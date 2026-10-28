@@ -8,7 +8,7 @@
  * (MIT) — δες LICENSE-NOTICE.txt στον φάκελο της κάρτας.
  */
 (() => {
-const CARD_VERSION = "1.0.1";
+const CARD_VERSION = "1.0.0";
 const TAG = "deepal-s05-card";
 const SETTINGS_TAG = "deepal-s05-settings";
 const EDITOR_TAG = "deepal-s05-card-editor";
@@ -546,8 +546,10 @@ ha-card { ${VARS}
     radial-gradient(90% 60% at 100% 0%, rgba(var(--ds-fu), .08), transparent 60%),
     var(--ha-card-background, var(--card-background-color, #1c1c1c)); }
 ha-card[data-pad="half"] { padding:7px; gap:12px; }
-ha-card[data-pad="none"] { padding:0 0 12px; gap:12px; }
-ha-card[data-pad="none"] > :not(.hero):not(.sheet) { margin-inline:14px; }
+ha-card[data-pad="none"] { padding:0 0 8px; gap:8px; }
+ha-card[data-pad="none"] > :not(.hero):not(.sheet) { margin-inline:0; }
+ha-card[data-pad="none"] .t2, ha-card[data-pad="none"] .tile { border-radius:0; border-inline:0; }
+ha-card[data-pad="none"] .actions { padding-inline:6px; }
 ha-card[data-pad="none"] > .hero { border-radius:0; }
 ha-card[data-ppad="half"] .sheet { padding:5px; } ha-card[data-ppad="half"] .box { padding:8px 7px 6px; }
 ha-card[data-ppad="none"] .sheet { padding:0; } ha-card[data-ppad="none"] .box { padding:8px 4px 4px; border-radius:24px 24px 0 0; border-inline:0; border-bottom:0; }
@@ -685,6 +687,8 @@ ${BASE_CSS}
 .gauge .ev { stroke: rgb(var(--ds-ev)); filter: drop-shadow(0 0 4px rgba(var(--ds-ev), .5)); transition: stroke-dasharray .8s ease; }
 .gauge .fu { stroke: rgb(var(--ds-fu)); transition: stroke-dasharray .8s ease; }
 .gauge .c { position:absolute; inset:0; display:grid; place-items:center; font-size:22px; font-weight:600; letter-spacing:-.02em; color: var(--ds-fg); }
+.gauge .c { display:flex; flex-direction:column; justify-content:center; align-items:center; line-height:1.05; }
+.gauge .c .gf { display:inline-flex; align-items:center; gap:2px; font-size:11.5px; font-weight:600; letter-spacing:0; margin-top:1px; } .gauge .c .gf svg.i { width:11px; height:11px; transform:none; overflow:visible; }
 .gauge .c small { font-size:10px; font-weight:500; color: var(--ds-fg2); }
 
 /* Όχημα */
@@ -1563,7 +1567,7 @@ class DeepalS05Card extends HTMLElement {
         <div class="gauge"><svg viewBox="0 0 100 100" aria-hidden="true">
           <circle class="tr" cx="50" cy="50" r="44" stroke-width="7" pathLength="100" stroke-dasharray="75 25"/><circle class="ev" cx="50" cy="50" r="44" stroke-width="7" pathLength="100" stroke-dasharray="${(cl(bat) * 0.75).toFixed(1)} 100"/>${flow}
           ${fu ? `<circle class="tr" cx="50" cy="50" r="33" stroke-width="7" pathLength="100" stroke-dasharray="75 25"/><circle class="fu" cx="50" cy="50" r="33" stroke-width="7" pathLength="100" stroke-dasharray="${(cl(fuelPct) * 0.75).toFixed(1)} 100"/>` : ""}</svg>
-          <div class="c"><span>${bat === null ? "--" : Math.round(bat)}<small>%</small></span></div></div></div>`;
+          <div class="c"><span>${bat === null ? "--" : Math.round(bat)}<small>%</small></span>${fu ? `<span class="gf" style="color:rgb(${fuRgb})">${ico("fuel")}${fuelPct === null ? "--" : Math.round(cl(fuelPct))}<small>%</small></span>` : ""}</div></div></div>`;
 
     this._renderVehicle(v);
     this._watchChanges(v);

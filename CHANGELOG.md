@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2
+
+- Battery/fuel gauge (PHEV): the centre now shows both the battery % and the fuel %.
+- `card_padding: none` now makes the tiles and buttons edge to edge as well (popups keep their own margins).
+
 ## 1.0.1
 
 - Messages are shown on the hero image (bottom or top, configurable) and stay longer (configurable).
