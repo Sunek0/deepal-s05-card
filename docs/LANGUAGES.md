@@ -4,7 +4,7 @@ The card text is written in Greek in the source. A language file maps each Greek
 The card uses the Home Assistant language (`auto`) or the `language` option, loads `lang/<code>.js` and falls back to
 `en` when no file exists for the language (Greek needs no file).
 
-1. Copy `dist/lang/en.js` to `dist/lang/<code>.js`, for example `de.js` or `pt-BR.js`.
+1. Copy `dist/lang/es.js` (or `src/lang_en.js`) to `dist/lang/<code>.js`, for example `de.js` or `pt-BR.js`.
 2. In the new file change the code and the name:
 
    ```js
@@ -24,7 +24,7 @@ The card uses the Home Assistant language (`auto`) or the `language` option, loa
 6. Run `bash scripts/build.sh` (it syntax-checks every file in `dist/lang/`), reload the browser, choose the language in
    *Settings → General → Language*.
 
-Built-in languages: Greek (source), English (`en.js`) and Spanish (`es.js`). To make a new language appear in the
+Included languages: Greek (the source text, no file), English (`src/lang_en.js`, built into the main file as the fallback) and Spanish (`dist/lang/es.js`). To make a new language appear in the
 language list before it is loaded, add it to `available()` in `src/05_i18n.js`.
 
 Missing keys are shown in Greek, so a partial translation is fine. Pull requests with new languages are welcome.

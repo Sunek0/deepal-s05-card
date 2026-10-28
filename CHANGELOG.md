@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.2.4
+
+Cleanup. · Τακτοποίηση. · Limpieza.
+
+**Changed**
+
+- The `lang/` folder now holds only the languages that load on demand (Spanish, and any you add). The English file moved to the source (`src/lang_en.js`) because it is built into the main file, so it is no longer installed twice.
+
+<details><summary>Ελληνικά</summary>
+
+**Αλλαγές**
+
+- Ο φάκελος `lang/` έχει πλέον μόνο τις γλώσσες που φορτώνουν όταν χρειάζονται (ισπανικά και όσες προσθέσεις). Το αγγλικό αρχείο πέρασε στον πηγαίο κώδικα (`src/lang_en.js`) γιατί είναι ενσωματωμένο στο κύριο αρχείο, οπότε δεν εγκαθίσταται πια δύο φορές.
+
+</details>
+
+<details><summary>Español</summary>
+
+**Cambios**
+
+- La carpeta `lang/` contiene ahora solo los idiomas que se cargan cuando hacen falta (español y los que añadas). El archivo de inglés pasó al código fuente (`src/lang_en.js`) porque va integrado en el archivo principal, así que ya no se instala dos veces.
+
+</details>
+
 ## 1.2.3
 
 Language loading. · Φόρτωση γλωσσών. · Carga de idiomas.
