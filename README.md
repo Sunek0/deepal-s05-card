@@ -1,5 +1,7 @@
 # Deepal S05 Card
 
+**English** · [Ελληνικά](README.el.md) · [Español](README.es.md)
+
 A Lovelace card for the **Deepal S05** (EV and PHEV) that looks and feels like the manufacturer's mobile app.
 It works with the [Deepal Alternative](https://github.com/Sunek0/ha-deepal-alternative) integration (`deepal` domain).
 
@@ -14,10 +16,10 @@ It works with the [Deepal Alternative](https://github.com/Sunek0/ha-deepal-alter
 | | |
 |---|---|
 | ![Overview](docs/images/overview.jpg) | ![Charging](docs/images/charging.jpg) |
-| ![Top view](docs/images/tyres.jpg) | ![Seats](docs/images/seats.jpg) |
+| ![Car View](docs/images/tyres.jpg) | ![Seats](docs/images/seats.jpg) |
 | ![Climate](docs/images/climate.jpg) | ![Settings](docs/images/settings.jpg) |
 | ![Sections](docs/images/sections.jpg) | ![Tyre settings](docs/images/settings-tyres.jpg) |
-| ![EV and PHEV](docs/images/phev-ev.jpg) | |
+| ![Car colours](docs/images/car-colors.jpg) | ![EV and PHEV](docs/images/phev-ev.jpg) |
 
 ## Features
 
@@ -25,7 +27,8 @@ It works with the [Deepal Alternative](https://github.com/Sunek0/ha-deepal-alter
 - Round control buttons: lock, windows, trunk, climate, tyres, interior, flash lights, horn, find car — layout, labels, size, order and visibility are configurable.
 - Range, battery (and fuel for PHEV) rings; the battery ring animates while charging.
 - Charging status: current, time remaining and type as text next to the charge port (4 styles), plus an optional animated effect on the car (cable flow / charge-port pulse / light sweep).
-- Top-view popup with a real photo (tyre pressure pills — green OK / red alert —  open doors/windows/hood/trunk) and interior popup (cabin climate with temperature picker, seat heating/ventilation, steering-wheel heating).
+- **Car View** popup: a real 3/4 render of the car in five colours with live doors, bonnet, tailgate, windows and lights, and the four tyre pressures connected to their wheels (green OK / red alert).
+- Climate popup with a temperature picker and animated airflow coloured by the target temperature, plus seat heating/ventilation and steering-wheel heating.
 - Diagnostics shown as small warning icons (airbag, ABS, brakes, tyres, 12 V battery…), customisable.
 - Custom info tiles: add any sensor.
 - **EV or PHEV**: fuel items are hidden automatically when the car has no fuel sensors (or force it in settings).
@@ -77,8 +80,8 @@ The target temperature picker uses the `climate.<prefix>_cabin_climate` entity d
 
 ## Photos and layers
 
-The card shows photos from `images/car/` and top-view/interior layers from `images/top/` and `images/interior/`, all next to the card file.
-They are made for a **black Deepal S05**. For another colour or model replace the files (same names) or point the card to your own folder in *Settings → Images*.
+The card shows photos from `images/car/` (hero), the Car View layers from `images/iso/<colour>/` and the interior layers from `images/interior/`, all next to the card file (HACS installs them with the card).
+The hero photos are made for a **black Deepal S05**; the Car View is available in five colours (*Settings → Appearance → Car colour*). For another model replace the files (same names) or point the card to your own folder in *Settings → Images*.
 See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the origin and licences of the images.
 
 ## Troubleshooting
@@ -97,17 +100,8 @@ bash scripts/build.sh      # builds dist/deepal-s05-card.js from src/
 ```
 
 Edit the files in `src/`, run the build, commit both `src/` and `dist/`.
-Layers can be regenerated with `tools/build_layers.py` (see the header of the script).
-
-## Ελληνικά (σύντομα)
-
-Κάρτα Lovelace για το Deepal S05 (EV και PHEV) που μοιάζει με την εφαρμογή του κατασκευαστή. Δουλεύει με το integration *Deepal Alternative*.
-
-- Εγκατάσταση: HACS → Custom repositories → κατηγορία **Dashboard** → εγκατάσταση → hard refresh.
-- Κάρτα: `type: custom:deepal-s05-card` και προαιρετικά `prefix: s05`.
-- Η γλώσσα ακολουθεί τη γλώσσα του HA (ελληνικά/αγγλικά). Όλες οι ρυθμίσεις αλλάζουν από το κουμπί «Ρυθμίσεις» στην κάρτα.
-- Σε μόνο ηλεκτρικό όχημα κρύβονται αυτόματα τα στοιχεία καυσίμου.
+The Car View images are converted from the dec_deepal renders with `tools/build_iso.py`, the interior layers with `tools/build_layers.py` (see the header of each script).
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Third-party material: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+MIT — Copyright (c) 2026 L.K. See [LICENSE](LICENSE). Third-party material: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

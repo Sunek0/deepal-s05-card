@@ -362,6 +362,25 @@
   "τιμόνι": "volante",
   "υψηλή": "alta",
   "χαμηλή": "baja",
-  "Κλειστά": "Cerradas"
+  "Κλειστά": "Cerradas",
+  "Χρώμα αέρα κλιματισμού": "Colores del flujo de aire",
+  "Ο αέρας στην καρτέλα Κλιματισμού παίρνει χρώμα ανάλογα με τη θερμοκρασία-στόχο. Όρισε τα όρια και τα χρώματα.": "El flujo de aire en la pestaña Climatización toma color según la temperatura objetivo. Define los límites y los colores.",
+  "Μέχρι (°C)": "Hasta (°C)",
+  "Δροσερό": "Fresco",
+  "Μέτριο": "Templado",
+  "Ζεστό": "Cálido",
+  "Μαύρο": "Negro",
+  "Μπλε": "Azul",
+  "Γκρι": "Gris",
+  "Ασημί": "Plata",
+  "Λευκό": "Blanco",
+  "Χρώμα αμαξιού": "Color del coche",
+  "Για την εικόνα Car View στο popup του οχήματος.": "Se usa en la imagen Car View del popup del vehículo.",
+  "Ζάντες (Car View)": "Llantas (Car View)",
+  "20″ με τάπες": "20″ con tapacubos",
+  "20″ χωρίς τάπες": "20″ sin tapacubos",
+  "18″ Pro": "18″ Pro",
+  "Συνδεδεμένο, δεν φορτίζει": "Enchufado, sin cargar",
+  "Δεν είναι συνδεδεμένο": "No enchufado"
  }
 };

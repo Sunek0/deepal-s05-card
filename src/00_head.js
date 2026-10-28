@@ -1,14 +1,15 @@
 /*!
- * deepal-s05-card  v0.4.0
+ * deepal-s05-card
+ * Copyright (c) 2026 L.K. — MIT License
  * Custom Lovelace card για Deepal S05 (και PHEV): hero με layers, κουμπιά ελέγχου,
- * κάτοψη με ελαστικά, εσωτερικό (θέρμανση/αερισμός), διαγνωστικά, δικό της UI ρυθμίσεων.
+ * Car View με ελαστικά, εσωτερικό (θέρμανση/αερισμός), διαγνωστικά, δικό της UI ρυθμίσεων.
  *
  * Χωρίς εξαρτήσεις και χωρίς CDN. Τα εικονίδια είναι δικά της (ενσωματωμένα).
- * Οι εικόνες των layers (κάτοψη/εσωτερικό) προέρχονται από το έργο dec_deepal
- * (MIT) — δες LICENSE-NOTICE.txt στον φάκελο της κάρτας.
+ * Οι εικόνες των layers (Car View/εσωτερικό) προέρχονται από το έργο dec_deepal
+ * (MIT) — δες THIRD_PARTY_NOTICES.md στον φάκελο της κάρτας.
  */
 (() => {
-const CARD_VERSION = "1.0.7";
+const CARD_VERSION = "1.1.0";
 const TAG = "deepal-s05-card";
 const SETTINGS_TAG = "deepal-s05-settings";
 const EDITOR_TAG = "deepal-s05-card-editor";
@@ -83,12 +84,15 @@ const DEFAULTS = {
   entities: {},
   images: {},
   climate_on_mode: null,
-  top_orientation: "horizontal", // horizontal | vertical
   tire_min: 2.0, // bar — κάτω από αυτό «χαμηλή»
   tire_max: 3.5, // bar — πάνω από αυτό «υψηλή»
   tire_unit: "bar", // bar | kPa | psi
   tire_check: "vehicle", // vehicle = μόνο οι ειδοποιήσεις του οχήματος · limits = τα δικά μου όρια · both = και τα δύο
+  car_color: "black", // χρώμα αμαξιού στις εικόνα Car View: black · blue · grey · silver · white
+  iso_wheels: "cover", // ζάντες στο Car View: cover (20" με τάπες) · open (20" χωρίς τάπες) · pro (18")
   charge_style: "line", // line · text · big · beside
+  air_t1: 22, air_t2: 24, // κλιματισμός: μέχρι t1 δροσερός αέρας, μέχρι t2 μέτριος, πάνω ζεστός
+  air_c1: "#8ec5ff", air_c2: "#ffcc3d", air_c3: "#ff7a2e", // χρώματα αέρα: δροσερό · μέτριο · ζεστό
   show_customize: true,
   language: "auto", // auto (γλώσσα του HA) | el | en | …
   charge_fx: "flow_port", // εφέ φόρτισης πάνω στο αμάξι: flow_port | flow | port | sweep | none
@@ -242,6 +246,7 @@ const ICONS = {
   cloudcheck: '<path d="M7.6 18.4h9.1a3.9 3.9 0 0 0 .6-7.7A5.6 5.6 0 0 0 6.4 9.3a4.6 4.6 0 0 0 1.2 9.1z"/><path d="M9.6 13.7l1.8 1.8 3.1-3.2"/>',
   cloudoff: '<path d="M7.6 18.4h9.1a3.9 3.9 0 0 0 .6-7.7A5.6 5.6 0 0 0 6.4 9.3a4.6 4.6 0 0 0 1.2 9.1z"/><path d="M4 4l16 16"/>',
   /* ── Όχημα ── */
+  carside: '<path d="M3.5 15.5v-2.2c0-.7.4-1.3 1-1.6l2.6-1.1 2.1-2.6c.3-.4.8-.6 1.3-.6h4.2c.5 0 1 .2 1.3.6l2 2.6 2.1.7c.6.2 1 .8 1 1.4v2.8"/><path class="a" d="M9.4 8.5l-1.3 2.6h8.2l-1.6-2.6"/><circle cx="7.6" cy="16" r="1.9"/><circle cx="16.6" cy="16" r="1.9"/><path d="M3.5 15.5h2.2M9.5 15.5h5.2M18.5 15.5h2"/>',
   cartop: '<path d="M8.2 3.8h7.6c1.1 0 2 .9 2 2v12.4c0 1.1-.9 2-2 2H8.2c-1.1 0-2-.9-2-2V5.8c0-1.1.9-2 2-2z"/><path class="a" d="M8.4 8.4h7.2l.6 4.1H7.8z"/><path d="M8.6 17.2h6.8"/><path d="M4.6 8.4v2M19.4 8.4v2"/>',
   interior: '<path d="M7.6 4.2c-1 0-1.7.9-1.4 1.9l1.6 6.4c.2.8.9 1.3 1.7 1.3h6.3"/><path class="a" d="M9.2 14.6h6.5c1.2 0 2.2 1 2.2 2.2v.3H9.9c-.9 0-1.6-.6-1.8-1.4z"/><path d="M8.8 20h9.2"/>',
   steering: '<circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="1.9"/><path d="M3.9 12h6.2M13.9 12h6.2M12 14v6.2"/>',

@@ -1,6 +1,6 @@
 # Third-party notices
 
-## Vehicle layer images (`dist/images/top`, `dist/images/interior`)
+## Vehicle layer images (`dist/images/iso`, `dist/images/interior`)
 
 Derived from the **dec_deepal** project (<https://github.com/manuelem1984/dec_deepal>), distributed under the MIT License:
 
@@ -25,7 +25,7 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-The images were recoloured to black (open parts in red) with `tools/build_layers.py`.
+The Car View layers (`dist/images/iso/<colour>`, front-left isometric view, 750×500) are the original renders of the five colours, converted from PNG to WebP (`tools/build_iso.py`) without any other change; the number plate layer is not used. The interior layers were recoloured to black with `tools/build_layers.py`.
 
 ## Vehicle photos (`dist/images/car`)
 

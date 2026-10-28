@@ -2,9 +2,6 @@
 /* ───────────────────────── Ρυθμίσεις (UI) ─────────────────────────
  * Ένα κοινό στοιχείο που χρησιμοποιείται και μέσα στην κάρτα (αποθήκευση στη συσκευή)
  * και στον επεξεργαστή του Home Assistant (αποθήκευση στο YAML της κάρτας). */
-const TOP_FILES_ALL = ["base", "low_beam_on", "hood_open", "hood_closed", "trunk_open", "trunk_closed", "door_front_left_open", "door_front_left_closed",
-  "door_front_right_open", "door_front_right_closed", "door_rear_left_open", "door_rear_left_closed", "door_rear_right_open", "door_rear_right_closed",
-  "window_front_left_open", "window_front_right_open", "window_rear_left_open", "window_rear_right_open"];
 const INT_FILES_ALL = ["base", ...INT_LAYERS];
 const ALL_FILES = { ...HERO_FILES, ...DASH_FILES };
 const heroBases = (c) => (c.image_path ? [normPath(c.image_path)] : [`${SCRIPT_BASE}images/car/`]);
@@ -63,9 +60,7 @@ class DeepalS05Settings extends HTMLElement {
     return `<p class="hint">${T("Βάλε τις ενότητες με τη σειρά που θέλεις (π.χ. πρώτα κουμπιά, μετά η εικόνα, μετά η αυτονομία) και κρύψε όσες δεν χρειάζεσαι.")}</p>
       ${this._orderList(SECTIONS, c.order, c.hidden, (i) => SECTION_LABELS[i], "sec")}
       <h4>Πάνω στην εικόνα</h4>
-      <div class="list">${HERO_SHOW_OPTS.map(([k, l]) => `<button class="row tg ${(c.hero_show || []).includes(k) ? "on" : ""}" data-hs="${k}"><span>${l}</span><i class="sw ${(c.hero_show || []).includes(k) ? "on" : ""}"></i></button>`).join("")}</div>
-      <h4>Κάτοψη</h4>
-      ${this._opt("Κάτοψη", this._seg("top_orientation", c.top_orientation, [["horizontal", "Οριζόντια"], ["vertical", "Κάθετη"]]))}`;
+      <div class="list">${HERO_SHOW_OPTS.map(([k, l]) => `<button class="row tg ${(c.hero_show || []).includes(k) ? "on" : ""}" data-hs="${k}"><span>${l}</span><i class="sw ${(c.hero_show || []).includes(k) ? "on" : ""}"></i></button>`).join("")}</div>`;
   }
   _tabButtons(c) {
     const conf = [["lock", "Κλείδωμα"], ["unlock", "Ξεκλείδωμα"], ["windows", "Άνοιγμα παραθύρων"], ["trunk", "Άνοιγμα πορτμπαγκάζ"], ["climate", "Κλιματισμός"], ["flash", "Φώτα"], ["honk", "Κόρνα"], ["find", "Εντοπισμός"], ["refresh", "Ανανέωση δεδομένων"]];
@@ -175,7 +170,22 @@ class DeepalS05Settings extends HTMLElement {
       <p class="hint">Εκτός ορίων η πίεση εμφανίζεται ως «χαμηλή» ή «υψηλή».</p>`}`;
   }
   _tabLook(c) {
-    return `<h4>Περιθώρια</h4>
+    const hc = (k) => hexc(c[k], DEFAULTS[k]);
+    const sw = (k, l) => `<label class="sw-c"><input type="color" data-set="${k}" data-text value="${esc(hc(k))}"><span>${l}</span></label>`;
+    const a = Number(c.air_t1) || 22, b = Number(c.air_t2) || 24, lo = 16, hi = 30, pc = (v) => Math.min(100, Math.max(0, ((v - lo) / (hi - lo)) * 100));
+    const cc = CAR_COLORS.some((x) => x[0] === c.car_color) ? c.car_color : "black";
+    return `<h4>Χρώμα αμαξιού</h4>
+      <p class="hint">Για την εικόνα Car View στο popup του οχήματος.</p>
+      <div class="csw">${CAR_COLORS.map(([k, n, hex]) => `<button data-sset="car_color|${k}" class="${k === cc ? "on" : ""}" style="background:${hex}" title="${esc(T(n))}" aria-label="${esc(T(n))}"></button>`).join("")}</div>
+      ${this._opt("Ζάντες (Car View)", this._seg("iso_wheels", c.iso_wheels || "cover", [["cover", "20″ με τάπες"], ["open", "20″ χωρίς τάπες"], ["pro", "18″ Pro"]]))}
+      <h4>Χρώμα αέρα κλιματισμού</h4>
+      <p class="hint">Ο αέρας στην καρτέλα Κλιματισμού παίρνει χρώμα ανάλογα με τη θερμοκρασία-στόχο. Όρισε τα όρια και τα χρώματα.</p>
+      <div class="lvhead"><span></span><span>Μέχρι (°C)</span><span></span></div>
+      <div class="lvrow">${sw("air_c1", "Δροσερό")}${this._num("air_t1", c.air_t1, "0.5")}<i class="dash"></i></div>
+      <div class="lvrow">${sw("air_c2", "Μέτριο")}${this._num("air_t2", c.air_t2, "0.5")}<i class="dash"></i></div>
+      <div class="lvrow">${sw("air_c3", "Ζεστό")}<i class="dash">—</i><i class="dash"></i></div>
+      <div class="lvbar" style="background:linear-gradient(90deg, ${hc("air_c1")} 0 ${pc(a)}%, ${hc("air_c2")} ${pc(a)}% ${pc(b)}%, ${hc("air_c3")} ${pc(b)}% 100%)"></div>
+      <h4>Περιθώρια</h4>
       ${this._opt("Περιθώρια κάρτας", this._seg("card_padding", c.card_padding || "normal", [["normal", "Κανονικά"], ["half", "Μισά"], ["none", "Χωρίς"]]), "«Χωρίς»: η εικόνα πηγαίνει από άκρη σε άκρη.")}
       ${this._opt("Περιθώρια popup", this._seg("popup_padding", c.popup_padding || "normal", [["normal", "Κανονικά"], ["half", "Μισά"], ["none", "Χωρίς"]]))}
       <h4>Μηνύματα</h4>

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Φτιάχνει τα layers (κάτοψη + εσωτερικό) για την κάρτα deepal-s05-card
+Φτιάχνει τα layers (εσωτερικό· η κάτοψη δεν χρησιμοποιείται πια — το Car View φτιάχνεται με build_iso.py) για την κάρτα deepal-s05-card
 από το repo manuelem1984/dec_deepal (MIT).
 
   python3 build_layers.py <φάκελος dec_deepal-main> <φάκελος εξόδου> [--tone black|original]

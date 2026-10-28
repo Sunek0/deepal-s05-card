@@ -362,6 +362,25 @@
   "τιμόνι": "steering",
   "υψηλή": "high",
   "χαμηλή": "low",
-  "Κλειστά": "Closed"
+  "Κλειστά": "Closed",
+  "Χρώμα αέρα κλιματισμού": "Air flow colors",
+  "Ο αέρας στην καρτέλα Κλιματισμού παίρνει χρώμα ανάλογα με τη θερμοκρασία-στόχο. Όρισε τα όρια και τα χρώματα.": "The airflow in the Climate tab is colored by the target temperature. Set the limits and the colors.",
+  "Μέχρι (°C)": "Up to (°C)",
+  "Δροσερό": "Cool",
+  "Μέτριο": "Mild",
+  "Ζεστό": "Warm",
+  "Μαύρο": "Black",
+  "Μπλε": "Blue",
+  "Γκρι": "Grey",
+  "Ασημί": "Silver",
+  "Λευκό": "White",
+  "Χρώμα αμαξιού": "Car color",
+  "Για την εικόνα Car View στο popup του οχήματος.": "Used by the Car View image in the vehicle popup.",
+  "Ζάντες (Car View)": "Wheels (Car View)",
+  "20″ με τάπες": "20″ with covers",
+  "20″ χωρίς τάπες": "20″ without covers",
+  "18″ Pro": "18″ Pro",
+  "Συνδεδεμένο, δεν φορτίζει": "Plugged in, not charging",
+  "Δεν είναι συνδεδεμένο": "Not plugged in"
  }
 };

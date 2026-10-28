@@ -1,14 +1,15 @@
 /*!
- * deepal-s05-card  v0.4.0
+ * deepal-s05-card
+ * Copyright (c) 2026 L.K. — MIT License
  * Custom Lovelace card για Deepal S05 (και PHEV): hero με layers, κουμπιά ελέγχου,
- * κάτοψη με ελαστικά, εσωτερικό (θέρμανση/αερισμός), διαγνωστικά, δικό της UI ρυθμίσεων.
+ * Car View με ελαστικά, εσωτερικό (θέρμανση/αερισμός), διαγνωστικά, δικό της UI ρυθμίσεων.
  *
  * Χωρίς εξαρτήσεις και χωρίς CDN. Τα εικονίδια είναι δικά της (ενσωματωμένα).
- * Οι εικόνες των layers (κάτοψη/εσωτερικό) προέρχονται από το έργο dec_deepal
- * (MIT) — δες LICENSE-NOTICE.txt στον φάκελο της κάρτας.
+ * Οι εικόνες των layers (Car View/εσωτερικό) προέρχονται από το έργο dec_deepal
+ * (MIT) — δες THIRD_PARTY_NOTICES.md στον φάκελο της κάρτας.
  */
 (() => {
-const CARD_VERSION = "1.0.7";
+const CARD_VERSION = "1.1.0";
 const TAG = "deepal-s05-card";
 const SETTINGS_TAG = "deepal-s05-settings";
 const EDITOR_TAG = "deepal-s05-card-editor";
@@ -83,12 +84,15 @@ const DEFAULTS = {
   entities: {},
   images: {},
   climate_on_mode: null,
-  top_orientation: "horizontal", // horizontal | vertical
   tire_min: 2.0, // bar — κάτω από αυτό «χαμηλή»
   tire_max: 3.5, // bar — πάνω από αυτό «υψηλή»
   tire_unit: "bar", // bar | kPa | psi
   tire_check: "vehicle", // vehicle = μόνο οι ειδοποιήσεις του οχήματος · limits = τα δικά μου όρια · both = και τα δύο
+  car_color: "black", // χρώμα αμαξιού στις εικόνα Car View: black · blue · grey · silver · white
+  iso_wheels: "cover", // ζάντες στο Car View: cover (20" με τάπες) · open (20" χωρίς τάπες) · pro (18")
   charge_style: "line", // line · text · big · beside
+  air_t1: 22, air_t2: 24, // κλιματισμός: μέχρι t1 δροσερός αέρας, μέχρι t2 μέτριος, πάνω ζεστός
+  air_c1: "#8ec5ff", air_c2: "#ffcc3d", air_c3: "#ff7a2e", // χρώματα αέρα: δροσερό · μέτριο · ζεστό
   show_customize: true,
   language: "auto", // auto (γλώσσα του HA) | el | en | …
   charge_fx: "flow_port", // εφέ φόρτισης πάνω στο αμάξι: flow_port | flow | port | sweep | none
@@ -242,6 +246,7 @@ const ICONS = {
   cloudcheck: '<path d="M7.6 18.4h9.1a3.9 3.9 0 0 0 .6-7.7A5.6 5.6 0 0 0 6.4 9.3a4.6 4.6 0 0 0 1.2 9.1z"/><path d="M9.6 13.7l1.8 1.8 3.1-3.2"/>',
   cloudoff: '<path d="M7.6 18.4h9.1a3.9 3.9 0 0 0 .6-7.7A5.6 5.6 0 0 0 6.4 9.3a4.6 4.6 0 0 0 1.2 9.1z"/><path d="M4 4l16 16"/>',
   /* ── Όχημα ── */
+  carside: '<path d="M3.5 15.5v-2.2c0-.7.4-1.3 1-1.6l2.6-1.1 2.1-2.6c.3-.4.8-.6 1.3-.6h4.2c.5 0 1 .2 1.3.6l2 2.6 2.1.7c.6.2 1 .8 1 1.4v2.8"/><path class="a" d="M9.4 8.5l-1.3 2.6h8.2l-1.6-2.6"/><circle cx="7.6" cy="16" r="1.9"/><circle cx="16.6" cy="16" r="1.9"/><path d="M3.5 15.5h2.2M9.5 15.5h5.2M18.5 15.5h2"/>',
   cartop: '<path d="M8.2 3.8h7.6c1.1 0 2 .9 2 2v12.4c0 1.1-.9 2-2 2H8.2c-1.1 0-2-.9-2-2V5.8c0-1.1.9-2 2-2z"/><path class="a" d="M8.4 8.4h7.2l.6 4.1H7.8z"/><path d="M8.6 17.2h6.8"/><path d="M4.6 8.4v2M19.4 8.4v2"/>',
   interior: '<path d="M7.6 4.2c-1 0-1.7.9-1.4 1.9l1.6 6.4c.2.8.9 1.3 1.7 1.3h6.3"/><path class="a" d="M9.2 14.6h6.5c1.2 0 2.2 1 2.2 2.2v.3H9.9c-.9 0-1.6-.6-1.8-1.4z"/><path d="M8.8 20h9.2"/>',
   steering: '<circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="1.9"/><path d="M3.9 12h6.2M13.9 12h6.2M12 14v6.2"/>',
@@ -447,26 +452,15 @@ const OTHER_KEYS = [
   ...["front_left", "front_right", "rear_left", "rear_right"].flatMap((p) => [`sensor.${p}_tire_pressure`]),
   ...["front_left", "front_right"].flatMap((p) => [`number.${p}_seat_heating_level`, `number.${p}_seat_ventilation_level`]),
 ];
-const TIRES = [
-  { id: "front_left", x: 246, y: 195, side: -1, name: "Εμπρός αριστερά" },
-  { id: "front_right", x: 500, y: 195, side: 1, name: "Εμπρός δεξιά" },
-  { id: "rear_left", x: 236, y: 588, side: -1, name: "Πίσω αριστερά" },
-  { id: "rear_right", x: 501, y: 588, side: 1, name: "Πίσω δεξιά" },
+const TIRES = [ // px/py: θέση της ετικέτας στην εικόνα Car View (%)· wx/wy: θέση του τροχού (%)· hid: ο τροχός δεν φαίνεται στην εικόνα (εκτιμώμενη θέση)
+  { id: "front_left", px: 15, py: 88, wx: 49.3, wy: 65, hid: false, name: "Εμπρός αριστερά" },
+  { id: "front_right", px: 15, py: 12, wx: 27, wy: 60, hid: true, name: "Εμπρός δεξιά" },
+  { id: "rear_left", px: 86, py: 88, wx: 83, wy: 57, hid: false, name: "Πίσω αριστερά" },
+  { id: "rear_right", px: 86, py: 12, wx: 60.5, wy: 52, hid: true, name: "Πίσω δεξιά" },
 ];
-const TOP_BOX = { x: 120, y: 22, w: 510, h: 720 }; // θέση των layers μέσα στο πλέγμα 750×750
-const TOP_LAYERS = [
-  ["low_beam", "low_beam_on"],
-  ["hood", "hood_open", "hood_closed", "binary_sensor.hood"],
-  ["trunk", "trunk_open", "trunk_closed", "binary_sensor.trunk"],
-  ["fl", "door_front_left_open", "door_front_left_closed", "binary_sensor.front_left_door"],
-  ["fr", "door_front_right_open", "door_front_right_closed", "binary_sensor.front_right_door"],
-  ["rl", "door_rear_left_open", "door_rear_left_closed", "binary_sensor.rear_left_door"],
-  ["rr", "door_rear_right_open", "door_rear_right_closed", "binary_sensor.rear_right_door"],
-  ["wfl", "window_front_left_open", null, "binary_sensor.front_left_window_open"],
-  ["wfr", "window_front_right_open", null, "binary_sensor.front_right_window_open"],
-  ["wrl", "window_rear_left_open", null, "binary_sensor.rear_left_window_open"],
-  ["wrr", "window_rear_right_open", null, "binary_sensor.rear_right_window_open"],
-];
+/* Car View: layers 750×500 (πηγή: github.com/manuelem1984/dec_deepal, MIT) */
+const CAR_COLORS = [["black", "Μαύρο", "#1b1c22"], ["blue", "Μπλε", "#4a86b8"], ["grey", "Γκρι", "#6b6d72"], ["silver", "Ασημί", "#b9bcc0"], ["white", "Λευκό", "#f1f2f4"]];
+const ISO_DOORS = [["rear", "right"], ["front", "right"], ["rear", "left"], ["front", "left"]];
 const INT_SIZE = { w: 745, h: 560 };
 // hotspots εσωτερικού: [id, κλειδί, εικονίδιο, ετικέτα, x%, y%, layer]
 const INT_SPOTS = [
@@ -628,7 +622,7 @@ ${BASE_CSS}
 .toast { position:absolute; left:50%; top:14px; bottom:auto; z-index:40; transform: translate(-50%, -8px); max-width: calc(100% - 28px); padding: 8px 14px; border-radius: 999px;
   font-size: 12.5px; font-weight: 500; color:#fff; opacity:0; pointer-events:none; background: rgba(20,20,24,.82); border:1px solid rgba(255,255,255,.16);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transition: opacity .2s ease, transform .2s ease; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
-.toast.pos-bottom { top:auto; bottom:14px; transform: translate(-50%, 8px); }
+.toast.pos-bottom { top:auto; bottom:62px; transform: translate(-50%, 8px); }
 .toast.show { opacity:1; transform: translate(-50%, 0); } .toast.warn { border-color: rgba(var(--ds-warn), .55); } .toast.error { border-color: rgba(var(--ds-bad), .55); } .toast.ok { border-color: rgba(var(--ds-ok), .55); }
 
 /* Κουμπιά (κυκλικά, σαν της εφαρμογής) */
@@ -637,6 +631,9 @@ ${BASE_CSS}
 .actions.grid { display:grid; grid-template-columns: repeat(5, 1fr); gap: 18px 4px; }
 .actions.scroll { display:flex; gap: 12px; overflow-x:auto; scrollbar-width:none; padding: 2px 2px 4px; scroll-snap-type:x proximity; }
 .actions.scroll::-webkit-scrollbar { display:none; }
+.actions.scroll[data-r] { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 34px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 34px), transparent); }
+.actions.scroll[data-l] { -webkit-mask-image: linear-gradient(90deg, transparent, #000 34px); mask-image: linear-gradient(90deg, transparent, #000 34px); }
+.actions.scroll[data-l][data-r] { -webkit-mask-image: linear-gradient(90deg, transparent, #000 34px, #000 calc(100% - 34px), transparent); mask-image: linear-gradient(90deg, transparent, #000 34px, #000 calc(100% - 34px), transparent); }
 .actions.scroll .cell { flex:none; width: calc(var(--bs) + 22px); scroll-snap-align:start; }
 .actions.fit { display:flex; gap:4px; justify-content:space-between; }
 .actions.fit .cell { flex:1 1 0; } .actions.fit .act { --bs: clamp(32px, 11cqw, 52px); }
@@ -711,8 +708,9 @@ ${BASE_CSS}
 .dash img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition: opacity .5s ease; }
 .dash .air { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; opacity:0; transition: opacity .6s ease; }
 .dash.air .air { opacity:1; }
-.air { --sp: 1; }
-.air .st { fill:none; stroke-linecap:round; stroke-dasharray: 62 38; animation: ds-flow calc(var(--t, 2.4s) / var(--sp)) linear infinite; animation-delay: var(--d, 0s); }
+.air { --sp: 1; --a0:#eaf6ff; --a1:#b9dcff; --a2:#8ec5ff; }
+.air .st { fill:none; stroke-linecap:round; stroke-dasharray: 62 38; transform-box: fill-box; transform-origin: 50% 0%; animation: ds-flow calc(var(--t, 2.4s) / var(--sp)) linear infinite, ds-sway calc(var(--w, 3.6s) / var(--sp)) ease-in-out infinite; animation-delay: var(--d, 0s), var(--d, 0s); }
+@keyframes ds-sway { 0%,100% { transform: translateX(-2.2px) skewX(-5deg); } 50% { transform: translateX(2.2px) skewX(5deg); } }
 .air .gl { fill:none; stroke-linecap:round; }
 .air .bg { opacity:.85; animation: ds-air 3.2s ease-in-out infinite; animation-delay: var(--d, 0s); mix-blend-mode: screen; }
 @keyframes ds-flow { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
@@ -720,17 +718,7 @@ ${BASE_CSS}
 .dash .ttl, .seatsttl { font-size:12px; color: var(--ds-fg2); }
 .seatsttl { margin:2px 2px 0; }
 .dash .spot { z-index:2; }
-.vstage { position:relative; width:100%; border-radius: var(--ds-r); overflow:hidden; flex:none; background: radial-gradient(70% 70% at 50% 45%, rgba(255,255,255,.07), rgba(0,0,0,.0) 70%); }
-.vstage > svg { display:block; width:100%; height:auto; }
-.vstage .l { opacity:0; transition: opacity .35s ease; } .vstage .l.on { opacity:1; }
 .vmiss { padding:18px 12px; text-align:center; font-size:12.5px; color: var(--ds-fg2); }
-.pill rect { stroke-width: 1.6; fill: rgba(14,15,20,.72); } .pill text { font-weight:700; font-family: inherit; } .pill .s { font-weight:600; letter-spacing:.02em; }
-.pill.ok rect { stroke: rgb(var(--ds-ok)); fill: rgba(var(--ds-ok), .16); } .pill.ok text { fill: rgb(var(--ds-ok)); }
-.pill.bad rect { stroke: rgb(var(--ds-bad)); fill: rgba(var(--ds-bad), .2); animation: ds-pill 1.8s ease-in-out infinite; } .pill.bad text { fill: rgb(var(--ds-bad)); }
-.pill.na rect { stroke: rgba(148,163,184,.7); } .pill.na text { fill: rgb(148,163,184); }
-.pin line { stroke-width:2; stroke-linecap:round; opacity:.7; } .pin .halo { opacity:.25; } .pin.ok line, .pin.ok .dot, .pin.ok .halo { stroke: rgb(var(--ds-ok)); fill: rgb(var(--ds-ok)); } .pin.bad line, .pin.bad .dot, .pin.bad .halo { stroke: rgb(var(--ds-bad)); fill: rgb(var(--ds-bad)); }
-.pin.na line, .pin.na .dot, .pin.na .halo { stroke: rgb(148,163,184); fill: rgb(148,163,184); } .pin .dot, .pin .halo { stroke:none; } .pin.bad .halo { animation: ds-pill 1.8s ease-in-out infinite; }
-@keyframes ds-pill { 0%,100% { stroke-opacity: 1; } 50% { stroke-opacity: .35; } }
 .ipane .sbtn { position:absolute; transform: translate(-50%,-50%); width:54px; padding:9px 0 7px; gap:5px; border-radius:18px; background: rgba(14,15,20,.66); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color:#fff; border-color: rgba(255,255,255,.2); }
 .ipane .sbtn:active { transform: translate(-50%,-50%) scale(.94); } .ipane .sbtn .nm { display:none; } .ipane .sbtn .i { --is:28px; }
 .sbtn { --c: var(--ds-info); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:12px 2px 9px; min-width:0; border-radius:20px; cursor:pointer; color: var(--ds-fg2);
@@ -740,6 +728,16 @@ ${BASE_CSS}
 .sbtn.lv { border-color: rgba(var(--c), .7); background: rgba(var(--c), .16); color: var(--ds-fg); } .ipane .sbtn.lv { background: rgba(14,15,20,.74); } .sbtn.lv .i { color: rgb(var(--c)); }
 .sbtn .lvl { display:flex; gap:3px; height:4px; } .sbtn .lvl i { width:10px; height:4px; border-radius:2px; background: var(--ds-line); } .sbtn .lvl i.f { background: rgb(var(--c)); }
 .sbtn .lvl[hidden] { display:flex !important; visibility:hidden; }
+.isop { container-type: inline-size; border-radius: var(--ds-r); overflow:hidden; position:relative; width:100%; aspect-ratio: 750 / 500; background: radial-gradient(ellipse 70% 55% at 50% 72%, #3b4654 0%, #181b21 62%, #0e0f13 100%); }
+.isop.noimg { display:none; }
+.isop svg.tl { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; } .isop svg.tl line { stroke-width:1.2; stroke-linecap:round; opacity:.6; } .isop svg.tl line.hid { stroke-dasharray: 5 5; opacity:.45; } .isop svg.tl .halo { opacity:.25; } .isop svg.tl circle.hid { fill:none; stroke-width:1.4; stroke-dasharray: 3 3; opacity:.7; }
+.isop .tp { position:absolute; z-index:2; transform: translate(-50%,-50%); min-width:11.5cqw; padding:.5cqw 1.2cqw .6cqw; border-radius:1.9cqw; border:1px solid; background: rgba(14,15,20,.52); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); text-align:center; line-height:1.15; font-weight:700; white-space:nowrap; }
+.isop .tp .n { font-size:1.45cqw; font-weight:600; color: var(--ds-fg2); letter-spacing:.02em; } .isop .tp .v { font-size:2.35cqw; } .isop .tp .s { font-size:1.55cqw; font-weight:600; }
+.isop .tp.ok { border-color: rgb(var(--ds-ok)); color: rgb(var(--ds-ok)); background: rgba(var(--ds-ok), .14); } .isop .tp.bad { border-color: rgb(var(--ds-bad)); color: rgb(var(--ds-bad)); background: rgba(var(--ds-bad), .18); animation: ds-pill 1.8s ease-in-out infinite; } .isop .tp.na { border-color: rgba(148,163,184,.7); color: rgb(148,163,184); }
+.isop svg.tl .ok { stroke: rgb(var(--ds-ok)); fill: rgb(var(--ds-ok)); } .isop svg.tl .bad { stroke: rgb(var(--ds-bad)); fill: rgb(var(--ds-bad)); } .isop svg.tl .na { stroke: rgb(148,163,184); fill: rgb(148,163,184); } .isop svg.tl circle:not(.hid) { stroke:none; }
+@keyframes ds-pill { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+.isop img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; opacity:0; transition: opacity .3s ease; pointer-events:none; } .isop img.on { opacity:1; }
+#vtabs button .tx { white-space:nowrap; } @media (max-width:430px) { #vtabs button:not(.on) .tx { display:none; } }
 .ipane { border-radius: var(--ds-r); overflow:hidden; position:relative; width:100%; aspect-ratio: ${INT_SIZE.w} / ${INT_SIZE.h}; background:#0b0c10; }
 .ipane img { position:absolute; inset:0; width:100%; height:100%; transition: opacity .35s ease; }
 .ipane img.l { opacity:0; } .ipane img.l.on { opacity:1; }
@@ -814,14 +812,15 @@ ${BASE_CSS}
 .charge > div { min-width:0; } .charge .l { font-size:11.5px; color: var(--ds-fg2); }
 .charge .v { margin-top:3px; font-size:15px; font-weight:600; color: var(--ds-fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .foot { align-self:center; display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border:0; border-radius:999px; background:transparent; cursor:pointer; color: var(--ds-fg2); font-size:11.5px; opacity:.75; }
-.foot .age { margin-right:4px; } .foot:not(.nosets) .age:not([hidden])::after { content:'·'; margin-left:10px; } .foot:hover, .foot:focus-visible { opacity:1; } .foot .i { --is: 14px; } .foot .sets { display:inline-flex; align-items:center; gap:6px; } .foot.nosets { cursor:default; pointer-events:none; } .foot.nosets .sets { display:none; }
+.foot .age { margin-right:4px; } .foot .age.old { color: rgb(var(--ds-warn)); } .foot:not(.nosets) .age:not([hidden])::after { content:'·'; margin-left:10px; } .foot:hover, .foot:focus-visible { opacity:1; } .foot .i { --is: 14px; } .foot .sets { display:inline-flex; align-items:center; gap:6px; } .foot.nosets { cursor:default; pointer-events:none; } .foot.nosets .sets { display:none; }
 
 /* Φύλλο */
-.sheet { position:absolute; inset:0; z-index:20; display:none; align-items:flex-end; justify-content:center; padding:10px; background: rgba(0,0,0,.62); }
+.sheet { position:fixed; inset:0; z-index:100000; display:none; align-items:flex-end; justify-content:center; padding:10px; background: rgba(0,0,0,.62); }
 /* ρευστή απόδοση: όσο ανοιχτό είναι παράθυρο ή η κάρτα είναι εκτός οθόνης, παγώνουν τα εφέ από πίσω */
 ha-card:has(.sheet.show) *:not(.sheet):not(.sheet *), ha-card.off *, ha-card.off *::before, ha-card.off *::after { animation-play-state: paused !important; }
 .sheet.show { display:flex; animation: ds-fade .3s ease-out; }
-.box { width:100%; max-height:70%; min-height:min(300px, 100%); box-sizing:border-box; display:flex; flex-direction:column; padding:16px 14px 12px; border-radius:24px; background: var(--ha-card-background, var(--card-background-color, #222)); border:1px solid var(--ds-line); animation: ds-up .42s cubic-bezier(.22,.8,.3,1); overflow:hidden; }
+@media (min-width:640px) { .sheet { align-items:center; } }
+.box { width:100%; max-width:560px; max-height:70%; min-height:min(300px, 100%); box-sizing:border-box; display:flex; flex-direction:column; padding:16px 14px 12px; border-radius:24px; background: var(--ha-card-background, var(--card-background-color, #222)); border:1px solid var(--ds-line); animation: ds-up .42s cubic-bezier(.22,.8,.3,1); overflow:hidden; }
 .box.wide { overflow:hidden; max-height:94%; } .box.confirm { min-height:0; }
 .box h3 { margin:0; font-size:16px; font-weight:600; color: var(--ds-fg); } .box p.c { margin:6px 0 12px; font-size:13px; color: var(--ds-fg2); text-align:center; }
 .confirm { text-align:center; }
@@ -834,6 +833,7 @@ ha-card:has(.sheet.show) *:not(.sheet):not(.sheet *), ha-card.off *, ha-card.off
 `;
 
 const SETTINGS_CSS = `
+.csw { display:flex; gap:14px; flex-wrap:wrap; padding:6px 2px 10px; } .csw button { flex:none; width:46px; height:46px; min-width:46px; border-radius:50%; padding:0; border:2px solid var(--ds-line); cursor:pointer; box-shadow: inset 0 0 0 2px rgba(0,0,0,.28); transition: transform .15s ease; } .csw button:active { transform: scale(.92); } .csw button.on { border-color: rgb(var(--ds-info)); box-shadow: 0 0 0 3px rgba(var(--ds-info), .4), inset 0 0 0 2px rgba(0,0,0,.28); }
 :host { display:block; ${VARS} color: var(--ds-fg); }
 ${BASE_CSS}
 .wrap { display:flex; flex-direction:column; gap:10px; }
@@ -885,7 +885,7 @@ textarea { width:100%; box-sizing:border-box; min-height:150px; padding:10px; bo
 
 /* ───────────────────────── Κάρτα ───────────────────────── */
 const RING = '<svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><rect x="2.5" y="2.5" width="95" height="95" rx="47.5" pathLength="100"/></svg>';
-const REBUILD_KEYS = ["image_path", "layers_path", "images", "top_orientation", "name", "image_scale", "image_aspect", "prefix", "entities"];
+const REBUILD_KEYS = ["image_path", "layers_path", "images", "name", "image_scale", "image_aspect", "prefix", "entities"];
 const normPath = (p) => (p ? (p.endsWith("/") ? p : p + "/") : p);
 
 /* Συγχώνευση: προεπιλογές < YAML κάρτας < τοπικές ρυθμίσεις συσκευής */
@@ -1069,7 +1069,7 @@ class DeepalS05Card extends HTMLElement {
     const cu = [...(this._c.diag_custom || []), ...(this._c.info_custom || [])].map((x) => this._eobj(x.entity)?.state ?? "∅").join("|");
     return [st, cu, Math.floor(Date.now() / 60000), Object.keys(this._pending).join(","),
       Object.entries(this._flashes).map(([k, v]) => k + v.type).join(","), this._confirm ? this._confirm.id : "", String(this._customize),
-      JSON.stringify(this._c), JSON.stringify(this._opt), String(this._tpend), String(this._view), this._toastState ? this._toastState.msg : ""].join("#");
+      JSON.stringify(this._c), JSON.stringify(this._opt), String(this._tpend), String((this._tgt() || {}).state), String(this._view), this._toastState ? this._toastState.msg : ""].join("#");
   }
   _force() { this._sig = null; if (this._hass && this._c) this._render(); }
   _diagAvail() { return DIAG.filter((d) => this._obj(d[0])); }
@@ -1099,6 +1099,13 @@ class DeepalS05Card extends HTMLElement {
     else img = "off";
     return { unlocked, lights, charging, plugged, battery, open, img };
   }
+  _scUpd() {
+    const a = this._el && this._el.actions; if (!a) return;
+    if (!this._scBound) { this._scBound = true; a.addEventListener("scroll", () => this._scUpd(), { passive: true }); }
+    const r = a.scrollWidth - a.clientWidth - a.scrollLeft > 6, l = a.scrollLeft > 6;
+    a.toggleAttribute("data-r", r); a.toggleAttribute("data-l", l);
+  }
+  _ageMin() { const t = new Date(this._s("sensor.last_updated") || "").getTime(); return Number.isFinite(t) ? Math.max(0, Math.round((Date.now() - t) / 60000)) : 0; }
   _age() {
     const raw = this._s("sensor.last_updated");
     if (!raw) return "--";
@@ -1173,7 +1180,7 @@ class DeepalS05Card extends HTMLElement {
       climate: { on: climateOn, icon: climateOn ? "snow" : "snowoff", sub: climate === null ? "μη διαθέσιμο" : climateOn ? "ενεργός" : "ανενεργός", tone: climate === null ? "bad" : "", disabled: climate === null, confirm: "climate",
         watch: this._obj("binary_sensor.climate_on") ? "binary_sensor.climate_on" : "climate.cabin_climate", timeout: 35000, call: cCall,
         unsupported: climateOn ? "Ο κλιματισμός δεν έχει εντολή απενεργοποίησης σε αυτή την οντότητα" : "Ο κλιματισμός δεν έχει εντολή ενεργοποίησης σε αυτή την οντότητα" },
-      tires: (() => { const s = this._tiresSummary(); return { icon: "tirealert", ...s, open: "top" }; })(),
+      tires: (() => { const s = this._tiresSummary(); return { icon: "tirealert", ...s, open: "iso" }; })(),
       cabin: (() => { const s = this._cabinSummary(climateOn); return { icon: s.on ? "interioron" : "interior", ...s, open: "climate" }; })(),
       flash: { confirm: "flash", icon: "headlight", sub: "αναλαμπή", btn: "button.flash_lights", call: ["button", "press", "button.flash_lights"] },
       honk: { confirm: "honk", icon: "horn", sub: "ηχητικό σήμα", btn: "button.honk_horn", call: ["button", "press", "button.honk_horn"] },
@@ -1353,49 +1360,56 @@ class DeepalS05Card extends HTMLElement {
   }
   _layerBase() { return this._c.layers_path ? normPath(this._c.layers_path) : `${SCRIPT_BASE}images/`; }
 
-  _topSvg() {
-    const c = this._c, B = `${this._layerBase()}top/`, horiz = c.top_orientation !== "vertical";
-    const img = (n, extra = "") => `<image class="l ${extra}" data-l="${n}" href="${esc(B + n + ".webp")}" x="${TOP_BOX.x}" y="${TOP_BOX.y}" width="${TOP_BOX.w}" height="${TOP_BOX.h}"/>`;
-    let layers = `<image data-l="base" href="${esc(B + "base.webp")}" x="${TOP_BOX.x}" y="${TOP_BOX.y}" width="${TOP_BOX.w}" height="${TOP_BOX.h}"/>`;
-    for (const [id, open] of TOP_LAYERS) layers += img(open); // η βάση είναι η πραγματική φωτογραφία· εμφανίζονται μόνο τα layers «ανοιχτό»
-    const OFF = 96, map = (px, py) => (horiz ? [py, 750 - px] : [px, py]);
-    const pins = TIRES.map((t) => {
-      const [x0, y0] = map(t.x, t.y), [x1, y1] = map(t.x + t.side * (OFF - 46), t.y);
-      return `<g class="pin" data-pin="${t.id}"><line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}"/><circle cx="${x0}" cy="${y0}" r="9" class="halo"/><circle cx="${x0}" cy="${y0}" r="4.5" class="dot"/></g>`;
-    }).join("");
-    const pills = TIRES.map((t) => {
-      const [x, y] = map(t.x + t.side * OFF, t.y);
-      return `<g class="pill" data-t="${t.id}" transform="translate(${x} ${y})"><rect x="-46" y="-27" width="92" height="54" rx="17"/><text class="v" y="3" text-anchor="middle" font-size="20"></text><text class="s" y="20" text-anchor="middle" font-size="12"></text></g>`;
-    }).join("");
-    const vb = horiz ? "40 104 690 548" : "60 22 630 720";
-    return `<svg viewBox="${vb}" role="img" aria-label="Κάτοψη οχήματος"><g transform="${horiz ? "matrix(0 -1 1 0 0 750)" : ""}">${layers}</g>${pins}${pills}</svg>`;
-  }
   /* Αέρας από τους αεραγωγούς: δέσμες από λεπτές καμπύλες που ανοίγουν σε βεντάλια, με διαφάνεια που σβήνει (συντεταγμένες εικόνας 510×285) */
   _airSvg() {
+    // μεσαίοι αεραγωγοί: βεντάλια· πλαϊνοί (σχισμές ταμπλό): λεπτές "φυσικές" γραμμές ροής
     const R = [
-      [[115, 124, 85, 128, 35, 136, 0, 150], [105, 132, 75, 146, 30, 170, 0, 188]],
-      [[170, 126, 158, 150, 128, 178, 116, 214], [163, 132, 172, 160, 178, 190, 184, 222]],
       [[244, 170, 236, 195, 190, 218, 160, 233], [236, 172, 232, 200, 222, 232, 205, 250]],
       [[270, 170, 284, 198, 320, 216, 350, 233], [262, 172, 268, 205, 285, 235, 300, 250]],
-      [[410, 122, 440, 130, 480, 145, 510, 157], [420, 133, 450, 140, 485, 160, 510, 177]],
     ];
-    const N = 9, f = (n) => n.toFixed(1), P = (p) => `M${f(p[0])} ${f(p[1])}C${f(p[2])} ${f(p[3])} ${f(p[4])} ${f(p[5])} ${f(p[6])} ${f(p[7])}`;
-    let defs = '<filter id="airb" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="2.2"/></filter><filter id="airb2" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".6"/></filter>', body = "";
+    const f = (n) => n.toFixed(1), P = (p) => `M${f(p[0])} ${f(p[1])}C${f(p[2])} ${f(p[3])} ${f(p[4])} ${f(p[5])} ${f(p[6])} ${f(p[7])}`;
+    const grad = (id, x0, y0, x1, y1) => `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${f(x0)}" y1="${f(y0)}" x2="${f(x1)}" y2="${f(y1)}"><stop offset="0" style="stop-color:var(--a0)" stop-opacity=".95"/><stop offset=".55" style="stop-color:var(--a1)" stop-opacity=".6"/><stop offset="1" style="stop-color:var(--a2)" stop-opacity="0"/></linearGradient>`;
+    let defs = '<filter id="airb" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="2.2"/></filter><filter id="airb2" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".6"/></filter><filter id="airb3" x="-20%" y="-10%" width="140%" height="120%"><feGaussianBlur stdDeviation=".45"/></filter>', body = "";
     R.forEach(([A, B], r) => {
-      const x0 = (A[0] + B[0]) / 2, y0 = (A[1] + B[1]) / 2, x1 = (A[6] + B[6]) / 2, y1 = (A[7] + B[7]) / 2;
-      defs += `<linearGradient id="ag${r}" gradientUnits="userSpaceOnUse" x1="${f(x0)}" y1="${f(y0)}" x2="${f(x1)}" y2="${f(y1)}"><stop offset="0" stop-color="#eaf6ff" stop-opacity=".95"/><stop offset=".55" stop-color="#b9dcff" stop-opacity=".6"/><stop offset="1" stop-color="#8ec5ff" stop-opacity="0"/></linearGradient>`;
-      const rev = B.slice(); const Br = `L${f(B[6])} ${f(B[7])}C${f(B[4])} ${f(B[5])} ${f(B[2])} ${f(B[3])} ${f(B[0])} ${f(B[1])}Z`;
+      const N = 9, x0 = (A[0] + B[0]) / 2, y0 = (A[1] + B[1]) / 2, x1 = (A[6] + B[6]) / 2, y1 = (A[7] + B[7]) / 2;
+      defs += grad("ag" + r, x0, y0, x1, y1);
+      const Br = `L${f(B[6])} ${f(B[7])}C${f(B[4])} ${f(B[5])} ${f(B[2])} ${f(B[3])} ${f(B[0])} ${f(B[1])}Z`;
       body += `<path class="bg" d="${P(A)}${Br}" fill="url(#ag${r})" filter="url(#airb)" style="--d:${(-r * 0.7).toFixed(1)}s"/>`;
       let st = "";
       for (let k = 0; k < N; k++) {
-        const t = k / (N - 1), s = A.map((v, i) => v * (1 - t) + rev[i] * t);
+        const t = k / (N - 1), s = A.map((v, i) => v * (1 - t) + B[i] * t);
         const edge = k === 0 || k === N - 1, w = edge ? 1 : 1.4 + ((k * 7 + r) % 3) * 0.5;
         const dl = -(((k * 0.53 + r * 0.9) % 2.4)).toFixed(2), tt = (2.0 + ((k * 5 + r * 3) % 7) * 0.22).toFixed(2);
-        st += `<path class="st" d="${P(s)}" pathLength="100" stroke="url(#ag${r})" stroke-width="${w}" style="--d:${dl}s;--t:${tt}s"/>`;
+        st += `<path class="st" d="${P(s)}" pathLength="100" stroke="url(#ag${r})" stroke-width="${w}" style="--w:${(3.4 + ((k * 3 + r) % 5) * 0.4).toFixed(2)}s;--d:${dl}s;--t:${tt}s"/>`;
       }
       body += `<g filter="url(#airb2)">${st}</g>`;
     });
+    // πλαϊνές σχισμές: δεξιά x 438–464 (αριστερά καθρέφτης), ροή προς τους επιβάτες
+    // δεξιά σχισμή: απαλή ροή προς τους επιβάτες
+    const W = [[0, 78, -6, -16, -22], [4, 92, 5, -10, -26], [8, 70, -4, -18, -16], [12, 100, 6, -6, -24], [16, 84, -5, -14, -28], [20, 96, 4, -9, -20], [24, 74, -3, -17, -23], [27, 88, 5, -8, -30]];
+    const wisp = (p, k, side, w, da) => `<path class="st" d="${P(p)}" pathLength="100" stroke="url(#as${side})" stroke-width="${w}" stroke-dasharray="${da}" style="--w:${(3.2 + ((k * 3 + side) % 5) * 0.45).toFixed(2)}s;--d:${-(((k * 0.61 + side * 0.9) % 2.4)).toFixed(2)}s;--t:${(2.8 + ((k * 5 + side * 3) % 7) * 0.28).toFixed(2)}s"/>`;
+    defs += grad("as0", 451, 123, 430, 215) + grad("as1", 80, 122, 12, 200);
+    let st = "";
+    W.forEach(([dx, L, a, b, c], k) => { const x = 438 + dx; st += wisp([x, 123, x + a, 123 + L * 0.3, x + b, 123 + L * 0.65, x + c, 123 + L], k, 0, (0.7 + (k % 3) * 0.2).toFixed(2), k % 2 ? "78 22" : "64 36"); });
+    body += `<path class="bg" d="M438 123C436 150 424 175 412 200L440 200C450 175 464 150 465 123Z" fill="url(#as0)" filter="url(#airb)" style="opacity:.4"/><g filter="url(#airb3)">${st}</g>`;
+    // αριστερή σχισμή: ο αέρας βγαίνει ΠΙΣΩ από το τιμόνι (το εσωτερικό του τιμονιού κρύβεται με μάσκα) και ρέει προς τα έξω/κάτω
+    defs += '<mask id="wmask" maskUnits="userSpaceOnUse" x="0" y="0" width="510" height="285"><rect width="510" height="285" fill="#fff"/><ellipse cx="115" cy="137" rx="69" ry="63" fill="#000" filter="url(#airb3)"/></mask>';
+    st = "";
+    for (let k = 0; k < 9; k++) {
+      const sx = 70 + k * 4, ex = 6 + ((k * 7) % 5) * 7, ey = 160 + ((k * 11) % 6) * 9, ph = (k % 3) * 4;
+      st += wisp([sx, 121 + (k % 2), sx - 28, 123 + ph, ex + 24, ey - 48 - ph, ex, ey], k, 1, (0.7 + (k % 3) * 0.2).toFixed(2), k % 2 ? "78 22" : "62 38");
+    }
+    body += `<g mask="url(#wmask)"><path class="bg" d="M72 120C40 122 20 140 4 170L4 205C30 190 44 160 82 126Z" fill="url(#as1)" filter="url(#airb)" style="opacity:.45"/><g filter="url(#airb3)">${st}</g></g>`;
     return `<svg class="air" viewBox="0 0 510 285" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs>${defs}</defs>${body}</svg>`;
+  }
+  // χρώμα αέρα ανάλογα με τη θερμοκρασία-στόχο: < air_t1 μπλε, μέχρι air_t2 κίτρινο, πάνω πορτοκαλί
+  _airTone(v) {
+    const svg = this._el && this._el.dash && this._el.dash.querySelector(".air"); if (!svg || !Number.isFinite(v)) return;
+    const t1 = Number(this._c.air_t1) || 22, t2 = Number(this._c.air_t2) || 24;
+    const hex2rgb = (h, d) => { const m = /^#?([0-9a-f]{6})$/i.exec(String(h || "").trim()); return m ? [0, 2, 4].map((i) => parseInt(m[1].substr(i, 2), 16)).join(",") : d; };
+    const base = v < t1 ? this._c.air_c1 : v <= t2 ? this._c.air_c2 : this._c.air_c3, rgb = hex2rgb(base, v < t1 ? "142,197,255" : v <= t2 ? "255,204,61" : "255,122,46").split(",").map(Number);
+    const mix = (w) => `rgb(${rgb.map((x) => Math.round(x + (255 - x) * w)).join(",")})`, c = [mix(0.82), mix(0.4), mix(0)];
+    c.forEach((x, i) => svg.style.setProperty("--a" + i, x));
   }
   _climHtml() {
     return `<div class="dash" id="dash"><img class="b" alt="">${this._airSvg()}</div>
@@ -1407,6 +1421,44 @@ class DeepalS05Card extends HTMLElement {
     const B = `${this._layerBase()}interior/`;
     const btns = INT_SPOTS.map(([id, , icon, name, x, y]) => `<button class="sbtn ${icon === "fan" ? "cool" : "hot"}" data-spot="${id}" style="left:${x}%;top:${y}%" aria-label="${esc(name)}" title="${esc(name)}">${ico(icon === "fan" ? "fan" : icon === "steering" ? "steering" : "seat")}<span class="lvl"><i></i><i></i><i></i></span></button>`).join("");
     return `<div class="ipane"><img data-l="base" src="${esc(B)}base.webp" alt="">${INT_LAYERS.map((n) => `<img class="l" data-l="${n}" src="${esc(B + n)}.webp" alt="">`).join("")}${btns}</div>`;
+  }
+
+  /* Προβολή 3/4: layers με τη σειρά του repo dec_deepal (πίσω από το αμάξι → αμάξι → μπροστά) */
+  _isoRender(v) {
+    const el = this._el, c = this._c, color = CAR_COLORS.some((x) => x[0] === c.car_color) ? c.car_color : "black", wheels = ["open", "pro"].includes(c.iso_wheels) ? c.iso_wheels : "";
+    const key = color + "|" + wheels, root = this._layerBase() + "iso/";
+    if (this._isoKey !== key) {
+      this._isoKey = key; this._isoL = [];
+      const L = (dir, name, fn) => { this._isoL.push([name, dir, fn]); };
+      const dk = (p, sd) => `binary_sensor.${p}_${sd}_door`, wk = (p, sd) => `binary_sensor.${p}_${sd}_window_open`;
+      const door = (p, sd) => { const d = () => this._is(dk(p, sd), "on"), w = () => this._is(wk(p, sd), "on"); L("common", `window_${p}_${sd}_closed`, () => !w() && !d()); L("common", `window_${p}_${sd}_closed_door_open`, () => !w() && d()); L(color, `door_${p}_${sd}_open`, d); L(color, `door_${p}_${sd}_closed`, () => !d()); };
+      const trunk = () => this._is("binary_sensor.trunk", "on"), hood = () => this._is("binary_sensor.hood", "on");
+      door("rear", "right"); door("front", "right"); L(color, "trunk_closed", () => !trunk());
+      L(color, "base", () => true); if (wheels) L("common", "wheels_" + wheels, () => true);
+      L(color, "trunk_open", trunk); L(color, "hood_open", hood); L(color, "hood_closed", () => !hood());
+      door("rear", "left"); door("front", "left"); L("common", "low_beam_on", () => this._is("binary_sensor.low_beam", "on"));
+      const lines = TIRES.map((t) => { const h = t.hid ? " hid" : "", x = t.wx * 7.5, y = t.wy * 5; return `<line data-pin="${t.id}" class="${h.trim()}" x1="${t.px * 7.5}" y1="${t.py * 5}" x2="${x}" y2="${y}"/>` + (t.hid ? `<circle data-pin="${t.id}" class="hid" cx="${x}" cy="${y}" r="8"/>` : `<circle data-pin="${t.id}" cx="${x}" cy="${y}" r="5"/><circle class="halo" data-pin="${t.id}" cx="${x}" cy="${y}" r="11"/>`); }).join("");
+      const pills = TIRES.map((t) => `<div class="tp na" data-t="${t.id}" style="left:${t.px}%;top:${t.py}%"><div class="n">${esc(T(t.name))}</div><div class="v">--</div><div class="s"></div></div>`).join("");
+      el.viso.innerHTML = `<div class="isop">${this._isoL.map(([n, d]) => `<img data-n="${n}" src="${esc(root + d + "/" + n + ".webp")}" alt="" decoding="async">`).join("")}<svg class="tl" viewBox="0 0 750 500" aria-hidden="true">${lines}</svg>${pills}</div>`;
+      this._isoImgs = [...el.viso.querySelectorAll("img")];
+      const base = el.viso.querySelector('img[data-n="base"]');
+      el.vmiss.hidden = true;
+      if (base) base.addEventListener("error", () => { el.vmiss.hidden = false; const p = el.viso.querySelector(".isop"); if (p) p.classList.add("noimg"); }, { once: true });
+    }
+    this._isoImgs.forEach((im, i) => im.classList.toggle("on", !!this._isoL[i][2]()));
+    const notes = [];
+    TIRES.forEach((t) => {
+      const r = this._tire(t), g = el.viso.querySelector(`.tp[data-t="${t.id}"]`); if (!g) return;
+      const st = r.bar === null ? "na" : r.tone === "var(--ds-ok)" ? "ok" : "bad";
+      g.className = `tp ${st}`; g.style.opacity = r.stale ? ".7" : "";
+      g.querySelector(".v").textContent = r.txt + (r.stale ? "·" : "");
+      g.querySelector(".s").textContent = st === "ok" ? "✓ OK" : st === "bad" ? `! ${T(r.note || "έλεγξε πίεση")}` : "";
+      el.viso.querySelectorAll(`[data-pin="${t.id}"]`).forEach((n) => n.setAttribute("class", `${n.classList.contains("halo") ? "halo " : ""}${n.classList.contains("hid") ? "hid " : ""}${st}`));
+      if (r.note) notes.push(`<span><b style="--c:${r.tone}">${esc(T(t.name))}</b>: ${esc(T(r.note))}</span>`);
+    });
+    const open = v.open.map((x) => x[1]);
+    const bits = [...(open.length ? [`<span><b style="--c:var(--ds-bad)">Ανοιχτά:</b> ${esc(open.join(", "))}</span>`] : []), ...notes];
+    el.vextra.innerHTML = bits.length ? `<div class="vline">${bits.join("")}</div>` : ""; el.vextra.hidden = !bits.length;
   }
 
   _build() {
@@ -1437,8 +1489,8 @@ class DeepalS05Card extends HTMLElement {
         <div class="sheet" id="vsheet"><div class="box wide" id="vbox">
           <div class="hd"><h3 id="vtitle">Όχημα</h3><button class="x" data-vclose aria-label="Κλείσιμο">${ico("close")}</button></div>
           <div class="veh" id="veh">
-            <div class="seg" id="vtabs"><button data-vv="top">${ico("cartop")}Κάτοψη</button><button data-vv="climate">${ico("fan")}Κλιματισμός</button><button data-vv="seats">${ico("seat")}Καθίσματα</button></div>
-            <div class="vstage" id="vtop">${this._topSvg()}</div>
+            <div class="seg" id="vtabs"><button data-vv="iso">${ico("carside")}<span class="tx">Car View</span></button><button data-vv="climate">${ico("fan")}<span class="tx">Κλιματισμός</span></button><button data-vv="seats">${ico("seat")}<span class="tx">Καθίσματα</span></button></div>
+            <div class="vcol" id="viso"></div>
             <div class="vcol" id="vclim">${this._climHtml()}</div>
             <div class="vcol" id="vseats">${this._seatsHtml()}</div>
             <div class="vmiss" id="vmiss" hidden>${T("Δεν βρέθηκαν οι εικόνες οχήματος. Αντέγραψε τον φάκελο {0} δίπλα στο αρχείο της κάρτας (δες Ρυθμίσεις → Εικόνες).", "<b>images</b>")}</div>
@@ -1450,7 +1502,7 @@ class DeepalS05Card extends HTMLElement {
     const sr = this.shadowRoot, g = (i) => sr.getElementById(i);
     this._dashKeys = {};
     this._el = { card: sr.querySelector("ha-card"), hero: g("hero"), sweep: sr.querySelector(".sweep"), imgs: [...sr.querySelectorAll(".stage img")], plate: g("plate"), cloud: g("cloud"), age: g("age"),
-      toast: g("toast"), status: g("status"), tells: g("tells"), rfs: g("rfs"), total: g("total"), stats: g("stats"), veh: g("veh"), vtabs: g("vtabs"), vtop: g("vtop"), vclim: g("vclim"), vseats: g("vseats"), pk: g("pk"), pkp: g("pkp"), pkv: g("pkv"), vmiss: g("vmiss"), vextra: g("vextra"),
+      toast: g("toast"), status: g("status"), tells: g("tells"), rfs: g("rfs"), total: g("total"), stats: g("stats"), veh: g("veh"), vtabs: g("vtabs"), viso: g("viso"), vclim: g("vclim"), vseats: g("vseats"), pk: g("pk"), pkp: g("pkp"), pkv: g("pkv"), vmiss: g("vmiss"), vextra: g("vextra"),
       vsheet: g("vsheet"), vtctl: g("vtctl"), dash: g("dash"), info: g("info"), diag: g("diag"), charge: g("charge"), chgbox: g("chgbox"), chgline: g("chgline"), actions: g("actions"), foot: g("foot"), sheet: g("sheet"), box: g("box") };
     this._el.hero.style.setProperty("--ds-scale", String(c.image_scale));
     if (c.image_aspect) this._el.hero.style.setProperty("--ds-aspect", c.image_aspect);
@@ -1522,7 +1574,7 @@ class DeepalS05Card extends HTMLElement {
     if (bar !== null) {
       tone = "var(--ds-ok)";
       if (own) { if (bar < c.tire_min) { tone = "var(--ds-warn)"; note = "χαμηλή"; } else if (bar > c.tire_max) { tone = "var(--ds-warn)"; note = "υψηλή"; } }
-      if (veh && this._is("binary_sensor.tire_pressure_warning", "on")) { tone = "var(--ds-warn)"; note = "έλεγξε πίεση"; } // γενική ειδοποίηση του οχήματος
+      if (veh && this._is("binary_sensor.tire_pressure_warning", "on") && !TIRES.some((x) => this._is(`binary_sensor.${x.id}_tire_alarm`, "on"))) { tone = "var(--ds-warn)"; note = "έλεγξε πίεση"; } // γενική ειδοποίηση του οχήματος
     }
     if (alarm && veh) { tone = "var(--ds-bad)"; note = "συναγερμός"; }
     const unit = c.tire_unit;
@@ -1565,6 +1617,8 @@ class DeepalS05Card extends HTMLElement {
     el.cloud.dataset.ent = this._id("binary_sensor.cloud_connection");
     el.cloud.title = cloudOk ? "Συνδεδεμένο" : "Εκτός σύνδεσης"; el.cloud.setAttribute("aria-label", el.cloud.title);
     el.age.textContent = T("Ενημερώθηκε {0}", this._age());
+    el.age.classList.toggle("old", this._ageMin() > 180);
+    this._scUpd();
     const ts = this._toastState;
     if (ts) el.toast.textContent = ts.msg;
     el.toast.className = `toast pos-${c.toast_position === "top" ? "top" : "bottom"} ${ts && c.toasts !== false ? `show ${ts.type}` : ""}`;
@@ -1626,7 +1680,7 @@ class DeepalS05Card extends HTMLElement {
     el.stats.innerHTML = `
       <div class="t2 temp" data-open="climate" data-ent="${esc(this._id("climate.cabin_climate"))}" data-hold="${esc(JSON.stringify({ action: "more-info", entity: this._id("sensor.inside_temperature") }))}" role="button" tabindex="0" aria-label="Κλιματισμός">
         <div class="tt">Θερμοκρασία</div>
-        <div class="ts">Μέσα<br><b>${temp === null ? "--" : this._fmtNum(temp, 0) + "°C"}</b>${tgt === null || !climOn ? "" : ` · στόχος ${this._fmtNum(tgt, 1)}°`}</div>
+        <div class="ts">Μέσα<br><b>${temp === null ? "--" : this._fmtNum(temp, 0) + "°C"}</b>${tgt === null || !climOn ? "" : `<br><span class="sub">στόχος ${this._fmtNum(tgt, 1)}°</span>`}</div>
         <button class="knob ${climOn ? "on" : ""} ${pendC ? "pending" : ""}" data-id="climate" ${climOk ? "" : "disabled"} aria-label="Κλιματισμός on/off">${ico("power")}${pendC ? RING : ""}</button></div>
       <div class="t2 batt" data-ent="${esc(this._id("sensor.battery_level"))}" role="button" tabindex="0">
         <div class="tt">${fu ? "Ενέργεια" : "Μπαταρία"}</div>
@@ -1643,6 +1697,7 @@ class DeepalS05Card extends HTMLElement {
     /* πληροφορίες */
     const tiles = [];
     for (const id of c.info || []) {
+      if (id === "inside_temp" && !(c.hidden || []).includes("stats")) continue; /* η θερμοκρασία φαίνεται ήδη στο tile Θερμοκρασία */
       const it = INFO_ITEMS[id]; if (!it) continue;
       if (id === "fuel_level" && !hasFuel(this._hass, c)) continue;
       const { v: n, stale } = it[3] === null ? { v: null } : this._nl(it[0]);
@@ -1678,10 +1733,12 @@ class DeepalS05Card extends HTMLElement {
     if (showCharge) {
       const left = this._s("sensor.remaining_charge_time_h_mm"), type = this._s("sensor.charging_type");
       const curRaw = this._chargeCurrent(), pre = (curRaw.match(/^(AC|DC)\s/) || [])[1] || "";
-      const cur = curRaw ? curRaw.replace(/^(AC|DC)\s+/, "") : "--", rem = left && v.charging ? this._fmtLeft(left) : "--", typ = type || pre || "--";
-      if (cst === "line") el.chgbox.innerHTML = `${ico("bolt")}<span>${esc(cur)}</span><i>·</i><span>${esc(rem)}</span><i>·</i><span>${esc(typ)}</span>`;
-      else if (cst === "big") { const m = /^(.*?)\s*([A-Za-z]+)$/.exec(cur); el.chgbox.innerHTML = `<span class="a">${esc(m ? m[1] : cur)}${m ? `<small>${esc(m[2])}</small>` : ""}</span><span class="b">${esc(typ)} · ${esc(rem)} <em>Απομένουν</em></span>`; }
-      else el.chgbox.innerHTML = `<span class="a">${esc(cur)}</span><span class="b">${esc(rem)} <em>Απομένουν</em></span><span class="c">${esc(typ)}</span>`;
+      const cur = curRaw ? curRaw.replace(/^(AC|DC)\s+/, "") : "", rem = left && v.charging ? this._fmtLeft(left) : "", typ = type || pre || "";
+      const known = [cur, rem, typ].filter(Boolean);
+      el.chgbox.hidden = el.chgline.hidden = !known.length; /* αν δεν υπάρχει κανένα στοιχείο δεν δείχνουμε τίποτα (όχι «--») */
+      if (cst === "line") el.chgbox.innerHTML = ico("bolt") + known.map((x) => `<span>${esc(x)}</span>`).join("<i>·</i>");
+      else if (cst === "big") { const m = cur && /^(.*?)\s*([A-Za-z]+)$/.exec(cur); el.chgbox.innerHTML = (cur ? `<span class="a">${esc(m ? m[1] : cur)}${m ? `<small>${esc(m[2])}</small>` : ""}</span>` : "") + `<span class="b">${esc([typ, rem].filter(Boolean).join(" · "))}${rem ? ` <em>Απομένουν</em>` : ""}</span>`; }
+      else el.chgbox.innerHTML = (cur ? `<span class="a">${esc(cur)}</span>` : "") + (rem ? `<span class="b">${esc(rem)} <em>Απομένουν</em></span>` : "") + (typ ? `<span class="c">${esc(typ)}</span>` : "");
     }
 
     /* φύλλα */
@@ -1786,6 +1843,7 @@ class DeepalS05Card extends HTMLElement {
     const { vals, dec } = this._pk;
     this._pkItems.forEach((n, k) => { n.classList.toggle("act2", k === i); n.classList.toggle("near", Math.abs(k - i) === 1); });
     this._el.pkv.textContent = vals[i].toFixed(dec);
+    this._airTone(vals[i]);
     this._el.pk.classList.toggle("cold", vals[i] <= 20); this._el.pk.classList.toggle("hot", vals[i] >= 26);
   }
   _pkScroll(i, smooth) {
@@ -1805,33 +1863,16 @@ class DeepalS05Card extends HTMLElement {
   }
 
   _renderVehicle(v) {
-    const el = this._el, c = this._c, view = this._view === "seats" ? "seats" : this._view === "top" ? "top" : this._view ? "climate" : "top";
+    const el = this._el, c = this._c, view = this._view === "seats" || this._view === "climate" ? this._view : "iso";
     el.vsheet.classList.toggle("show", this._vsheetOpen());
-    this.shadowRoot.getElementById("vtitle").textContent = view === "top" ? "Ελαστικά & ανοίγματα" : view === "climate" ? "Κλιματισμός" : "Καθίσματα & τιμόνι";
+    this.shadowRoot.getElementById("vtitle").textContent = view === "iso" ? "Car View" : view === "climate" ? "Κλιματισμός" : "Καθίσματα & τιμόνι";
     if (!this._vsheetOpen()) { this._pkIdx = -1; return; }
     el.vtabs.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.vv === view));
-    el.vtop.hidden = view !== "top"; el.vclim.hidden = view !== "climate"; el.vseats.hidden = view !== "seats";
-    el.vextra.hidden = view !== "top";
+    el.viso.hidden = view !== "iso"; el.vclim.hidden = view !== "climate"; el.vseats.hidden = view !== "seats";
+    el.vextra.hidden = view !== "iso";
     if (view !== "climate") this._pkIdx = -1;
-    if (view === "top") {
-      for (const [id, open, closed, key] of TOP_LAYERS) {
-        const on = id === "low_beam" ? this._is("binary_sensor.low_beam", "on") : this._is(key, "on");
-        const o = el.vtop.querySelector(`[data-l="${open}"]`); if (o) o.classList.toggle("on", on);
-        if (closed) { const cl = el.vtop.querySelector(`[data-l="${closed}"]`); if (cl) cl.classList.toggle("on", !on); }
-      }
-      const pills = [];
-      TIRES.forEach((t) => {
-        const r = this._tire(t), g = el.vtop.querySelector(`[data-t="${t.id}"]`); if (!g) return;
-        const st = r.bar === null ? "na" : r.tone === "var(--ds-ok)" ? "ok" : "bad";
-        g.setAttribute("class", `pill ${st}`); const pin = el.vtop.querySelector(`[data-pin="${t.id}"]`); if (pin) pin.setAttribute("class", `pin ${st}`);
-        g.querySelector(".v").textContent = r.txt + (r.stale ? "·" : "");
-        g.querySelector(".s").textContent = st === "ok" ? "✓ OK" : st === "bad" ? `! ${r.note || "έλεγξε πίεση"}` : "";
-        g.setAttribute("opacity", r.stale ? ".7" : "1");
-        if (r.note) pills.push(`<span><b style="--c:${r.tone}">${esc(t.name)}</b>: ${esc(r.note)}</span>`);
-      });
-      const open = v.open.map((x) => x[1]);
-      const bits = [...(open.length ? [`<span><b style="--c:var(--ds-bad)">Ανοιχτά:</b> ${esc(open.join(", "))}</span>`] : []), ...pills];
-      el.vextra.innerHTML = bits.length ? `<div class="vline">${bits.join("")}</div>` : ""; el.vextra.hidden = !bits.length;
+    if (view === "iso") {
+      this._isoRender(v);
     } else if (view === "seats") {
       for (const [id, key, , , , , layer] of INT_SPOTS) {
         const lv = this._level(key), max = this._obj(key)?.attributes?.max ?? 3;
@@ -1850,6 +1891,7 @@ class DeepalS05Card extends HTMLElement {
       if (im.dataset.key !== k) { im.dataset.key = k; im.dataset.i = "0"; im.style.visibility = ""; im.src = this._heroSrc(k, 0); }
       el.dash.classList.toggle("air", on);
       const fan = parseFloat(this._s("sensor.climate_fan_level"));
+      this._airTone(this._tpend ?? parseFloat((this._tgt() || {}).state));
       el.dash.querySelector(".air").style.setProperty("--sp", String(Number.isFinite(fan) ? Math.min(1.9, Math.max(0.7, 0.65 + fan * 0.16)) : 1));
       const inside = this._n("sensor.inside_temperature"), fanTxt = this._s("sensor.climate_fan_level"), pend = !!this._pending.climate;
       el.vtctl.innerHTML = `<div class="crow"><div class="in"><b>${on ? "Ενεργός" : "Ανενεργός"}</b><br>${inside === null ? "" : `Μέσα ${this._fmtNum(inside, 1)}°C`}${fanTxt === null || !on ? "" : ` · ένταση ${esc(fanTxt)}`}</div>
@@ -1871,9 +1913,6 @@ class DeepalS05Card extends HTMLElement {
 /* ───────────────────────── Ρυθμίσεις (UI) ─────────────────────────
  * Ένα κοινό στοιχείο που χρησιμοποιείται και μέσα στην κάρτα (αποθήκευση στη συσκευή)
  * και στον επεξεργαστή του Home Assistant (αποθήκευση στο YAML της κάρτας). */
-const TOP_FILES_ALL = ["base", "low_beam_on", "hood_open", "hood_closed", "trunk_open", "trunk_closed", "door_front_left_open", "door_front_left_closed",
-  "door_front_right_open", "door_front_right_closed", "door_rear_left_open", "door_rear_left_closed", "door_rear_right_open", "door_rear_right_closed",
-  "window_front_left_open", "window_front_right_open", "window_rear_left_open", "window_rear_right_open"];
 const INT_FILES_ALL = ["base", ...INT_LAYERS];
 const ALL_FILES = { ...HERO_FILES, ...DASH_FILES };
 const heroBases = (c) => (c.image_path ? [normPath(c.image_path)] : [`${SCRIPT_BASE}images/car/`]);
@@ -1932,9 +1971,7 @@ class DeepalS05Settings extends HTMLElement {
     return `<p class="hint">${T("Βάλε τις ενότητες με τη σειρά που θέλεις (π.χ. πρώτα κουμπιά, μετά η εικόνα, μετά η αυτονομία) και κρύψε όσες δεν χρειάζεσαι.")}</p>
       ${this._orderList(SECTIONS, c.order, c.hidden, (i) => SECTION_LABELS[i], "sec")}
       <h4>Πάνω στην εικόνα</h4>
-      <div class="list">${HERO_SHOW_OPTS.map(([k, l]) => `<button class="row tg ${(c.hero_show || []).includes(k) ? "on" : ""}" data-hs="${k}"><span>${l}</span><i class="sw ${(c.hero_show || []).includes(k) ? "on" : ""}"></i></button>`).join("")}</div>
-      <h4>Κάτοψη</h4>
-      ${this._opt("Κάτοψη", this._seg("top_orientation", c.top_orientation, [["horizontal", "Οριζόντια"], ["vertical", "Κάθετη"]]))}`;
+      <div class="list">${HERO_SHOW_OPTS.map(([k, l]) => `<button class="row tg ${(c.hero_show || []).includes(k) ? "on" : ""}" data-hs="${k}"><span>${l}</span><i class="sw ${(c.hero_show || []).includes(k) ? "on" : ""}"></i></button>`).join("")}</div>`;
   }
   _tabButtons(c) {
     const conf = [["lock", "Κλείδωμα"], ["unlock", "Ξεκλείδωμα"], ["windows", "Άνοιγμα παραθύρων"], ["trunk", "Άνοιγμα πορτμπαγκάζ"], ["climate", "Κλιματισμός"], ["flash", "Φώτα"], ["honk", "Κόρνα"], ["find", "Εντοπισμός"], ["refresh", "Ανανέωση δεδομένων"]];
@@ -2044,7 +2081,22 @@ class DeepalS05Settings extends HTMLElement {
       <p class="hint">Εκτός ορίων η πίεση εμφανίζεται ως «χαμηλή» ή «υψηλή».</p>`}`;
   }
   _tabLook(c) {
-    return `<h4>Περιθώρια</h4>
+    const hc = (k) => hexc(c[k], DEFAULTS[k]);
+    const sw = (k, l) => `<label class="sw-c"><input type="color" data-set="${k}" data-text value="${esc(hc(k))}"><span>${l}</span></label>`;
+    const a = Number(c.air_t1) || 22, b = Number(c.air_t2) || 24, lo = 16, hi = 30, pc = (v) => Math.min(100, Math.max(0, ((v - lo) / (hi - lo)) * 100));
+    const cc = CAR_COLORS.some((x) => x[0] === c.car_color) ? c.car_color : "black";
+    return `<h4>Χρώμα αμαξιού</h4>
+      <p class="hint">Για την εικόνα Car View στο popup του οχήματος.</p>
+      <div class="csw">${CAR_COLORS.map(([k, n, hex]) => `<button data-sset="car_color|${k}" class="${k === cc ? "on" : ""}" style="background:${hex}" title="${esc(T(n))}" aria-label="${esc(T(n))}"></button>`).join("")}</div>
+      ${this._opt("Ζάντες (Car View)", this._seg("iso_wheels", c.iso_wheels || "cover", [["cover", "20″ με τάπες"], ["open", "20″ χωρίς τάπες"], ["pro", "18″ Pro"]]))}
+      <h4>Χρώμα αέρα κλιματισμού</h4>
+      <p class="hint">Ο αέρας στην καρτέλα Κλιματισμού παίρνει χρώμα ανάλογα με τη θερμοκρασία-στόχο. Όρισε τα όρια και τα χρώματα.</p>
+      <div class="lvhead"><span></span><span>Μέχρι (°C)</span><span></span></div>
+      <div class="lvrow">${sw("air_c1", "Δροσερό")}${this._num("air_t1", c.air_t1, "0.5")}<i class="dash"></i></div>
+      <div class="lvrow">${sw("air_c2", "Μέτριο")}${this._num("air_t2", c.air_t2, "0.5")}<i class="dash"></i></div>
+      <div class="lvrow">${sw("air_c3", "Ζεστό")}<i class="dash">—</i><i class="dash"></i></div>
+      <div class="lvbar" style="background:linear-gradient(90deg, ${hc("air_c1")} 0 ${pc(a)}%, ${hc("air_c2")} ${pc(a)}% ${pc(b)}%, ${hc("air_c3")} ${pc(b)}% 100%)"></div>
+      <h4>Περιθώρια</h4>
       ${this._opt("Περιθώρια κάρτας", this._seg("card_padding", c.card_padding || "normal", [["normal", "Κανονικά"], ["half", "Μισά"], ["none", "Χωρίς"]]), "«Χωρίς»: η εικόνα πηγαίνει από άκρη σε άκρη.")}
       ${this._opt("Περιθώρια popup", this._seg("popup_padding", c.popup_padding || "normal", [["normal", "Κανονικά"], ["half", "Μισά"], ["none", "Χωρίς"]]))}
       <h4>Μηνύματα</h4>

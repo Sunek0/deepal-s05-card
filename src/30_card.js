@@ -1,7 +1,7 @@
 
 /* ───────────────────────── Κάρτα ───────────────────────── */
 const RING = '<svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><rect x="2.5" y="2.5" width="95" height="95" rx="47.5" pathLength="100"/></svg>';
-const REBUILD_KEYS = ["image_path", "layers_path", "images", "top_orientation", "name", "image_scale", "image_aspect", "prefix", "entities"];
+const REBUILD_KEYS = ["image_path", "layers_path", "images", "name", "image_scale", "image_aspect", "prefix", "entities"];
 const normPath = (p) => (p ? (p.endsWith("/") ? p : p + "/") : p);
 
 /* Συγχώνευση: προεπιλογές < YAML κάρτας < τοπικές ρυθμίσεις συσκευής */
@@ -185,7 +185,7 @@ class DeepalS05Card extends HTMLElement {
     const cu = [...(this._c.diag_custom || []), ...(this._c.info_custom || [])].map((x) => this._eobj(x.entity)?.state ?? "∅").join("|");
     return [st, cu, Math.floor(Date.now() / 60000), Object.keys(this._pending).join(","),
       Object.entries(this._flashes).map(([k, v]) => k + v.type).join(","), this._confirm ? this._confirm.id : "", String(this._customize),
-      JSON.stringify(this._c), JSON.stringify(this._opt), String(this._tpend), String(this._view), this._toastState ? this._toastState.msg : ""].join("#");
+      JSON.stringify(this._c), JSON.stringify(this._opt), String(this._tpend), String((this._tgt() || {}).state), String(this._view), this._toastState ? this._toastState.msg : ""].join("#");
   }
   _force() { this._sig = null; if (this._hass && this._c) this._render(); }
   _diagAvail() { return DIAG.filter((d) => this._obj(d[0])); }
@@ -215,6 +215,13 @@ class DeepalS05Card extends HTMLElement {
     else img = "off";
     return { unlocked, lights, charging, plugged, battery, open, img };
   }
+  _scUpd() {
+    const a = this._el && this._el.actions; if (!a) return;
+    if (!this._scBound) { this._scBound = true; a.addEventListener("scroll", () => this._scUpd(), { passive: true }); }
+    const r = a.scrollWidth - a.clientWidth - a.scrollLeft > 6, l = a.scrollLeft > 6;
+    a.toggleAttribute("data-r", r); a.toggleAttribute("data-l", l);
+  }
+  _ageMin() { const t = new Date(this._s("sensor.last_updated") || "").getTime(); return Number.isFinite(t) ? Math.max(0, Math.round((Date.now() - t) / 60000)) : 0; }
   _age() {
     const raw = this._s("sensor.last_updated");
     if (!raw) return "--";
@@ -289,7 +296,7 @@ class DeepalS05Card extends HTMLElement {
       climate: { on: climateOn, icon: climateOn ? "snow" : "snowoff", sub: climate === null ? "μη διαθέσιμο" : climateOn ? "ενεργός" : "ανενεργός", tone: climate === null ? "bad" : "", disabled: climate === null, confirm: "climate",
         watch: this._obj("binary_sensor.climate_on") ? "binary_sensor.climate_on" : "climate.cabin_climate", timeout: 35000, call: cCall,
         unsupported: climateOn ? "Ο κλιματισμός δεν έχει εντολή απενεργοποίησης σε αυτή την οντότητα" : "Ο κλιματισμός δεν έχει εντολή ενεργοποίησης σε αυτή την οντότητα" },
-      tires: (() => { const s = this._tiresSummary(); return { icon: "tirealert", ...s, open: "top" }; })(),
+      tires: (() => { const s = this._tiresSummary(); return { icon: "tirealert", ...s, open: "iso" }; })(),
       cabin: (() => { const s = this._cabinSummary(climateOn); return { icon: s.on ? "interioron" : "interior", ...s, open: "climate" }; })(),
       flash: { confirm: "flash", icon: "headlight", sub: "αναλαμπή", btn: "button.flash_lights", call: ["button", "press", "button.flash_lights"] },
       honk: { confirm: "honk", icon: "horn", sub: "ηχητικό σήμα", btn: "button.honk_horn", call: ["button", "press", "button.honk_horn"] },
@@ -469,49 +476,56 @@ class DeepalS05Card extends HTMLElement {
   }
   _layerBase() { return this._c.layers_path ? normPath(this._c.layers_path) : `${SCRIPT_BASE}images/`; }
 
-  _topSvg() {
-    const c = this._c, B = `${this._layerBase()}top/`, horiz = c.top_orientation !== "vertical";
-    const img = (n, extra = "") => `<image class="l ${extra}" data-l="${n}" href="${esc(B + n + ".webp")}" x="${TOP_BOX.x}" y="${TOP_BOX.y}" width="${TOP_BOX.w}" height="${TOP_BOX.h}"/>`;
-    let layers = `<image data-l="base" href="${esc(B + "base.webp")}" x="${TOP_BOX.x}" y="${TOP_BOX.y}" width="${TOP_BOX.w}" height="${TOP_BOX.h}"/>`;
-    for (const [id, open] of TOP_LAYERS) layers += img(open); // η βάση είναι η πραγματική φωτογραφία· εμφανίζονται μόνο τα layers «ανοιχτό»
-    const OFF = 96, map = (px, py) => (horiz ? [py, 750 - px] : [px, py]);
-    const pins = TIRES.map((t) => {
-      const [x0, y0] = map(t.x, t.y), [x1, y1] = map(t.x + t.side * (OFF - 46), t.y);
-      return `<g class="pin" data-pin="${t.id}"><line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}"/><circle cx="${x0}" cy="${y0}" r="9" class="halo"/><circle cx="${x0}" cy="${y0}" r="4.5" class="dot"/></g>`;
-    }).join("");
-    const pills = TIRES.map((t) => {
-      const [x, y] = map(t.x + t.side * OFF, t.y);
-      return `<g class="pill" data-t="${t.id}" transform="translate(${x} ${y})"><rect x="-46" y="-27" width="92" height="54" rx="17"/><text class="v" y="3" text-anchor="middle" font-size="20"></text><text class="s" y="20" text-anchor="middle" font-size="12"></text></g>`;
-    }).join("");
-    const vb = horiz ? "40 104 690 548" : "60 22 630 720";
-    return `<svg viewBox="${vb}" role="img" aria-label="Κάτοψη οχήματος"><g transform="${horiz ? "matrix(0 -1 1 0 0 750)" : ""}">${layers}</g>${pins}${pills}</svg>`;
-  }
   /* Αέρας από τους αεραγωγούς: δέσμες από λεπτές καμπύλες που ανοίγουν σε βεντάλια, με διαφάνεια που σβήνει (συντεταγμένες εικόνας 510×285) */
   _airSvg() {
+    // μεσαίοι αεραγωγοί: βεντάλια· πλαϊνοί (σχισμές ταμπλό): λεπτές "φυσικές" γραμμές ροής
     const R = [
-      [[115, 124, 85, 128, 35, 136, 0, 150], [105, 132, 75, 146, 30, 170, 0, 188]],
-      [[170, 126, 158, 150, 128, 178, 116, 214], [163, 132, 172, 160, 178, 190, 184, 222]],
       [[244, 170, 236, 195, 190, 218, 160, 233], [236, 172, 232, 200, 222, 232, 205, 250]],
       [[270, 170, 284, 198, 320, 216, 350, 233], [262, 172, 268, 205, 285, 235, 300, 250]],
-      [[410, 122, 440, 130, 480, 145, 510, 157], [420, 133, 450, 140, 485, 160, 510, 177]],
     ];
-    const N = 9, f = (n) => n.toFixed(1), P = (p) => `M${f(p[0])} ${f(p[1])}C${f(p[2])} ${f(p[3])} ${f(p[4])} ${f(p[5])} ${f(p[6])} ${f(p[7])}`;
-    let defs = '<filter id="airb" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="2.2"/></filter><filter id="airb2" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".6"/></filter>', body = "";
+    const f = (n) => n.toFixed(1), P = (p) => `M${f(p[0])} ${f(p[1])}C${f(p[2])} ${f(p[3])} ${f(p[4])} ${f(p[5])} ${f(p[6])} ${f(p[7])}`;
+    const grad = (id, x0, y0, x1, y1) => `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${f(x0)}" y1="${f(y0)}" x2="${f(x1)}" y2="${f(y1)}"><stop offset="0" style="stop-color:var(--a0)" stop-opacity=".95"/><stop offset=".55" style="stop-color:var(--a1)" stop-opacity=".6"/><stop offset="1" style="stop-color:var(--a2)" stop-opacity="0"/></linearGradient>`;
+    let defs = '<filter id="airb" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="2.2"/></filter><filter id="airb2" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".6"/></filter><filter id="airb3" x="-20%" y="-10%" width="140%" height="120%"><feGaussianBlur stdDeviation=".45"/></filter>', body = "";
     R.forEach(([A, B], r) => {
-      const x0 = (A[0] + B[0]) / 2, y0 = (A[1] + B[1]) / 2, x1 = (A[6] + B[6]) / 2, y1 = (A[7] + B[7]) / 2;
-      defs += `<linearGradient id="ag${r}" gradientUnits="userSpaceOnUse" x1="${f(x0)}" y1="${f(y0)}" x2="${f(x1)}" y2="${f(y1)}"><stop offset="0" stop-color="#eaf6ff" stop-opacity=".95"/><stop offset=".55" stop-color="#b9dcff" stop-opacity=".6"/><stop offset="1" stop-color="#8ec5ff" stop-opacity="0"/></linearGradient>`;
-      const rev = B.slice(); const Br = `L${f(B[6])} ${f(B[7])}C${f(B[4])} ${f(B[5])} ${f(B[2])} ${f(B[3])} ${f(B[0])} ${f(B[1])}Z`;
+      const N = 9, x0 = (A[0] + B[0]) / 2, y0 = (A[1] + B[1]) / 2, x1 = (A[6] + B[6]) / 2, y1 = (A[7] + B[7]) / 2;
+      defs += grad("ag" + r, x0, y0, x1, y1);
+      const Br = `L${f(B[6])} ${f(B[7])}C${f(B[4])} ${f(B[5])} ${f(B[2])} ${f(B[3])} ${f(B[0])} ${f(B[1])}Z`;
       body += `<path class="bg" d="${P(A)}${Br}" fill="url(#ag${r})" filter="url(#airb)" style="--d:${(-r * 0.7).toFixed(1)}s"/>`;
       let st = "";
       for (let k = 0; k < N; k++) {
-        const t = k / (N - 1), s = A.map((v, i) => v * (1 - t) + rev[i] * t);
+        const t = k / (N - 1), s = A.map((v, i) => v * (1 - t) + B[i] * t);
         const edge = k === 0 || k === N - 1, w = edge ? 1 : 1.4 + ((k * 7 + r) % 3) * 0.5;
         const dl = -(((k * 0.53 + r * 0.9) % 2.4)).toFixed(2), tt = (2.0 + ((k * 5 + r * 3) % 7) * 0.22).toFixed(2);
-        st += `<path class="st" d="${P(s)}" pathLength="100" stroke="url(#ag${r})" stroke-width="${w}" style="--d:${dl}s;--t:${tt}s"/>`;
+        st += `<path class="st" d="${P(s)}" pathLength="100" stroke="url(#ag${r})" stroke-width="${w}" style="--w:${(3.4 + ((k * 3 + r) % 5) * 0.4).toFixed(2)}s;--d:${dl}s;--t:${tt}s"/>`;
       }
       body += `<g filter="url(#airb2)">${st}</g>`;
     });
+    // πλαϊνές σχισμές: δεξιά x 438–464 (αριστερά καθρέφτης), ροή προς τους επιβάτες
+    // δεξιά σχισμή: απαλή ροή προς τους επιβάτες
+    const W = [[0, 78, -6, -16, -22], [4, 92, 5, -10, -26], [8, 70, -4, -18, -16], [12, 100, 6, -6, -24], [16, 84, -5, -14, -28], [20, 96, 4, -9, -20], [24, 74, -3, -17, -23], [27, 88, 5, -8, -30]];
+    const wisp = (p, k, side, w, da) => `<path class="st" d="${P(p)}" pathLength="100" stroke="url(#as${side})" stroke-width="${w}" stroke-dasharray="${da}" style="--w:${(3.2 + ((k * 3 + side) % 5) * 0.45).toFixed(2)}s;--d:${-(((k * 0.61 + side * 0.9) % 2.4)).toFixed(2)}s;--t:${(2.8 + ((k * 5 + side * 3) % 7) * 0.28).toFixed(2)}s"/>`;
+    defs += grad("as0", 451, 123, 430, 215) + grad("as1", 80, 122, 12, 200);
+    let st = "";
+    W.forEach(([dx, L, a, b, c], k) => { const x = 438 + dx; st += wisp([x, 123, x + a, 123 + L * 0.3, x + b, 123 + L * 0.65, x + c, 123 + L], k, 0, (0.7 + (k % 3) * 0.2).toFixed(2), k % 2 ? "78 22" : "64 36"); });
+    body += `<path class="bg" d="M438 123C436 150 424 175 412 200L440 200C450 175 464 150 465 123Z" fill="url(#as0)" filter="url(#airb)" style="opacity:.4"/><g filter="url(#airb3)">${st}</g>`;
+    // αριστερή σχισμή: ο αέρας βγαίνει ΠΙΣΩ από το τιμόνι (το εσωτερικό του τιμονιού κρύβεται με μάσκα) και ρέει προς τα έξω/κάτω
+    defs += '<mask id="wmask" maskUnits="userSpaceOnUse" x="0" y="0" width="510" height="285"><rect width="510" height="285" fill="#fff"/><ellipse cx="115" cy="137" rx="69" ry="63" fill="#000" filter="url(#airb3)"/></mask>';
+    st = "";
+    for (let k = 0; k < 9; k++) {
+      const sx = 70 + k * 4, ex = 6 + ((k * 7) % 5) * 7, ey = 160 + ((k * 11) % 6) * 9, ph = (k % 3) * 4;
+      st += wisp([sx, 121 + (k % 2), sx - 28, 123 + ph, ex + 24, ey - 48 - ph, ex, ey], k, 1, (0.7 + (k % 3) * 0.2).toFixed(2), k % 2 ? "78 22" : "62 38");
+    }
+    body += `<g mask="url(#wmask)"><path class="bg" d="M72 120C40 122 20 140 4 170L4 205C30 190 44 160 82 126Z" fill="url(#as1)" filter="url(#airb)" style="opacity:.45"/><g filter="url(#airb3)">${st}</g></g>`;
     return `<svg class="air" viewBox="0 0 510 285" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs>${defs}</defs>${body}</svg>`;
+  }
+  // χρώμα αέρα ανάλογα με τη θερμοκρασία-στόχο: < air_t1 μπλε, μέχρι air_t2 κίτρινο, πάνω πορτοκαλί
+  _airTone(v) {
+    const svg = this._el && this._el.dash && this._el.dash.querySelector(".air"); if (!svg || !Number.isFinite(v)) return;
+    const t1 = Number(this._c.air_t1) || 22, t2 = Number(this._c.air_t2) || 24;
+    const hex2rgb = (h, d) => { const m = /^#?([0-9a-f]{6})$/i.exec(String(h || "").trim()); return m ? [0, 2, 4].map((i) => parseInt(m[1].substr(i, 2), 16)).join(",") : d; };
+    const base = v < t1 ? this._c.air_c1 : v <= t2 ? this._c.air_c2 : this._c.air_c3, rgb = hex2rgb(base, v < t1 ? "142,197,255" : v <= t2 ? "255,204,61" : "255,122,46").split(",").map(Number);
+    const mix = (w) => `rgb(${rgb.map((x) => Math.round(x + (255 - x) * w)).join(",")})`, c = [mix(0.82), mix(0.4), mix(0)];
+    c.forEach((x, i) => svg.style.setProperty("--a" + i, x));
   }
   _climHtml() {
     return `<div class="dash" id="dash"><img class="b" alt="">${this._airSvg()}</div>
@@ -523,6 +537,44 @@ class DeepalS05Card extends HTMLElement {
     const B = `${this._layerBase()}interior/`;
     const btns = INT_SPOTS.map(([id, , icon, name, x, y]) => `<button class="sbtn ${icon === "fan" ? "cool" : "hot"}" data-spot="${id}" style="left:${x}%;top:${y}%" aria-label="${esc(name)}" title="${esc(name)}">${ico(icon === "fan" ? "fan" : icon === "steering" ? "steering" : "seat")}<span class="lvl"><i></i><i></i><i></i></span></button>`).join("");
     return `<div class="ipane"><img data-l="base" src="${esc(B)}base.webp" alt="">${INT_LAYERS.map((n) => `<img class="l" data-l="${n}" src="${esc(B + n)}.webp" alt="">`).join("")}${btns}</div>`;
+  }
+
+  /* Προβολή 3/4: layers με τη σειρά του repo dec_deepal (πίσω από το αμάξι → αμάξι → μπροστά) */
+  _isoRender(v) {
+    const el = this._el, c = this._c, color = CAR_COLORS.some((x) => x[0] === c.car_color) ? c.car_color : "black", wheels = ["open", "pro"].includes(c.iso_wheels) ? c.iso_wheels : "";
+    const key = color + "|" + wheels, root = this._layerBase() + "iso/";
+    if (this._isoKey !== key) {
+      this._isoKey = key; this._isoL = [];
+      const L = (dir, name, fn) => { this._isoL.push([name, dir, fn]); };
+      const dk = (p, sd) => `binary_sensor.${p}_${sd}_door`, wk = (p, sd) => `binary_sensor.${p}_${sd}_window_open`;
+      const door = (p, sd) => { const d = () => this._is(dk(p, sd), "on"), w = () => this._is(wk(p, sd), "on"); L("common", `window_${p}_${sd}_closed`, () => !w() && !d()); L("common", `window_${p}_${sd}_closed_door_open`, () => !w() && d()); L(color, `door_${p}_${sd}_open`, d); L(color, `door_${p}_${sd}_closed`, () => !d()); };
+      const trunk = () => this._is("binary_sensor.trunk", "on"), hood = () => this._is("binary_sensor.hood", "on");
+      door("rear", "right"); door("front", "right"); L(color, "trunk_closed", () => !trunk());
+      L(color, "base", () => true); if (wheels) L("common", "wheels_" + wheels, () => true);
+      L(color, "trunk_open", trunk); L(color, "hood_open", hood); L(color, "hood_closed", () => !hood());
+      door("rear", "left"); door("front", "left"); L("common", "low_beam_on", () => this._is("binary_sensor.low_beam", "on"));
+      const lines = TIRES.map((t) => { const h = t.hid ? " hid" : "", x = t.wx * 7.5, y = t.wy * 5; return `<line data-pin="${t.id}" class="${h.trim()}" x1="${t.px * 7.5}" y1="${t.py * 5}" x2="${x}" y2="${y}"/>` + (t.hid ? `<circle data-pin="${t.id}" class="hid" cx="${x}" cy="${y}" r="8"/>` : `<circle data-pin="${t.id}" cx="${x}" cy="${y}" r="5"/><circle class="halo" data-pin="${t.id}" cx="${x}" cy="${y}" r="11"/>`); }).join("");
+      const pills = TIRES.map((t) => `<div class="tp na" data-t="${t.id}" style="left:${t.px}%;top:${t.py}%"><div class="n">${esc(T(t.name))}</div><div class="v">--</div><div class="s"></div></div>`).join("");
+      el.viso.innerHTML = `<div class="isop">${this._isoL.map(([n, d]) => `<img data-n="${n}" src="${esc(root + d + "/" + n + ".webp")}" alt="" decoding="async">`).join("")}<svg class="tl" viewBox="0 0 750 500" aria-hidden="true">${lines}</svg>${pills}</div>`;
+      this._isoImgs = [...el.viso.querySelectorAll("img")];
+      const base = el.viso.querySelector('img[data-n="base"]');
+      el.vmiss.hidden = true;
+      if (base) base.addEventListener("error", () => { el.vmiss.hidden = false; const p = el.viso.querySelector(".isop"); if (p) p.classList.add("noimg"); }, { once: true });
+    }
+    this._isoImgs.forEach((im, i) => im.classList.toggle("on", !!this._isoL[i][2]()));
+    const notes = [];
+    TIRES.forEach((t) => {
+      const r = this._tire(t), g = el.viso.querySelector(`.tp[data-t="${t.id}"]`); if (!g) return;
+      const st = r.bar === null ? "na" : r.tone === "var(--ds-ok)" ? "ok" : "bad";
+      g.className = `tp ${st}`; g.style.opacity = r.stale ? ".7" : "";
+      g.querySelector(".v").textContent = r.txt + (r.stale ? "·" : "");
+      g.querySelector(".s").textContent = st === "ok" ? "✓ OK" : st === "bad" ? `! ${T(r.note || "έλεγξε πίεση")}` : "";
+      el.viso.querySelectorAll(`[data-pin="${t.id}"]`).forEach((n) => n.setAttribute("class", `${n.classList.contains("halo") ? "halo " : ""}${n.classList.contains("hid") ? "hid " : ""}${st}`));
+      if (r.note) notes.push(`<span><b style="--c:${r.tone}">${esc(T(t.name))}</b>: ${esc(T(r.note))}</span>`);
+    });
+    const open = v.open.map((x) => x[1]);
+    const bits = [...(open.length ? [`<span><b style="--c:var(--ds-bad)">Ανοιχτά:</b> ${esc(open.join(", "))}</span>`] : []), ...notes];
+    el.vextra.innerHTML = bits.length ? `<div class="vline">${bits.join("")}</div>` : ""; el.vextra.hidden = !bits.length;
   }
 
   _build() {
@@ -553,8 +605,8 @@ class DeepalS05Card extends HTMLElement {
         <div class="sheet" id="vsheet"><div class="box wide" id="vbox">
           <div class="hd"><h3 id="vtitle">Όχημα</h3><button class="x" data-vclose aria-label="Κλείσιμο">${ico("close")}</button></div>
           <div class="veh" id="veh">
-            <div class="seg" id="vtabs"><button data-vv="top">${ico("cartop")}Κάτοψη</button><button data-vv="climate">${ico("fan")}Κλιματισμός</button><button data-vv="seats">${ico("seat")}Καθίσματα</button></div>
-            <div class="vstage" id="vtop">${this._topSvg()}</div>
+            <div class="seg" id="vtabs"><button data-vv="iso">${ico("carside")}<span class="tx">Car View</span></button><button data-vv="climate">${ico("fan")}<span class="tx">Κλιματισμός</span></button><button data-vv="seats">${ico("seat")}<span class="tx">Καθίσματα</span></button></div>
+            <div class="vcol" id="viso"></div>
             <div class="vcol" id="vclim">${this._climHtml()}</div>
             <div class="vcol" id="vseats">${this._seatsHtml()}</div>
             <div class="vmiss" id="vmiss" hidden>${T("Δεν βρέθηκαν οι εικόνες οχήματος. Αντέγραψε τον φάκελο {0} δίπλα στο αρχείο της κάρτας (δες Ρυθμίσεις → Εικόνες).", "<b>images</b>")}</div>
@@ -566,7 +618,7 @@ class DeepalS05Card extends HTMLElement {
     const sr = this.shadowRoot, g = (i) => sr.getElementById(i);
     this._dashKeys = {};
     this._el = { card: sr.querySelector("ha-card"), hero: g("hero"), sweep: sr.querySelector(".sweep"), imgs: [...sr.querySelectorAll(".stage img")], plate: g("plate"), cloud: g("cloud"), age: g("age"),
-      toast: g("toast"), status: g("status"), tells: g("tells"), rfs: g("rfs"), total: g("total"), stats: g("stats"), veh: g("veh"), vtabs: g("vtabs"), vtop: g("vtop"), vclim: g("vclim"), vseats: g("vseats"), pk: g("pk"), pkp: g("pkp"), pkv: g("pkv"), vmiss: g("vmiss"), vextra: g("vextra"),
+      toast: g("toast"), status: g("status"), tells: g("tells"), rfs: g("rfs"), total: g("total"), stats: g("stats"), veh: g("veh"), vtabs: g("vtabs"), viso: g("viso"), vclim: g("vclim"), vseats: g("vseats"), pk: g("pk"), pkp: g("pkp"), pkv: g("pkv"), vmiss: g("vmiss"), vextra: g("vextra"),
       vsheet: g("vsheet"), vtctl: g("vtctl"), dash: g("dash"), info: g("info"), diag: g("diag"), charge: g("charge"), chgbox: g("chgbox"), chgline: g("chgline"), actions: g("actions"), foot: g("foot"), sheet: g("sheet"), box: g("box") };
     this._el.hero.style.setProperty("--ds-scale", String(c.image_scale));
     if (c.image_aspect) this._el.hero.style.setProperty("--ds-aspect", c.image_aspect);
@@ -638,7 +690,7 @@ class DeepalS05Card extends HTMLElement {
     if (bar !== null) {
       tone = "var(--ds-ok)";
       if (own) { if (bar < c.tire_min) { tone = "var(--ds-warn)"; note = "χαμηλή"; } else if (bar > c.tire_max) { tone = "var(--ds-warn)"; note = "υψηλή"; } }
-      if (veh && this._is("binary_sensor.tire_pressure_warning", "on")) { tone = "var(--ds-warn)"; note = "έλεγξε πίεση"; } // γενική ειδοποίηση του οχήματος
+      if (veh && this._is("binary_sensor.tire_pressure_warning", "on") && !TIRES.some((x) => this._is(`binary_sensor.${x.id}_tire_alarm`, "on"))) { tone = "var(--ds-warn)"; note = "έλεγξε πίεση"; } // γενική ειδοποίηση του οχήματος
     }
     if (alarm && veh) { tone = "var(--ds-bad)"; note = "συναγερμός"; }
     const unit = c.tire_unit;
@@ -681,6 +733,8 @@ class DeepalS05Card extends HTMLElement {
     el.cloud.dataset.ent = this._id("binary_sensor.cloud_connection");
     el.cloud.title = cloudOk ? "Συνδεδεμένο" : "Εκτός σύνδεσης"; el.cloud.setAttribute("aria-label", el.cloud.title);
     el.age.textContent = T("Ενημερώθηκε {0}", this._age());
+    el.age.classList.toggle("old", this._ageMin() > 180);
+    this._scUpd();
     const ts = this._toastState;
     if (ts) el.toast.textContent = ts.msg;
     el.toast.className = `toast pos-${c.toast_position === "top" ? "top" : "bottom"} ${ts && c.toasts !== false ? `show ${ts.type}` : ""}`;
@@ -742,7 +796,7 @@ class DeepalS05Card extends HTMLElement {
     el.stats.innerHTML = `
       <div class="t2 temp" data-open="climate" data-ent="${esc(this._id("climate.cabin_climate"))}" data-hold="${esc(JSON.stringify({ action: "more-info", entity: this._id("sensor.inside_temperature") }))}" role="button" tabindex="0" aria-label="Κλιματισμός">
         <div class="tt">Θερμοκρασία</div>
-        <div class="ts">Μέσα<br><b>${temp === null ? "--" : this._fmtNum(temp, 0) + "°C"}</b>${tgt === null || !climOn ? "" : ` · στόχος ${this._fmtNum(tgt, 1)}°`}</div>
+        <div class="ts">Μέσα<br><b>${temp === null ? "--" : this._fmtNum(temp, 0) + "°C"}</b>${tgt === null || !climOn ? "" : `<br><span class="sub">στόχος ${this._fmtNum(tgt, 1)}°</span>`}</div>
         <button class="knob ${climOn ? "on" : ""} ${pendC ? "pending" : ""}" data-id="climate" ${climOk ? "" : "disabled"} aria-label="Κλιματισμός on/off">${ico("power")}${pendC ? RING : ""}</button></div>
       <div class="t2 batt" data-ent="${esc(this._id("sensor.battery_level"))}" role="button" tabindex="0">
         <div class="tt">${fu ? "Ενέργεια" : "Μπαταρία"}</div>
@@ -759,6 +813,7 @@ class DeepalS05Card extends HTMLElement {
     /* πληροφορίες */
     const tiles = [];
     for (const id of c.info || []) {
+      if (id === "inside_temp" && !(c.hidden || []).includes("stats")) continue; /* η θερμοκρασία φαίνεται ήδη στο tile Θερμοκρασία */
       const it = INFO_ITEMS[id]; if (!it) continue;
       if (id === "fuel_level" && !hasFuel(this._hass, c)) continue;
       const { v: n, stale } = it[3] === null ? { v: null } : this._nl(it[0]);
@@ -794,10 +849,12 @@ class DeepalS05Card extends HTMLElement {
     if (showCharge) {
       const left = this._s("sensor.remaining_charge_time_h_mm"), type = this._s("sensor.charging_type");
       const curRaw = this._chargeCurrent(), pre = (curRaw.match(/^(AC|DC)\s/) || [])[1] || "";
-      const cur = curRaw ? curRaw.replace(/^(AC|DC)\s+/, "") : "--", rem = left && v.charging ? this._fmtLeft(left) : "--", typ = type || pre || "--";
-      if (cst === "line") el.chgbox.innerHTML = `${ico("bolt")}<span>${esc(cur)}</span><i>·</i><span>${esc(rem)}</span><i>·</i><span>${esc(typ)}</span>`;
-      else if (cst === "big") { const m = /^(.*?)\s*([A-Za-z]+)$/.exec(cur); el.chgbox.innerHTML = `<span class="a">${esc(m ? m[1] : cur)}${m ? `<small>${esc(m[2])}</small>` : ""}</span><span class="b">${esc(typ)} · ${esc(rem)} <em>Απομένουν</em></span>`; }
-      else el.chgbox.innerHTML = `<span class="a">${esc(cur)}</span><span class="b">${esc(rem)} <em>Απομένουν</em></span><span class="c">${esc(typ)}</span>`;
+      const cur = curRaw ? curRaw.replace(/^(AC|DC)\s+/, "") : "", rem = left && v.charging ? this._fmtLeft(left) : "", typ = type || pre || "";
+      const known = [cur, rem, typ].filter(Boolean);
+      el.chgbox.hidden = el.chgline.hidden = !known.length; /* αν δεν υπάρχει κανένα στοιχείο δεν δείχνουμε τίποτα (όχι «--») */
+      if (cst === "line") el.chgbox.innerHTML = ico("bolt") + known.map((x) => `<span>${esc(x)}</span>`).join("<i>·</i>");
+      else if (cst === "big") { const m = cur && /^(.*?)\s*([A-Za-z]+)$/.exec(cur); el.chgbox.innerHTML = (cur ? `<span class="a">${esc(m ? m[1] : cur)}${m ? `<small>${esc(m[2])}</small>` : ""}</span>` : "") + `<span class="b">${esc([typ, rem].filter(Boolean).join(" · "))}${rem ? ` <em>Απομένουν</em>` : ""}</span>`; }
+      else el.chgbox.innerHTML = (cur ? `<span class="a">${esc(cur)}</span>` : "") + (rem ? `<span class="b">${esc(rem)} <em>Απομένουν</em></span>` : "") + (typ ? `<span class="c">${esc(typ)}</span>` : "");
     }
 
     /* φύλλα */
@@ -902,6 +959,7 @@ class DeepalS05Card extends HTMLElement {
     const { vals, dec } = this._pk;
     this._pkItems.forEach((n, k) => { n.classList.toggle("act2", k === i); n.classList.toggle("near", Math.abs(k - i) === 1); });
     this._el.pkv.textContent = vals[i].toFixed(dec);
+    this._airTone(vals[i]);
     this._el.pk.classList.toggle("cold", vals[i] <= 20); this._el.pk.classList.toggle("hot", vals[i] >= 26);
   }
   _pkScroll(i, smooth) {
@@ -921,33 +979,16 @@ class DeepalS05Card extends HTMLElement {
   }
 
   _renderVehicle(v) {
-    const el = this._el, c = this._c, view = this._view === "seats" ? "seats" : this._view === "top" ? "top" : this._view ? "climate" : "top";
+    const el = this._el, c = this._c, view = this._view === "seats" || this._view === "climate" ? this._view : "iso";
     el.vsheet.classList.toggle("show", this._vsheetOpen());
-    this.shadowRoot.getElementById("vtitle").textContent = view === "top" ? "Ελαστικά & ανοίγματα" : view === "climate" ? "Κλιματισμός" : "Καθίσματα & τιμόνι";
+    this.shadowRoot.getElementById("vtitle").textContent = view === "iso" ? "Car View" : view === "climate" ? "Κλιματισμός" : "Καθίσματα & τιμόνι";
     if (!this._vsheetOpen()) { this._pkIdx = -1; return; }
     el.vtabs.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.vv === view));
-    el.vtop.hidden = view !== "top"; el.vclim.hidden = view !== "climate"; el.vseats.hidden = view !== "seats";
-    el.vextra.hidden = view !== "top";
+    el.viso.hidden = view !== "iso"; el.vclim.hidden = view !== "climate"; el.vseats.hidden = view !== "seats";
+    el.vextra.hidden = view !== "iso";
     if (view !== "climate") this._pkIdx = -1;
-    if (view === "top") {
-      for (const [id, open, closed, key] of TOP_LAYERS) {
-        const on = id === "low_beam" ? this._is("binary_sensor.low_beam", "on") : this._is(key, "on");
-        const o = el.vtop.querySelector(`[data-l="${open}"]`); if (o) o.classList.toggle("on", on);
-        if (closed) { const cl = el.vtop.querySelector(`[data-l="${closed}"]`); if (cl) cl.classList.toggle("on", !on); }
-      }
-      const pills = [];
-      TIRES.forEach((t) => {
-        const r = this._tire(t), g = el.vtop.querySelector(`[data-t="${t.id}"]`); if (!g) return;
-        const st = r.bar === null ? "na" : r.tone === "var(--ds-ok)" ? "ok" : "bad";
-        g.setAttribute("class", `pill ${st}`); const pin = el.vtop.querySelector(`[data-pin="${t.id}"]`); if (pin) pin.setAttribute("class", `pin ${st}`);
-        g.querySelector(".v").textContent = r.txt + (r.stale ? "·" : "");
-        g.querySelector(".s").textContent = st === "ok" ? "✓ OK" : st === "bad" ? `! ${r.note || "έλεγξε πίεση"}` : "";
-        g.setAttribute("opacity", r.stale ? ".7" : "1");
-        if (r.note) pills.push(`<span><b style="--c:${r.tone}">${esc(t.name)}</b>: ${esc(r.note)}</span>`);
-      });
-      const open = v.open.map((x) => x[1]);
-      const bits = [...(open.length ? [`<span><b style="--c:var(--ds-bad)">Ανοιχτά:</b> ${esc(open.join(", "))}</span>`] : []), ...pills];
-      el.vextra.innerHTML = bits.length ? `<div class="vline">${bits.join("")}</div>` : ""; el.vextra.hidden = !bits.length;
+    if (view === "iso") {
+      this._isoRender(v);
     } else if (view === "seats") {
       for (const [id, key, , , , , layer] of INT_SPOTS) {
         const lv = this._level(key), max = this._obj(key)?.attributes?.max ?? 3;
@@ -966,6 +1007,7 @@ class DeepalS05Card extends HTMLElement {
       if (im.dataset.key !== k) { im.dataset.key = k; im.dataset.i = "0"; im.style.visibility = ""; im.src = this._heroSrc(k, 0); }
       el.dash.classList.toggle("air", on);
       const fan = parseFloat(this._s("sensor.climate_fan_level"));
+      this._airTone(this._tpend ?? parseFloat((this._tgt() || {}).state));
       el.dash.querySelector(".air").style.setProperty("--sp", String(Number.isFinite(fan) ? Math.min(1.9, Math.max(0.7, 0.65 + fan * 0.16)) : 1));
       const inside = this._n("sensor.inside_temperature"), fanTxt = this._s("sensor.climate_fan_level"), pend = !!this._pending.climate;
       el.vtctl.innerHTML = `<div class="crow"><div class="in"><b>${on ? "Ενεργός" : "Ανενεργός"}</b><br>${inside === null ? "" : `Μέσα ${this._fmtNum(inside, 1)}°C`}${fanTxt === null || !on ? "" : ` · ένταση ${esc(fanTxt)}`}</div>
