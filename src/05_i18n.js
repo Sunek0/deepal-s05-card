@@ -1,4 +1,3 @@
-
 /* ───────────────────────── Γλώσσες (i18n) ─────────────────────────
  * Τα κείμενα στον κώδικα είναι ελληνικά και λειτουργούν ως «κλειδιά». Κάθε άλλη γλώσσα
  * είναι ένα αρχείο lang/<κωδικός>.js δίπλα στην κάρτα, που αντιστοιχίζει ελληνικό κείμενο → μετάφραση:
@@ -18,7 +17,7 @@ const I18N = {
     return new Promise((res) => {
       if (LANGS[code]) return res(true);
       const s = document.createElement("script");
-      s.src = `${SCRIPT_BASE}lang/${code}.js`; s.async = true;
+      s.src = `${SCRIPT_BASE}lang/${code}.js?v=${CARD_VERSION}`; s.async = true;
       s.onload = () => res(!!LANGS[code]); s.onerror = () => res(false);
       document.head.appendChild(s);
     });
@@ -95,3 +94,4 @@ const I18N = {
 };
 const GREEK = new RegExp(`[${GL}]`);
 const T = (s, ...a) => I18N.t(s, a);
+

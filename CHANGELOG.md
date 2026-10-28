@@ -1,5 +1,77 @@
 # Changelog
 
+## 1.2.0
+
+Summary of everything that changed since 1.1.0. · Συγκεντρωτικά όσα άλλαξαν από την 1.1.0. · Resumen de todo lo que cambió desde la 1.1.0.
+
+**New**
+
+- **Diagnostics redesigned.** Larger, solid dashboard-style icons (brakes, tyre pressure, 12 V and traction battery, power system, power limit, steering, key fob, oil, engine) coloured by status: green OK, amber warning, red critical, grey unavailable. Identical icons are grouped with a counter.
+- **Diagnostics popup.** The **+N** chip now opens a list of *all* sensors — Problems, Unavailable, OK — instead of the settings. The number counts sensors, so icons + N always add up to the sensors that are active (or all of them in “always show” mode).
+- **New sensors.** *Settings → Sensors → Search for new sensors* finds warnings of your vehicle that the card does not know yet and adds them; the popup also tells you when it finds some. Any Home Assistant icon (`mdi:…`) can be used for your own sensors.
+- **Trunk button** with a side-view car and open tailgate (open and closed state).
+- **Buttons:** main row + a small “More” chevron (`button_layout: split`, `button_primary`, `buttons_more`).
+- **Climate tile:** target temperature with − / + (`climate_ui: steps`) or the classic large circle (`circle`). Changing the target while the climate is off no longer turns it on, and asks for confirmation when `climate` is in `confirm`.
+- **Larger info tiles.** The Odometer, Fuel, Power, Charging… tiles (and your own) have bigger text and icons, all the same size. The diagnostic icons on the car photo are sized to fit the picture.
+- **“No data” hint.** *Settings → Sensors → Info* now marks sensors that exist but report no value — for example *Petrol* (fuel volume) when the vehicle only reports the tank level in %.
+- New presentation images, including two new ones (diagnostics and new sensors). `tools/make_images.js` rebuilds all of them from the real card.
+- Offline banner, popups close with Escape, keep keyboard focus inside and can be swiped down on phones. “All good” line in the Car View.
+- Fuel colour now matches the green of the battery at 100 %.
+
+**Fixed**
+
+- 15 sensors were shown as 10 icons: the four tyre alarms and the tyre-pressure warning, and the two power warnings, were merged without saying so.
+- The **+N** chip opened Settings instead of showing the sensors.
+- The `validate` workflow now declares read-only permissions.
+
+<details><summary>Ελληνικά</summary>
+
+**Νέα**
+
+- **Νέος σχεδιασμός διαγνωστικών.** Μεγαλύτερα, γεμάτα εικονίδια τύπου ταμπλό (φρένα, πίεση ελαστικών, μπαταρία 12 V και έλξης, σύστημα ισχύος, περιορισμός ισχύος, τιμόνι, κλειδί, λάδι, κινητήρας) με χρώμα ανά κατάσταση: πράσινο OK, κεχριμπάρι προειδοποίηση, κόκκινο κρίσιμο, γκρι μη διαθέσιμο. Τα ίδια εικονίδια ομαδοποιούνται με μετρητή.
+- **Popup διαγνωστικών.** Το **+N** ανοίγει πλέον λίστα με *όλους* τους αισθητήρες — Προβλήματα, Μη διαθέσιμοι, Εντάξει — αντί για τις ρυθμίσεις. Ο αριθμός μετράει αισθητήρες, άρα εικονίδια + N = οι ενεργοί αισθητήρες (ή όλοι, στη λειτουργία «Πάντα όλες»).
+- **Νέοι αισθητήρες.** *Ρυθμίσεις → Αισθητήρες → Αναζήτηση νέων αισθητήρων* βρίσκει προειδοποιήσεις του οχήματος που η κάρτα δεν ξέρει και τις προσθέτει· το popup σε ειδοποιεί όταν βρει. Για τους δικούς σου αισθητήρες μπορείς να βάλεις οποιοδήποτε εικονίδιο του HA (`mdi:…`).
+- **Κουμπί πορτμπαγκάζ** με αυτοκίνητο σε πλάγια όψη και ανοιχτή πόρτα αποσκευών (ανοιχτό και κλειστό).
+- **Κουμπιά:** κύρια σειρά + μικρό βελάκι «Περισσότερα» (`button_layout: split`, `button_primary`, `buttons_more`).
+- **Πλακίδιο κλιματισμού:** θερμοκρασία-στόχος με − / + (`climate_ui: steps`) ή ο κλασικός μεγάλος κύκλος (`circle`). Η αλλαγή στόχου με κλειστό κλιματισμό δεν τον ανοίγει πια και ζητά επιβεβαίωση όταν το `climate` είναι στο `confirm`.
+- **Μεγαλύτερα πλακίδια πληροφοριών.** Τα πλακίδια Οδόμετρο, Καύσιμο, Ισχύς, Φόρτιση… (και τα δικά σου) έχουν μεγαλύτερο κείμενο και εικονίδια, όλα στο ίδιο μέγεθος. Τα εικονίδια διαγνωστικών πάνω στη φωτογραφία προσαρμόστηκαν στο μέγεθος της εικόνας.
+- **Ένδειξη «Χωρίς δεδομένα».** Στις *Ρυθμίσεις → Αισθητήρες → Info* σημειώνονται οι αισθητήρες που υπάρχουν αλλά δεν δίνουν τιμή — π.χ. η *Βενζίνη* (λίτρα) όταν το όχημα στέλνει μόνο τη στάθμη σε %.
+- Νέες εικόνες παρουσίασης, με δύο καινούργιες (διαγνωστικά και νέοι αισθητήρες). Το `tools/make_images.js` τις ξαναφτιάχνει όλες από την πραγματική κάρτα.
+- Banner εκτός σύνδεσης, τα popups κλείνουν με Escape, κρατούν το πληκτρολόγιο μέσα τους και κλείνουν με σύρσιμο προς τα κάτω στο κινητό. Γραμμή «Όλα καλά» στο Car View.
+- Το χρώμα της βενζίνης ταιριάζει πλέον με το πράσινο της μπαταρίας στο 100 %.
+
+**Διορθώσεις**
+
+- 15 αισθητήρες εμφανίζονταν ως 10 εικονίδια: οι τέσσερις συναγερμοί ελαστικών με την προειδοποίηση πίεσης, και οι δύο προειδοποιήσεις ισχύος, ενώνονταν χωρίς ένδειξη.
+- Το **+N** άνοιγε τις Ρυθμίσεις αντί να δείχνει τους αισθητήρες.
+- Το workflow `validate` δηλώνει πλέον δικαιώματα μόνο ανάγνωσης.
+
+</details>
+
+<details><summary>Español</summary>
+
+**Novedades**
+
+- **Diagnóstico rediseñado.** Iconos más grandes y rellenos, al estilo del tablero (frenos, presión de neumáticos, batería de 12 V y de tracción, sistema de potencia, límite de potencia, dirección, llave, aceite, motor) con color según el estado: verde correcto, ámbar advertencia, rojo crítico, gris no disponible. Los iconos iguales se agrupan con un contador.
+- **Ventana de diagnóstico.** El chip **+N** abre ahora una lista de *todos* los sensores — Problemas, No disponibles, Correctos — en lugar de los ajustes. El número cuenta sensores, así que iconos + N siempre suman los sensores activos (o todos en el modo «Mostrar siempre»).
+- **Sensores nuevos.** *Ajustes → Sensores → Buscar sensores nuevos* encuentra advertencias de tu vehículo que la tarjeta aún no conoce y las añade; la ventana también avisa cuando encuentra alguna. Para tus propios sensores puedes usar cualquier icono de Home Assistant (`mdi:…`).
+- **Botón del maletero** con un coche de perfil y el portón abierto (estado abierto y cerrado).
+- **Botones:** fila principal + una pequeña flecha «Más» (`button_layout: split`, `button_primary`, `buttons_more`).
+- **Mosaico de climatización:** temperatura objetivo con − / + (`climate_ui: steps`) o el círculo grande clásico (`circle`). Cambiar el objetivo con la climatización apagada ya no la enciende y pide confirmación si `climate` está en `confirm`.
+- **Mosaicos de información más grandes.** Los mosaicos Cuentakilómetros, Combustible, Potencia, Carga… (y los tuyos) tienen texto e iconos más grandes, todos del mismo tamaño. Los iconos de diagnóstico sobre la foto se ajustan al tamaño de la imagen.
+- **Aviso «Sin datos».** *Ajustes → Sensores → Info* marca los sensores que existen pero no dan ningún valor — por ejemplo *Gasolina* (litros) cuando el vehículo solo informa del nivel del depósito en %.
+- Imágenes de presentación nuevas, con dos más (diagnóstico y sensores nuevos). `tools/make_images.js` las regenera todas desde la tarjeta real.
+- Banner sin conexión, las ventanas se cierran con Escape, mantienen el foco del teclado y se cierran deslizando hacia abajo en el móvil. Línea «Todo bien» en el Car View.
+- El color del combustible coincide ahora con el verde de la batería al 100 %.
+
+**Corregido**
+
+- 15 sensores se mostraban como 10 iconos: las cuatro alarmas de neumáticos con el aviso de presión, y las dos advertencias de potencia, se fusionaban sin indicarlo.
+- El chip **+N** abría los Ajustes en lugar de mostrar los sensores.
+- El flujo `validate` declara ahora permisos de solo lectura.
+
+</details>
+
 ## 1.1.0
 
 Summary of everything that changed since 1.0.7. · Συγκεντρωτικά όσα άλλαξαν από την 1.0.7. · Resumen de todo lo que cambió desde la 1.0.7.

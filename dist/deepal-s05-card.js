@@ -9,7 +9,7 @@
  * (MIT) — δες THIRD_PARTY_NOTICES.md στον φάκελο της κάρτας.
  */
 (() => {
-const CARD_VERSION = "1.1.0";
+const CARD_VERSION = "1.2.0";
 const TAG = "deepal-s05-card";
 const SETTINGS_TAG = "deepal-s05-settings";
 const EDITOR_TAG = "deepal-s05-card-editor";
@@ -72,12 +72,16 @@ const DEFAULTS = {
   hidden: [],
   buttons: BUTTON_IDS.slice(),
   buttons_hidden: [],
-  button_layout: "grid", // grid (σειρές) | scroll (μία γραμμή με scroll) | fit (μία γραμμή, χωράνε όλα)
+  button_layout: "split", // split (κύρια κουμπιά + «Περισσότερα») | grid (σειρές) | scroll (μία γραμμή με scroll) | fit (μία γραμμή, χωράνε όλα)
+  climate_ui: "steps", // πλακίδιο κλιματισμού: steps (στόχος με − / + και μικρό power) | circle (κλασικό: μεγάλος κύκλος on/off)
+  button_primary: 4, // split: πόσα κουμπιά (από την αρχή της λίστας) μπαίνουν στην κύρια σειρά
+  buttons_more: "collapse", // split: collapse (κρυμμένα πίσω από το «Περισσότερα») | show
   button_labels: "both", // none | status | title | both
   button_size: "m", // s | m | l
   diag: null, // null = όλα
   diag_mode: "alerts", // alerts | all
   diag_custom: [],
+  diag_ignore: [], // αισθητήρες που βρέθηκαν από την «Ανακάλυψη» και ο χρήστης αγνόησε
   hero_show: ["name", "plate", "range"], // τι φαίνεται πάνω στην εικόνα: name, plate, range, cloud, updated
   info: ["odometer", "fuel_level"],
   info_custom: [], // [{entity, label, icon, unit}]
@@ -208,10 +212,10 @@ const ICONS = {
   /* ── Κουμπιά ελέγχου ── */
   lock: '<rect class="a" x="5" y="10.4" width="14" height="9.8" rx="3.4"/><path d="M8.2 10.4V8.2a3.8 3.8 0 0 1 7.6 0v2.2"/><circle cx="12" cy="14.4" r="1.15" class="k"/><path d="M12 15v2"/>',
   unlock: '<rect class="a" x="5" y="10.4" width="14" height="9.8" rx="3.4"/><path d="M8.2 10.4V8.2a3.8 3.8 0 0 1 7.3-1.5"/><circle cx="12" cy="14.4" r="1.15" class="k"/><path d="M12 15v2"/>',
-  windowclosed: '<path d="M4.5 19V10.3l3.7-5c.3-.4.8-.6 1.3-.6H18c.8 0 1.5.7 1.5 1.5V19z"/><path class="a" d="M8.2 10.2l2.2-3h6.4v3.6H8.2z"/><path d="M14.4 17V12.6M12.2 14.6l2.2-2.2 2.2 2.2"/>',
-  windowopen: '<path d="M4.5 19V10.3l3.7-5c.3-.4.8-.6 1.3-.6H18c.8 0 1.5.7 1.5 1.5V19z"/><path class="a" d="M8.2 7.2l.7-.9h7.9v.9z"/><path d="M14.4 10.8v4.6M12.2 13.2l2.2 2.2 2.2-2.2"/>',
-  trunk: CARBODY + '<path class="a" d="M4.6 12.5 6.3 9.2h1.9l-.9 3.3z"/>',
-  trunkopen: '<path d="M9.4 11.4l.8-1.6c.3-.6.9-.9 1.5-.9h4.4c.6 0 1.1.3 1.5.7l2.2 2.9 1.4.4c.9.3 1.4 1 1.4 1.9v3.3h-1.4M14.8 17.2H9.2M5.2 17.2H3v-3c0-.9.6-1.6 1.4-1.8l1-.3"/><circle cx="7.2" cy="17.2" r="2"/><circle cx="16.8" cy="17.2" r="2"/><path class="a" d="M5.4 12.3 2.9 6 5.2 5.2l2.9 6.3z"/>',
+  windowclosed: '<path d="M4.6 20.2V9.2l3.5-4.4c.3-.4.8-.6 1.3-.6H18c.8 0 1.4.6 1.4 1.4v14.6z"/><path class="a" d="M8.2 9.4l2.3-3.2h7v8.4H8.2z"/><path d="M12.9 13.1V8.7M10.9 10.7l2-2 2 2"/>',
+  windowopen: '<path d="M4.6 20.2V9.2l3.5-4.4c.3-.4.8-.6 1.3-.6H18c.8 0 1.4.6 1.4 1.4v14.6z"/><path class="a" d="M8.2 9.4l1.1-1.5h8.2v1.5z"/><path d="M12.9 12.2v4.6M10.9 14.8l2 2 2-2"/>',
+  trunk: '<g transform="scale(0.02674)" stroke-width="34"><path d="M32 548V442Q34 408 92 388C170 362 262 338 336 314C420 252 480 214 560 190C650 164 800 162 1002 172L1012 180C1100 232 1200 268 1288 322Q1304 340 1312 372C1322 420 1322 480 1318 520L1300 546H1163A130 130 0 0 0 903 546H342A130 130 0 0 0 82 546Z"/><path d="M482 316Q562 262 648 228H660V316ZM716 228H866Q934 244 976 292L716 312Z"/><path d="M690 334Q696 430 692 505"/><path d="M1012 184C1100 226 1196 262 1262 306"/><circle cx="212" cy="567" r="93"/><circle cx="1033" cy="565" r="94"/><circle cx="212" cy="567" r="15" fill="currentColor" stroke="none"/><circle cx="1033" cy="565" r="15" fill="currentColor" stroke="none"/></g>',
+  trunkopen: '<g transform="scale(0.02674)" stroke-width="34"><path d="M32 548V442Q34 408 92 388C170 362 262 338 336 314C420 252 480 214 560 190C650 164 800 162 1002 172L1012 180C1100 232 1200 268 1288 322Q1304 340 1312 372C1322 420 1322 480 1318 520L1300 546H1163A130 130 0 0 0 903 546H342A130 130 0 0 0 82 546Z"/><path d="M482 316Q562 262 648 228H660V316ZM716 228H866Q934 244 976 292L716 312Z"/><path d="M690 334Q696 430 692 505"/><path d="M1010 176L1180 22Q1330 -4 1476 62Q1468 100 1424 100L1290 100L1062 184ZM1120 160L1222 70Q1320 58 1400 84"/><circle cx="212" cy="567" r="93"/><circle cx="1033" cy="565" r="94"/><circle cx="212" cy="567" r="15" fill="currentColor" stroke="none"/><circle cx="1033" cy="565" r="15" fill="currentColor" stroke="none"/></g>',
   tirealert: '<path d="M7.2 5.9A7.6 7.6 0 0 0 4.6 11.4c0 2.1.9 4 2.3 5.4.5.5 1.2.8 1.9.8h6.4c.7 0 1.4-.3 1.9-.8a7.6 7.6 0 0 0 2.3-5.4c0-2.2-1-4.2-2.6-5.5"/><path d="M12 8.2v4.4"/><path d="M12 15.2h.01" stroke-width="2.2"/>',
   interioron: '<path d="M7.6 6.2c-1 0-1.7.9-1.4 1.9l1.4 5.4c.2.8.9 1.3 1.7 1.3h6.3"/><path class="a" d="M9.2 15.4h6.5c1.2 0 2.2 1 2.2 2.2v.3H9.9c-.9 0-1.6-.6-1.8-1.4z"/><path d="M8.8 20.6h9.2"/><path d="M13.6 3.4c-1.2 1 1.2 2 0 3M17.2 3.4c-1.2 1 1.2 2 0 3"/>',
   snow: '<path d="M12 3.2v17.6M4.4 7.6l15.2 8.8M4.4 16.4l15.2-8.8"/><path d="M9.7 4.9 12 6.8l2.3-1.9M9.7 19.1 12 17.2l2.3 1.9M5.5 10.2l2.9-.5-.8-2.8M18.5 13.8l-2.9.5.8 2.8M5.5 13.8l2.9.5-.8 2.8M18.5 10.2l-2.9-.5.8-2.8"/>',
@@ -233,6 +237,7 @@ const ICONS = {
   minus: '<path d="M5.5 12h13"/>',
   up: '<path d="M6.5 14.5l5.5-5.5 5.5 5.5"/>',
   down: '<path d="M6.5 9.5l5.5 5.5 5.5-5.5"/>',
+  chevd: '<path d="M6.5 9.5l5.5 5.5 5.5-5.5"/>',
   chevr: '<path d="M9.5 6.5l5.5 5.5-5.5 5.5"/>',
   sliders: '<path d="M4 7h8.2M17 7h3M4 17h3M12.2 17H20"/><circle cx="14.6" cy="7" r="2.3"/><circle cx="9.6" cy="17" r="2.3"/>',
   eye: '<path d="M2.8 12S6 6.2 12 6.2 21.2 12 21.2 12 18 17.8 12 17.8 2.8 12 2.8 12z"/><circle class="a" cx="12" cy="12" r="2.7"/>',
@@ -273,20 +278,82 @@ const ICONS = {
   key: '<circle cx="7.9" cy="12" r="3.5"/><path d="M11.4 12H21M17.4 12v3.2M20.1 12v2.2"/>',
   speedlimit: '<path d="M4.6 17.6a8.2 8.2 0 1 1 14.8 0"/><path d="M12 14.4l-3.6-3.2"/><path d="M5 20h14" stroke-width="1.8"/>',
 };
-const ico = (n, cls = "") => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n] || ICONS.info}</svg>`;
-/* Εικονίδια διαγνωστικών: όλα μέσα στον ίδιο δαχτυλίδι (ISO-style «ενδεικτική λυχνία»). Τα airbag/abs/brake έχουν ήδη δαχτυλίδι. */
-const BADGE_NATIVE = new Set(["airbag", "abs", "brake"]);
-const icoBadge = (n, cls = "") => BADGE_NATIVE.has(n) ? ico(n, cls)
+/* Εικονίδια από το HA: «mdi:car-brake-abs» κ.λπ. (Material Design Icons, Apache-2.0 — ήδη μέσα στο HA, χωρίς λήψη από το διαδίκτυο) */
+const MDI_RE = /^[a-z][a-z0-9]*:[a-z0-9][a-z0-9-]*$/i;
+const ICON_VB = { trunk: "-0.8 -0.8 41.6 19.8", trunkopen: "-0.8 -0.8 41.6 19.8" }; /* πλάγια όψη: ευρύ εικονίδιο */
+const ico = (n, cls = "") => MDI_RE.test(n || "") ? `<ha-icon class="i ${cls}" icon="${n}"></ha-icon>`
+  : !ICONS[n] && TT[n] ? tt(n, cls) : `<svg class="i ${ICON_VB[n] ? "w " : ""}${cls}" viewBox="${ICON_VB[n] || "0 0 24 24"}" aria-hidden="true">${ICONS[n] || ICONS.info}</svg>`;
+/* Εικονίδια διαγνωστικών: γεμάτα εικονογράμματα ταμπλό (02_telltales.js). Ό,τι δεν έχει δικό του μπαίνει στον ίδιο δαχτυλίδι. */
+const BADGE_NATIVE = new Set(["airbag", "abs"]); /* έχουν ήδη δικό τους δαχτυλίδι (όπως τα ήθελε ο χρήστης) */
+const icoBadge = (n, cls = "") => TT[n] ? tt(n, cls) : BADGE_NATIVE.has(n) || MDI_RE.test(n || "") ? ico(n, cls)
   : `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.6" stroke-width="1.7"/><g transform="translate(12 12) scale(.58) translate(-12 -12)" stroke-width="2.7">${ICONS[n] || ICONS.info}</g></svg>`;
 const ICON_NAMES = Object.keys(ICONS);
 // Εικονίδια που προσφέρονται στον χρήστη για δικούς του αισθητήρες
 const PICKABLE_ICONS = [
   "info", "alert", "gauge", "thermo", "drop", "fuel", "battery", "battery12", "bolt", "plug", "leaf", "road",
-  "tire", "tirealert", "brake", "fluid", "engine", "key", "airbag", "abs", "door", "hood", "trunk", "seat", "steering",
+  "tire", "tirealert", "brake", "fluid", "engine", "key", "airbag", "abs", "evfault", "turtle", "oil", "door", "hood", "trunk", "seat", "steering",
   "heatwave", "fan", "headlight", "lock", "cartop", "cloudcheck", "speedlimit",
 ];
 
 
+
+/* ───────────────────────── Ενδεικτικές λυχνίες (telltales) ─────────────────────────
+ * Γεμάτα εικονογράμματα σε πλέγμα 32×32, σχεδιασμένα όπως οι λυχνίες του ταμπλό
+ * (ISO 2575): airbag, ABS, φρένα, υγρά, μπαταρίες, τιμόνι, ελαστικό, κινητήρας κ.ά.
+ * Χρώμα = currentColor (πράσινο / κεχριμπάρι / κόκκινο / γκρι ανάλογα με την κατάσταση).
+ * s = γραμμή, χωρίς class = γεμάτο σχήμα. Οι «κοπές» γίνονται με mask. */
+const TT_M = (id, shapes) => `<mask id="tm-${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32"><rect width="32" height="32" fill="#fff"/>${shapes}</mask>`;
+const TT_BANG = (x, y, h = 5.2, r = 1.4) => `<path class="s" d="M${x} ${y}v${h}"/><circle cx="${x}" cy="${y + h + 3.2}" r="${r}"/>`;
+const TT = {
+  /* φρένα: (!) μέσα σε παρενθέσεις */
+  brake: `<circle class="s" cx="16" cy="16" r="7.6"/>${TT_BANG(16, 11.4, 4.6)}
+    <path class="s" d="M7.2 9.4Q3 16 7.2 22.6M24.8 9.4Q29 16 24.8 22.6"/>`,
+  /* υγρά φρένων: σταγόνα με ! */
+  fluid: `${TT_M("fl", '<rect x="14.8" y="12" width="2.4" height="7.2" rx="1.2" fill="#000"/><circle cx="16" cy="22.4" r="1.5" fill="#000"/>')}
+    <path mask="url(#tm-fl)" d="M16 3.6c5.2 5.8 8.4 9.8 8.4 14a8.4 8.4 0 0 1-16.8 0c0-4.2 3.2-8.2 8.4-14z"/>`,
+  /* μπαταρία 12V */
+  battery12: `<path class="s" d="M5.2 11.6h21.6a1.6 1.6 0 0 1 1.6 1.6v11.2a1.6 1.6 0 0 1-1.6 1.6H5.2a1.6 1.6 0 0 1-1.6-1.6V13.2a1.6 1.6 0 0 1 1.6-1.6z"/>
+    <rect x="7" y="7.6" width="5.2" height="4" rx=".9"/><rect x="19.8" y="7.6" width="5.2" height="4" rx=".9"/>
+    <path class="s" d="M8 18.6h5.4M10.7 15.9v5.4M18.8 18.6h5.4"/>`,
+  /* μπαταρία έλξης χαμηλή */
+  battery: `<rect class="s" x="3.4" y="9.6" width="22.6" height="12.8" rx="3"/><rect x="27.4" y="13.6" width="2.2" height="4.8" rx="1"/>
+    <rect x="6.4" y="12.6" width="4.4" height="6.8" rx="1.2"/>${TT_BANG(18.6, 12.6, 3.8, 1.2)}`,
+  /* σύστημα ισχύος: αυτοκίνητο με κεραυνό */
+  evfault: `${TT_M("ev", '<circle cx="8.6" cy="22.4" r="4" fill="#000"/><circle cx="23.4" cy="22.4" r="4" fill="#000"/><path d="M17.6 10.6l-4.6 6.2h3.4l-1.4 5.2 5.6-7.2h-3.6z" fill="#000"/>')}
+    <path mask="url(#tm-ev)" d="M2.6 22.4v-4.6c0-1 .6-1.9 1.6-2.2l3.8-1.3 2.7-4.1c.4-.7 1.2-1.1 2-1.1h6.4c.8 0 1.5.4 2 1l3.1 4.1 2.2.7c1 .3 1.7 1.2 1.7 2.3v5.2z"/>
+    <circle cx="8.6" cy="22.6" r="2.6"/><circle cx="23.4" cy="22.6" r="2.6"/>`,
+  /* περιορισμός ισχύος: χελώνα */
+  turtle: `${TT_M("tu", '<path d="M16.4 12.4v9.2M10.8 15.4l2.8 6.2M22 15.4l-2.8 6.2M8.6 18.6h14.8" stroke="#000" stroke-width="1.5" stroke-linecap="round" fill="none"/>')}
+    <path mask="url(#tm-tu)" d="M5.8 22.4c0-6.2 4.6-10.6 10.6-10.6s10.6 4.4 10.6 10.6z"/>
+    <path d="M26.4 17.4c1.3-1.8 3.7-1.9 4.5-.3.6 1.3-.1 3-1.5 3.5l-3.2 1z"/>
+    <path d="M9.2 22.4v3.6h3.6v-3.6M20.4 22.4v3.6H24v-3.6"/><path class="s" stroke-width="1.8" d="M6 21.4 3 23.6"/>`,
+  /* υποβοήθηση τιμονιού: τιμόνι με ! */
+  steering: `<circle class="s" cx="16" cy="15" r="11.2" stroke-width="2.6"/>
+    <path class="s" stroke-width="3" d="M5.2 12.8Q16 17 26.8 12.8"/><circle cx="16" cy="15" r="2.2"/>
+    <path class="s" stroke-width="2.3" d="M16 19.4v3.4"/><circle cx="16" cy="25.2" r="1.25"/>`,
+  /* πίεση ελαστικών: τομή ελαστικού με ! */
+  tirealert: `<path class="s" stroke-width="2.4" d="M9.2 7.6A10.4 10.4 0 0 0 5.2 16c0 3.2 1.3 6 3.3 8 .5.5 1.2.8 1.9.8h11.2c.7 0 1.4-.3 1.9-.8 2-2 3.3-4.8 3.3-8 0-3.3-1.5-6.3-4-8.4"/>
+    <path class="s" stroke-width="2" d="M9.6 28.4l1.3-2 1.5 2 1.5-2 1.5 2 1.5-2 1.5 2 1.5-2 1.5 2"/>${TT_BANG(16, 11.2, 5)}`,
+  /* μπαταρία κλειδιού */
+  key: `<rect class="s" x="4.4" y="4.8" width="14.4" height="22.4" rx="5.6"/><circle class="s" cx="11.6" cy="9.8" r="2"/>
+    <circle cx="11.6" cy="15.6" r="1.6"/><circle cx="8.2" cy="19.4" r="1.5"/><circle cx="15" cy="19.4" r="1.5"/><circle cx="11.6" cy="23" r="1.5"/>
+    <rect class="s" x="21.4" y="17.6" width="7.4" height="10" rx="1.6" stroke-width="1.9"/><rect x="23.4" y="15.8" width="3.4" height="2" rx=".6"/><rect x="23.2" y="23.4" width="3.8" height="2.8" rx=".5"/>`,
+  /* κινητήρας (check engine) */
+  engine: `<path class="s" stroke-width="2.2" d="M13 8.2h6M16 8.2v3"/>
+    <path class="s" stroke-width="2.2" d="M9.8 11.4h12.4l2.2 2.6h2.4v3.2h1.9v5.6h-1.9v2.6h-4.1l-1.7 2H11.2l-2.6-2.8V11.4z"/>
+    <path class="s" stroke-width="2.2" d="M9.8 15.2H5.6v7.4h3"/><path class="s" stroke-width="1.8" d="M13.6 17.4h5.2M13.6 21h5.2"/>`,
+  /* πορτμπαγκάζ ανοιχτό */
+  trunk: `${TT_M("tk", '<path d="M12.2 5.6h7.6l1 4.2H11.2z" fill="#000"/><rect x="5.8" y="18.6" width="5.6" height="2.6" rx="1.1" fill="#000"/><rect x="20.6" y="18.6" width="5.6" height="2.6" rx="1.1" fill="#000"/><rect x="13.2" y="19" width="5.6" height="2.6" rx="1" fill="#000"/>')}
+    <g mask="url(#tm-tk)"><path d="M7.4 11.8 10.2 3.8c.2-.6.7-1 1.4-1h8.8c.7 0 1.2.4 1.4 1l2.8 8z"/><rect x="3.2" y="14.4" width="25.6" height="10" rx="3.6"/></g>
+    <rect x="5.6" y="24.2" width="5" height="3.6" rx="1.2"/><rect x="21.4" y="24.2" width="5" height="3.6" rx="1.2"/>`,
+    /* πίεση / στάθμη λαδιού */
+  oil: `<path d="M3.2 12.6l3.6 1.3v-2.4H5.2V9.7h7.8v1.8h-1.6v1.6h5.6l6.6-3 1.3 2.5-6.2 3v7.5c0 1.2-1 2.2-2.2 2.2H9c-1.2 0-2.2-1-2.2-2.2v-2.4L3.2 18.2z"/><path d="M27.6 15.6c1.4 1.8 2.2 3 2.2 4.2a2.2 2.2 0 0 1-4.4 0c0-1.2.8-2.4 2.2-4.2z"/>`,
+  /* παράθυρο πάνω / κάτω */
+  window: `<path class="s" stroke-width="2.2" d="M5 27V12.6L9.4 6.2c.4-.6 1-.9 1.7-.9H25c1 0 1.8.8 1.8 1.8V27z"/>
+    <path class="s" stroke-width="2" d="M5 14.4h8.2"/>
+    <path d="M18.6 11.8l-3.4 4.4h6.8zM18.6 24.2l-3.4-4.4h6.8z"/>`,
+};
+const tt = (n, cls = "") => `<svg class="tt ${cls}" viewBox="0 0 32 32" aria-hidden="true">${TT[n]}</svg>`;
 /* ───────────────────────── Γλώσσες (i18n) ─────────────────────────
  * Τα κείμενα στον κώδικα είναι ελληνικά και λειτουργούν ως «κλειδιά». Κάθε άλλη γλώσσα
  * είναι ένα αρχείο lang/<κωδικός>.js δίπλα στην κάρτα, που αντιστοιχίζει ελληνικό κείμενο → μετάφραση:
@@ -306,7 +373,7 @@ const I18N = {
     return new Promise((res) => {
       if (LANGS[code]) return res(true);
       const s = document.createElement("script");
-      s.src = `${SCRIPT_BASE}lang/${code}.js`; s.async = true;
+      s.src = `${SCRIPT_BASE}lang/${code}.js?v=${CARD_VERSION}`; s.async = true;
       s.onload = () => res(!!LANGS[code]); s.onerror = () => res(false);
       document.head.appendChild(s);
     });
@@ -409,23 +476,23 @@ const OPEN_ITEMS = [
   ["binary_sensor.hood", "Καπό"],
   ["binary_sensor.trunk", "Πορτμπαγκάζ"],
 ];
-// [κλειδί, ετικέτα, εικονίδιο]
+// [κλειδί, ετικέτα, εικονίδιο, σοβαρότητα: r = κόκκινο όταν ενεργό (κρίσιμο), y = κεχριμπάρι (προειδοποίηση)]
 const DIAG = [
-  ["binary_sensor.airbag_warning", "Airbag", "airbag"],
-  ["binary_sensor.abs_warning", "ABS", "abs"],
-  ["binary_sensor.brake_warning", "Φρένα", "brake"],
-  ["binary_sensor.brake_fluid_warning", "Υγρά φρένων", "fluid"],
-  ["binary_sensor.12_v_battery_warning", "Μπαταρία 12V", "battery12"],
-  ["binary_sensor.traction_battery_low_warning", "Χαμηλή μπαταρία έλξης", "battery"],
-  ["binary_sensor.power_system_warning", "Σύστημα ισχύος", "bolt"],
-  ["binary_sensor.power_limit_warning", "Περιορισμός ισχύος", "bolt"],
-  ["binary_sensor.power_steering_warning", "Υποβοήθηση τιμονιού", "steering"],
-  ["binary_sensor.tire_pressure_warning", "Πίεση ελαστικών", "tirealert"],
-  ["binary_sensor.front_left_tire_alarm", "Ελαστικό εμπρός αριστερά", "tirealert"],
-  ["binary_sensor.front_right_tire_alarm", "Ελαστικό εμπρός δεξιά", "tirealert"],
-  ["binary_sensor.rear_left_tire_alarm", "Ελαστικό πίσω αριστερά", "tirealert"],
-  ["binary_sensor.rear_right_tire_alarm", "Ελαστικό πίσω δεξιά", "tirealert"],
-  ["binary_sensor.key_fob_battery_low", "Μπαταρία κλειδιού", "key"],
+  ["binary_sensor.airbag_warning", "Airbag", "airbag", "r"],
+  ["binary_sensor.abs_warning", "ABS", "abs", "y"],
+  ["binary_sensor.brake_warning", "Φρένα", "brake", "r"],
+  ["binary_sensor.brake_fluid_warning", "Υγρά φρένων", "fluid", "r"],
+  ["binary_sensor.12_v_battery_warning", "Μπαταρία 12V", "battery12", "y"],
+  ["binary_sensor.traction_battery_low_warning", "Χαμηλή μπαταρία έλξης", "battery", "y"],
+  ["binary_sensor.power_system_warning", "Σύστημα ισχύος", "evfault", "r"],
+  ["binary_sensor.power_limit_warning", "Περιορισμός ισχύος", "turtle", "y"],
+  ["binary_sensor.power_steering_warning", "Υποβοήθηση τιμονιού", "steering", "y"],
+  ["binary_sensor.tire_pressure_warning", "Πίεση ελαστικών", "tirealert", "y"],
+  ["binary_sensor.front_left_tire_alarm", "Ελαστικό εμπρός αριστερά", "tirealert", "y"],
+  ["binary_sensor.front_right_tire_alarm", "Ελαστικό εμπρός δεξιά", "tirealert", "y"],
+  ["binary_sensor.rear_left_tire_alarm", "Ελαστικό πίσω αριστερά", "tirealert", "y"],
+  ["binary_sensor.rear_right_tire_alarm", "Ελαστικό πίσω δεξιά", "tirealert", "y"],
+  ["binary_sensor.key_fob_battery_low", "Μπαταρία κλειδιού", "key", "y"],
 ];
 // Έτοιμες «πληροφορίες»: id → [κλειδί, ετικέτα, εικονίδιο, δεκαδικά]
 const INFO_ITEMS = {
@@ -481,6 +548,7 @@ const CONFIRM_TEXT = {
   windows: ["Άνοιγμα παραθύρων;", "Όλα τα παράθυρα θα ανοίξουν."],
   lock: ["Κλείδωμα οχήματος;", "Το όχημα θα κλειδώσει."],
   climate: ["Αλλαγή κλιματισμού;", "Θα σταλεί εντολή στον κλιματισμό του οχήματος."],
+  climate_temp: ["Ενεργοποίηση κλιματισμού;", "Η αλλαγή θερμοκρασίας θα ενεργοποιήσει τον κλιματισμό του οχήματος."],
   flash: ["Αναλαμπή φώτων;", "Τα φώτα του οχήματος θα αναβοσβήσουν."],
   honk: ["Ηχητικό σήμα;", "Η κόρνα του οχήματος θα ηχήσει."],
   find: ["Εντοπισμός οχήματος;", "Τα φώτα θα αναβοσβήσουν και η κόρνα θα ηχήσει."],
@@ -522,6 +590,12 @@ const BASE_CSS = `
 button, input, select { font: inherit; color: inherit; }
 .i { width: var(--is, 20px); height: var(--is, 20px); fill: none; stroke: currentColor; stroke-width: 1.6;
   stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.tt { width: var(--is, 30px); height: var(--is, 30px); fill: currentColor; stroke: none; flex:none; } .tt .s { fill:none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+ha-icon.i { --mdc-icon-size: var(--is, 20px); width: var(--is, 20px); height: var(--is, 20px); display:inline-flex; color: inherit; }
+.btn.sm:has(.i), .btn.sm:has(.tt) { display:inline-flex; align-items:center; justify-content:center; gap:6px; } .btn.sm .i { --is:16px; }
+.btn.pl { background: rgba(var(--ds-info), .18); border-color: rgba(var(--ds-info), .55); }
+.row > .tt { --is:24px; color: var(--ds-fg2); } .row.tg.on > .tt { color: rgb(var(--ds-info)); }
+.i.w { width: calc(var(--is, 20px) * 1.5); height: auto; overflow: visible; }
 .i .a { fill: currentColor; fill-opacity: .2; }
 .i .k { fill: currentColor; stroke: none; }
 .seg { display:flex; padding:3px; gap:3px; border-radius:14px; background: var(--ds-soft); border:1px solid var(--ds-line); }
@@ -542,7 +616,7 @@ button, input, select { font: inherit; color: inherit; }
 `;
 const VARS = `
   --ds-r: 22px; --ds-ok: 52,211,153; --ds-warn: 251,191,36; --ds-bad: 248,113,113; --ds-info: 56,189,248; --ds-ev: 52,211,153; --ds-fu: 52,211,153;
-  --ds-fg: var(--primary-text-color, #fff); --ds-fg2: var(--secondary-text-color, rgba(255,255,255,.6));
+  --ds-fg: var(--primary-text-color, #fff); --ds-fg2: rgba(255,255,255,.72); --ds-fg2: color-mix(in srgb, var(--primary-text-color, #fff) 72%, transparent);
   --ds-line: rgba(var(--rgb-primary-text-color, 255,255,255), .12); --ds-soft: rgba(var(--rgb-primary-text-color, 255,255,255), .06);
 `;
 
@@ -578,7 +652,7 @@ ${BASE_CSS}
 .total { margin-top: 8px; }
 .total .big { font-size: 40px; font-weight: 300; letter-spacing: -.03em; line-height: .92; text-shadow: 0 2px 14px rgba(0,0,0,.5); }
 .total .big small { font-size: 16px; font-weight: 400; margin-left:4px; opacity:.8; letter-spacing:0; }
-.total .cap { margin-top: 3px; font-size: 11.5px; opacity:.65; }
+.total .cap { margin-top: 3px; font-size: 12.5px; opacity:.8; }
 .total .split { margin-top: 6px; display:flex; gap:10px; font-size: 12px; color: rgba(255,255,255,.85); }
 .total .split span { display:inline-flex; align-items:center; gap:4px; } .total .split .i { --is: 14px; }
 .total .split .e .i { color: rgb(var(--ds-ev)); } .total .split .f .i { color: rgb(var(--ds-fu)); }
@@ -639,13 +713,13 @@ ${BASE_CSS}
 .actions.fit .cell { flex:1 1 0; } .actions.fit .act { --bs: clamp(32px, 11cqw, 52px); }
 .cell { --c: var(--ds-info); display:flex; flex-direction:column; align-items:center; gap:6px; min-width:0; }
 .cell.warn { --c: var(--ds-warn); } .cell.bad { --c: var(--ds-bad); }
-.cell .cap { max-width:100%; font-size:11px; line-height:1.15; text-align:center; color: var(--ds-fg2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.cell .cap.t { color: var(--ds-fg); font-weight:600; font-size:11.5px; }
+.cell .cap { max-width:100%; font-size:12px; line-height:1.15; text-align:center; color: var(--ds-fg2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cell .cap.t { color: var(--ds-fg); font-weight:600; font-size:12.5px; }
 .cell.warn .cap.s, .cell.bad .cap.s { color: rgb(var(--c)); }
 .act { --c: var(--ds-info); position:relative; flex:none; display:grid; place-items:center; width: var(--bs); height: var(--bs); padding:0; cursor:pointer; border-radius:50%;
   border:1px solid var(--ds-line); background: var(--ds-soft); color: var(--ds-fg);
   -webkit-tap-highlight-color: transparent; transition: transform .14s ease, background .25s ease, border-color .25s ease, box-shadow .25s ease; }
-.act .i { width: 46%; height: 46%; color: var(--ds-fg); transition: color .25s ease; }
+.act .i { width: 46%; height: 46%; color: var(--ds-fg); transition: color .25s ease; } .act .i.w { width: 72%; height: auto; }
 .act.ok { --c: var(--ds-ok); } .cell.ok { --c: var(--ds-ok); }
 .act.warn { --c: var(--ds-warn); } .act.bad { --c: var(--ds-bad); }
 .act.warn:not(.on), .act.bad:not(.on) { border-color: rgba(var(--c), .55); } .act.warn:not(.on) .i, .act.bad:not(.on) .i { color: rgb(var(--c)); }
@@ -672,25 +746,33 @@ ${BASE_CSS}
 .t2 { position:relative; overflow:hidden; min-height:118px; padding: 10px 14px 12px; border-radius: 22px; background: var(--ds-soft); border:1px solid var(--ds-line); text-align:left; color: var(--ds-fg); }
 .t2[data-open] { cursor:pointer; -webkit-tap-highlight-color: transparent; transition: transform .14s ease; } .t2[data-open]:active { transform: scale(.985); }
 .t2 .tt { position:relative; z-index:1; font-size: 14.5px; font-weight: 600; letter-spacing:-.01em; }
-.t2 .ts { margin-top: 4px; font-size: 12px; color: var(--ds-fg2); line-height:1.35; }
+.t2 .ts { margin-top: 4px; font-size: 12.5px; color: var(--ds-fg2); line-height:1.35; }
 .t2 .ts b { font-weight:600; color: var(--ds-fg); font-size: 13px; }
-.t2 .ts.chg, .t2 .ts.chg b { color: rgb(var(--ds-ok)); } .t2.batt .ts { max-width: 58%; } .t2 .ts .sub { font-size: 11.5px; color: var(--ds-fg2); }
+.t2 .ts.chg, .t2 .ts.chg b { color: rgb(var(--ds-ok)); } .t2.batt .ts { max-width: 58%; } .t2 .ts .sub { font-size: 12px; color: var(--ds-fg2); }
 .gauge .fg { stroke: rgb(var(--ds-ev)); opacity:.28; }
 .gauge .fp { stroke: rgb(var(--ds-ev)); filter: drop-shadow(0 0 3px rgba(var(--ds-ev), .9)); animation: ds-chgflow 2.4s cubic-bezier(.45,.05,.55,.95) infinite, ds-chgfade 2.4s linear infinite; }
 @keyframes ds-chgflow { from { stroke-dashoffset: var(--fs); } to { stroke-dashoffset: var(--fe); } }
 @keyframes ds-chgfade { 0% { opacity: 0; } 15% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
 .t2 .lg { margin-top: 10px; display:flex; flex-direction:column; gap:3px; font-size:12px; }
 .t2 .lg span { display:flex; align-items:center; gap:4px; } .t2 .lg .i { --is: 14px; } .t2 .lg b { color: var(--ds-fg); font-weight:600; }
-.t2 .lg small { color: var(--ds-fg2); font-size: 10.5px; }
-.knob { --kc: var(--ds-info); position:absolute; right:-18px; bottom:-16px; width: 112px; height: 112px; border-radius:50%; border:0; cursor:pointer; padding:0;
-  display:grid; place-items:center; box-sizing:border-box;
-  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), rgba(255,255,255,.05) 70%); box-shadow: inset 0 0 0 1px var(--ds-line), 0 10px 24px rgba(0,0,0,.25);
-  -webkit-tap-highlight-color: transparent; transition: background .3s ease, transform .14s ease, box-shadow .3s ease; }
-.knob .i { --is: 32px; color: var(--ds-fg2); transition: color .3s ease; }
-.knob.on { background: radial-gradient(circle at 35% 30%, rgba(var(--kc), .95), rgba(var(--kc), .7)); box-shadow: 0 10px 28px rgba(var(--kc), .4); } .knob.on .i { color:#fff; }
-.knob:active { transform: scale(.94); } .knob[disabled] { opacity:.4; }
-.knob .ring { position:absolute; inset:-2px; width: calc(100% + 4px); height: calc(100% + 4px); pointer-events:none; overflow:visible; }
-.knob .ring rect { fill:none; stroke: rgb(var(--kc)); stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 20 80; animation: ds-dash 1.2s linear infinite; }
+.t2 .lg small { color: var(--ds-fg2); font-size: 11.5px; }
+/* πλακίδιο Κλιματισμός: θερμοκρασία μέσα, στόχος με ± και κουμπί on/off */
+.t2.temp { display:grid; grid-template-columns: 1fr auto; grid-template-rows: auto 1fr auto; align-items:start; min-height:132px; }
+.t2.temp .tt { grid-column:1; grid-row:1; align-self:center; }
+.tpw { --kc: var(--ds-info); grid-column:2; grid-row:1; position:relative; width:40px; height:40px; margin:-6px -8px 0 0; border-radius:50%; border:1px solid var(--ds-line); background: var(--ds-soft); display:grid; place-items:center; padding:0; cursor:pointer; color: var(--ds-fg2); -webkit-tap-highlight-color: transparent; transition: background .25s ease, color .25s ease, transform .14s ease, box-shadow .25s ease; }
+.tpw .i { --is:18px; } .tpw:active { transform: scale(.92); } .tpw[disabled] { opacity:.4; cursor:not-allowed; }
+.tpw.on { background: rgb(var(--kc)); border-color: transparent; color:#fff; box-shadow: 0 4px 14px rgba(var(--kc), .4); }
+.tpw:focus-visible, .cs:focus-visible { outline: 2px solid rgb(var(--ds-info)); outline-offset: 2px; }
+.tpw .ring { position:absolute; inset:-3px; width: calc(100% + 6px); height: calc(100% + 6px); pointer-events:none; overflow:visible; }
+.tpw .ring rect { fill:none; stroke: rgb(var(--kc)); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 20 80; animation: ds-dash 1.2s linear infinite; }
+.t2.temp .ct { grid-column:1 / -1; grid-row:2; align-self:center; display:flex; align-items:baseline; gap:8px; padding-top:2px; }
+.t2.temp .cur { font-size:38px; font-weight:300; letter-spacing:-.03em; line-height:1; color: var(--ds-fg); }
+.t2.temp .lbl { font-size:12px; color: var(--ds-fg2); }
+.cstep { grid-column:1 / -1; grid-row:3; display:flex; align-items:center; justify-content:space-between; gap:6px; margin-top:6px; padding:3px; border-radius:999px; background: rgba(0,0,0,.22); border:1px solid var(--ds-line); }
+.cstep.idle .cv b { color: var(--ds-fg2); }
+.cs { width:34px; height:34px; flex:none; border-radius:50%; border:0; display:grid; place-items:center; padding:0; cursor:pointer; background: var(--ds-soft); color: var(--ds-fg); -webkit-tap-highlight-color: transparent; transition: transform .12s ease, background .2s ease; }
+.cs .i { --is:16px; } .cs:active { transform: scale(.9); background: rgba(var(--ds-info), .25); } .cs[disabled] { opacity:.4; }
+.cv { display:flex; flex-direction:column; align-items:center; line-height:1.1; min-width:0; } .cv small { font-size:11px; color: var(--ds-fg2); } .cv b { font-size:15px; font-weight:600; color: rgb(var(--ds-info)); }
 .gauge { position:absolute; right:-35px; bottom:-35px; width: 150px; height: 150px; pointer-events:none; }
 .gauge svg { width:100%; height:100%; overflow:visible; }
 .gauge circle { fill:none; stroke-linecap:round; } .gauge .tr { stroke: var(--ds-line); }
@@ -700,6 +782,17 @@ ${BASE_CSS}
 .gauge .c { display:flex; flex-direction:column; justify-content:center; align-items:center; line-height:1.05; }
 .gauge .c .gf { display:inline-flex; align-items:center; gap:2px; font-size:15px; font-weight:700; letter-spacing:-.02em; margin-top:2px; } .gauge .c .gf svg.i { width:14px; height:14px; transform:none; overflow:visible; }
 .gauge .c small { font-size:12px; font-weight:500; color: var(--ds-fg2); }
+.knob { --kc: var(--ds-info); position:absolute; right:-18px; bottom:-16px; width: 112px; height: 112px; border-radius:50%; border:0; cursor:pointer; padding:0;
+  display:grid; place-items:center; box-sizing:border-box;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), rgba(255,255,255,.05) 70%); box-shadow: inset 0 0 0 1px var(--ds-line), 0 10px 24px rgba(0,0,0,.25);
+  -webkit-tap-highlight-color: transparent; transition: background .3s ease, transform .14s ease, box-shadow .3s ease; }
+.knob .i { --is: 32px; color: var(--ds-fg2); transition: color .3s ease; }
+.knob.on { background: radial-gradient(circle at 35% 30%, rgba(var(--kc), .95), rgba(var(--kc), .7)); box-shadow: 0 10px 28px rgba(var(--kc), .4); } .knob.on .i { color:#fff; }
+.knob:active { transform: scale(.94); } .knob[disabled] { opacity:.4; }
+.knob .ring { position:absolute; inset:-2px; width: calc(100% + 4px); height: calc(100% + 4px); pointer-events:none; overflow:visible; }
+.knob .ring rect { fill:none; stroke: rgb(var(--kc)); stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 20 80; animation: ds-dash 1.2s linear infinite; }
+.t2.batt { container-type: inline-size; }
+@container (max-width: 175px) { .gauge { width:116px; height:116px; right:-28px; bottom:-28px; } .gauge .c { font-size:22px; } .gauge .c .gf { font-size:12px; } .gauge .c small { font-size:10px; } .t2.batt .ts { max-width: 100%; } .t2.batt .lg { margin-top:6px; } }
 
 /* Όχημα */
 .veh { display:flex; flex-direction:column; gap:10px; flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; } .veh::-webkit-scrollbar { display:none; }
@@ -778,13 +871,27 @@ ${BASE_CSS}
 
 /* Πληροφορίες */
 .info { display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; } .info::-webkit-scrollbar { display:none; }
-.tile { flex:1 0 auto; min-width: 88px; display:flex; align-items:center; gap:9px; padding:9px 12px; border-radius:16px; background: var(--ds-soft); border:1px solid var(--ds-line); }
-.tile .i { --is: 20px; color: rgb(var(--ds-info)); } .tile .v { font-size:14px; font-weight:600; color: var(--ds-fg); white-space:nowrap; } .tile .l { font-size:11px; color: var(--ds-fg2); white-space:nowrap; }
-.tells { position:absolute; right:16px; bottom:16px; z-index:8; display:flex; gap:6px; } .tells[hidden] { display:none; }
-.tell { --c: var(--ds-bad); position:relative; width:34px; height:34px; padding:0; border:0; background:none; display:grid; place-items:center; cursor:pointer;
-  color: rgb(var(--c)); filter: drop-shadow(0 0 7px rgba(var(--c), .55)) drop-shadow(0 1px 4px rgba(0,0,0,.7)); -webkit-tap-highlight-color: transparent; }
-.tell .i { --is: 30px; } .tell.ok { --c: var(--ds-ok); } .tell.na { --c: 148,163,184; } .tell:active { transform: scale(.92); }
-.tell.more { color:#fff; font-size:12px; font-weight:600; filter:none; width:auto; padding:0 4px; text-shadow:0 1px 6px rgba(0,0,0,.7); }
+.tile { flex:1 0 auto; min-width: 88px; display:flex; align-items:center; gap:11px; padding:12px 15px; border-radius:18px; background: var(--ds-soft); border:1px solid var(--ds-line); }
+.tile .i { --is: 24px; color: rgb(var(--ds-info)); } .tile .v { font-size:16px; font-weight:600; color: var(--ds-fg); white-space:nowrap; } .tile .l { font-size:13px; color: var(--ds-fg2); white-space:nowrap; }
+.tells { position:absolute; right:14px; bottom:14px; z-index:8; display:flex; align-items:center; gap:4px; } .tells[hidden] { display:none; }
+.tell { --c: var(--ds-bad); position:relative; width:36px; height:36px; padding:0; border:0; background:none; display:grid; place-items:center; cursor:pointer;
+  color: rgb(var(--c)); filter: drop-shadow(0 0 8px rgba(var(--c), .5)) drop-shadow(0 1px 4px rgba(0,0,0,.75)); -webkit-tap-highlight-color: transparent; }
+.tell .i, .tell .tt { --is: 32px; } .tell.ok { --c: var(--ds-ok); } .tell.warn { --c: var(--ds-warn); } .tell.bad { --c: var(--ds-bad); } .tell.na { --c: 148,163,184; } .tell:active { transform: scale(.92); }
+.tell .n { position:absolute; right:-1px; top:-1px; min-width:16px; height:16px; padding:0 4px; box-sizing:border-box; border-radius:8px; display:grid; place-items:center; font-size:10px; font-weight:700; line-height:1; color:#111; background: rgb(var(--c)); filter:none; }
+.tell.more { width:auto; min-width:34px; height:28px; padding:0 9px; border-radius:14px; font-size:13px; font-weight:700; color:#fff; filter:none; background: rgba(15,18,24,.62); border:1px solid rgba(255,255,255,.28); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+/* popup διαγνωστικών */
+.box.dg { min-height:0; max-height:86%; } .box.dg .hd { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.dgsum { margin:4px 2px 10px; font-size:13px; font-weight:600; color: var(--ds-fg2); } .dgsum.ok { color: rgb(var(--ds-ok)); } .dgsum.bad { color: rgb(var(--ds-bad)); }
+.dgbody { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding-right:2px; }
+.dgh { display:flex; align-items:center; gap:7px; margin:12px 2px 6px; font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color: var(--ds-fg2); } .dgh em { font-style:normal; font-weight:600; padding:1px 7px; border-radius:9px; background: var(--ds-soft); letter-spacing:0; }
+.dgh.bad { color: rgb(var(--ds-bad)); } .dgh.ok { color: rgb(var(--ds-ok)); }
+.dglist { display:grid; grid-template-columns: 1fr; gap:6px; } .dglist.ok, .dglist.na { grid-template-columns: 1fr 1fr; }
+.dgrow { --c: var(--ds-ok); display:flex; align-items:center; gap:10px; padding:8px 10px; min-height:52px; border-radius:14px; border:1px solid rgba(var(--c), .3); background: rgba(var(--c), .09); color: var(--ds-fg); text-align:left; cursor:pointer; font:inherit; -webkit-tap-highlight-color: transparent; }
+.dgrow .tt, .dgrow .i { --is: 34px; color: rgb(var(--c)); } .dgrow > span { min-width:0; display:flex; flex-direction:column; gap:1px; } .dgrow b { font-size:13px; font-weight:600; line-height:1.2; overflow-wrap:anywhere; }
+.dgrow small { font-size:11.5px; color: rgb(var(--c)); } .dgrow.warn { --c: var(--ds-warn); } .dgrow.bad { --c: var(--ds-bad); } .dgrow.na { --c: 148,163,184; }
+.dgrow.bad, .dgrow.warn { background: rgba(var(--c), .14); border-color: rgba(var(--c), .55); } .dgrow.ok .tt, .dgrow.ok .i { --is: 28px; } .dgrow:active { transform: scale(.985); }
+.dgnew { display:flex; flex-direction:column; gap:8px; margin:0 0 6px; padding:10px 12px; border-radius:14px; border:1px dashed rgba(var(--ds-info), .6); background: rgba(var(--ds-info), .1); } .dgnew b { display:block; font-size:13px; } .dgnew small { display:block; margin-top:2px; font-size:11.5px; color: var(--ds-fg2); }
+.dgnew .btnrow { margin:0; justify-content:flex-end; } .dgfoot { margin-top:10px; justify-content:center; }
 .tile.bad .i { color: rgb(var(--ds-bad)); }
 
 /* Διαγνωστικά */
@@ -830,6 +937,34 @@ ha-card:has(.sheet.show) *:not(.sheet):not(.sheet *), ha-card.off *, ha-card.off
 @keyframes ds-up { from { transform: translateY(110%) } to { transform:none } }
 @keyframes ds-fade { from { opacity:0 } to { opacity:1 } }
 @media (prefers-reduced-motion: reduce) { .fx *, .act, .act .ring rect, .gauge .fp, .fxs *, .stage img, .bar b, .box, .l { animation: none !important; transition: none !important; } }
+/* αριθμοί σταθερού πλάτους */
+.total .big, .gauge .c, .t2 .lg b, .t2 .ts b, .tile .v, .cur, .cv b, .tp .v, .picker, .pk * { font-variant-numeric: tabular-nums; }
+
+/* κουμπιά: κύρια σειρά + «Περισσότερα» */
+.actions.split { --bs: 60px; display:block; padding:2px 0 4px; }
+.actions.split.sz-s { --bs: 50px; } .actions.split.sz-l { --bs: 68px; }
+.actions.split .prow { display:grid; grid-template-columns: repeat(var(--np, 4), 1fr); gap: 4px; }
+.actions.split .mrow { display:flex; flex-wrap:wrap; justify-content:center; gap: 14px 4px; padding: 0; transition: padding .28s ease; }
+.actions.split.moreopen .mrow { padding: 12px 0 8px; }
+.actions.split .mrow .cell { flex: 0 0 calc((100% - (var(--np, 4) - 1) * 4px) / var(--np, 4)); }
+.actions.split .mwrap { display:grid; grid-template-rows: 0fr; transition: grid-template-rows .28s ease, opacity .2s ease; opacity:0; }
+.actions.split.moreopen .mwrap { grid-template-rows: 1fr; opacity:1; }
+.actions.split .mrow { min-height:0; overflow:hidden; }
+.actions.split .mrow .cap.t { font-size:12.5px; }
+.morebtn { position:relative; display:flex; align-items:center; justify-content:center; margin:0 auto; padding:0; width:52px; height:22px; min-height:0; border-radius:999px; border:1px solid var(--ds-line); background: var(--ds-soft); color: var(--ds-fg2); cursor:pointer; -webkit-tap-highlight-color: transparent; }
+.morebtn::before { content:""; position:absolute; inset:-12px -14px; } /* μεγάλη περιοχή αφής, αόρατη */
+.morebtn > span:not(.mdot) { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+.actions.split .morebtn { margin-top:6px; margin-bottom:2px; } .actions.split .morebtn:hover { color: var(--ds-fg); }
+.morebtn .i { --is:16px; transition: transform .25s ease; } .actions.moreopen .morebtn .i { transform: rotate(180deg); }
+.morebtn:focus-visible { outline: 2px solid rgb(var(--ds-info)); outline-offset: 2px; }
+.morebtn .mdot { position:absolute; top:3px; right:9px; width:7px; height:7px; border-radius:50%; background: rgb(var(--ds-warn)); }
+.actions.offline .cell { opacity:.42; filter: grayscale(1); } .actions.offline .act { cursor:default; }
+
+@media (max-width:639px) { .box::before { content:""; flex:none; display:block; width:38px; height:4px; margin:-8px auto 10px; border-radius:3px; background: var(--ds-line); } .box.confirm::before { margin-bottom:6px; } }
+.box:focus { outline:none; }
+/* Car View: απαλή σκιά δαπέδου και μήνυμα «όλα καλά» */
+.isop::before { content:""; position:absolute; left:20%; right:14%; bottom:19%; height:9%; background: radial-gradient(ellipse at center, rgba(0,0,0,.6), transparent 70%); filter: blur(5px); pointer-events:none; }
+.vline.good { color: var(--ds-fg2); }
 `;
 
 const SETTINGS_CSS = `
@@ -883,6 +1018,39 @@ textarea { width:100%; box-sizing:border-box; min-height:150px; padding:10px; bo
 `;
 
 
+
+/* ───────────────────────── Ανακάλυψη νέων αισθητήρων ─────────────────────────
+ * Αν το integration προσθέσει νέα προειδοποίηση (π.χ. binary_sensor.s05_engine_warning), η κάρτα δεν την ξέρει.
+ * Εδώ ψάχνουμε στο HA για binary_sensor του ίδιου οχήματος που μοιάζουν με προειδοποίηση και δεν είναι ήδη στη λίστα. */
+const DISC_CLASSES = new Set(["problem", "safety", "tamper", "battery", "smoke", "gas", "carbon_monoxide"]);
+const DISC_SKIP = new Set(["lock", "door", "window", "plug", "light", "heat", "cold", "connectivity", "battery_charging", "power", "opening", "garage_door", "running", "moving", "presence", "occupancy", "motion", "vibration", "update"]);
+const DISC_NAME = /(warning|alarm|fault|error|alert|failure|malfunction|_low)$/;
+const guessDiagIcon = (s) => {
+  const t = String(s).toLowerCase();
+  const m = [[/airbag/, "airbag"], [/abs/, "abs"], [/fluid/, "fluid"], [/brake/, "brake"], [/tire|tyre|tpms/, "tirealert"], [/steer|eps/, "steering"], [/12_?v|aux/, "battery12"],
+    [/traction|hv_|high_voltage/, "battery"], [/battery|soc/, "battery"], [/oil/, "oil"], [/engine|motor|emission/, "engine"], [/power_limit|derat|limit/, "turtle"], [/power|system|inverter|drive/, "evfault"], [/key|fob/, "key"], [/trunk|tailgate/, "trunk"]];
+  for (const [re, ic] of m) if (re.test(t)) return ic;
+  return "alert";
+};
+const discoverDiag = (hass, c) => {
+  const st = hass?.states; if (!st) return [];
+  const p = effPrefix(hass, c);
+  const known = new Set([...DIAG.map((d) => resolveId(hass, c, d[0])), ...OPEN_ITEMS.map((o) => resolveId(hass, c, o[0])), ...OTHER_KEYS.map((k) => resolveId(hass, c, k)),
+    ...(c.diag_custom || []).map((x) => x.entity), ...(c.info_custom || []).map((x) => x.entity), ...(c.diag_ignore || [])]);
+  const mine = new Set(), pre = `binary_sensor.${p}_`;
+  for (const id of Object.keys(st)) if (id.startsWith(pre)) mine.add(id);
+  const reg = hass.entities, dev = reg && reg[resolveId(hass, c, "lock.doors")]?.device_id;
+  if (reg && dev) for (const e of Object.values(reg)) if (e.device_id === dev && e.entity_id.startsWith("binary_sensor.") && !e.hidden_by && !e.disabled_by) mine.add(e.entity_id);
+  const out = [];
+  for (const id of mine) {
+    const o = st[id]; if (!o || known.has(id)) continue;
+    const dc = o.attributes?.device_class, name = id.slice(id.indexOf(".") + 1);
+    if (!(DISC_CLASSES.has(dc) || (!DISC_SKIP.has(dc) && DISC_NAME.test(name)))) continue;
+    const fn = String(o.attributes?.friendly_name || name), label = fn.replace(new RegExp(`^${p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s+`, "i"), "");
+    out.push({ entity: id, label: label.charAt(0).toUpperCase() + label.slice(1), icon: guessDiagIcon(name), on: String(o.state).toLowerCase() === "on" });
+  }
+  return out.sort((a, b) => a.label.localeCompare(b.label));
+};
 /* ───────────────────────── Κάρτα ───────────────────────── */
 const RING = '<svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><rect x="2.5" y="2.5" width="95" height="95" rx="47.5" pathLength="100"/></svg>';
 const REBUILD_KEYS = ["image_path", "layers_path", "images", "name", "image_scale", "image_aspect", "prefix", "entities"];
@@ -916,7 +1084,7 @@ class DeepalS05Card extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" }); I18N.watch(this.shadowRoot);
     this._pending = {}; this._flashes = {}; this._opt = {}; this._last = {};
-    this._toastState = null; this._confirm = null; this._customize = false;
+    this._toastState = null; this._confirm = null; this._customize = false; this._diagSheet = false;
     this._sig = null; this._built = false; this._stab = "sections";
   }
 
@@ -945,9 +1113,11 @@ class DeepalS05Card extends HTMLElement {
   }
   connectedCallback() {
     I18N.subs.add(this);
+    if (!this._onKey) this._onKey = (e) => this._key(e);
+    document.addEventListener("keydown", this._onKey, true);
     if (window.IntersectionObserver && !this._io) { this._io = new IntersectionObserver(([e]) => { if (this._el && this._el.card) this._el.card.classList.toggle("off", !e.isIntersecting); }); this._io.observe(this); }
   }
-  disconnectedCallback() { I18N.subs.delete(this); if (this._yPend) { this._yPend = false; this._customize = false; this._doSaveYaml(); } if (this._io) { this._io.disconnect(); this._io = null; } }
+  disconnectedCallback() { I18N.subs.delete(this); if (this._onKey) document.removeEventListener("keydown", this._onKey, true); if (this._yPend) { this._yPend = false; this._customize = false; this._doSaveYaml(); } if (this._io) { this._io.disconnect(); this._io = null; } }
   getCardSize() { return 9; }
   getGridOptions() { return { columns: 12, min_columns: 6, rows: "auto" }; }
 
@@ -1068,19 +1238,36 @@ class DeepalS05Card extends HTMLElement {
     const st = this._allKeys().map((k) => this._obj(k)?.state ?? "∅").join("|");
     const cu = [...(this._c.diag_custom || []), ...(this._c.info_custom || [])].map((x) => this._eobj(x.entity)?.state ?? "∅").join("|");
     return [st, cu, Math.floor(Date.now() / 60000), Object.keys(this._pending).join(","),
-      Object.entries(this._flashes).map(([k, v]) => k + v.type).join(","), this._confirm ? this._confirm.id : "", String(this._customize),
-      JSON.stringify(this._c), JSON.stringify(this._opt), String(this._tpend), String((this._tgt() || {}).state), String(this._view), this._toastState ? this._toastState.msg : ""].join("#");
+      Object.entries(this._flashes).map(([k, v]) => k + v.type).join(","), this._confirm ? this._confirm.id : "", String(this._customize), String(this._diagSheet),
+      JSON.stringify(this._c), JSON.stringify(this._opt), String(this._tpend), String(this._moreOpen), String((this._tgt() || {}).state), String(this._view), this._toastState ? this._toastState.msg : ""].join("#");
   }
   _force() { this._sig = null; if (this._hass && this._c) this._render(); }
   _diagAvail() { return DIAG.filter((d) => this._obj(d[0])); }
   _diagItems() {
     const c = this._c, avail = this._diagAvail(), selIds = Array.isArray(c.diag) ? c.diag : DIAG.map((d) => d[0]);
-    const items = avail.filter((d) => selIds.includes(d[0])).map((d) => ({ label: d[1], icon: d[2], ent: this._id(d[0]), on: this._is(d[0], "on"), na: this._s(d[0]) === null }));
+    const mk = (label, icon, ent, on, na, sev) => ({ label, icon, ent, on, na, st: on ? sev : na ? "na" : "ok" });
+    const items = avail.filter((d) => selIds.includes(d[0])).map((d) => mk(d[1], d[2], this._id(d[0]), this._is(d[0], "on"), this._s(d[0]) === null, d[3] === "r" ? "bad" : "warn"));
     for (const x of c.diag_custom || []) {
       const o = this._eobj(x.entity);
-      items.push({ label: x.label || o?.attributes?.friendly_name || x.entity, icon: x.icon || "alert", ent: x.entity, on: !!o && ["on", "true", "problem", "alarm", "low"].includes(String(o.state).toLowerCase()), na: !o || BAD.includes(o.state) });
+      items.push(mk(x.label || o?.attributes?.friendly_name || x.entity, x.icon || "alert", x.entity, !!o && ["on", "true", "problem", "alarm", "low"].includes(String(o.state).toLowerCase()), !o || BAD.includes(o.state), "bad"));
     }
     return items;
+  }
+  /* Popup «Διαγνωστικά»: όλοι οι αισθητήρες, χωρισμένοι σε προβλήματα / μη διαθέσιμοι / εντάξει */
+  _diagHtml() {
+    const it = this._diagItems(), rank = { bad: 0, warn: 1, na: 2, ok: 3 };
+    const bad = it.filter((x) => x.st === "bad" || x.st === "warn").sort((a, b) => rank[a.st] - rank[b.st]), na = it.filter((x) => x.st === "na"), ok = it.filter((x) => x.st === "ok");
+    const stTxt = { bad: "Πρόβλημα", warn: "Προειδοποίηση", na: "Μη διαθέσιμο", ok: "Εντάξει" };
+    const row = (d) => `<button class="dgrow ${d.st}" data-ent="${esc(d.ent)}" title="${esc(d.label)}">${icoBadge(d.icon)}<span><b>${esc(d.label)}</b><small>${esc(T(stTxt[d.st]))}</small></span></button>`;
+    const sec = (title, arr, cls) => arr.length ? `<h4 class="dgh ${cls}">${esc(T(title))} <em>${arr.length}</em></h4><div class="dglist ${cls}">${arr.map(row).join("")}</div>` : "";
+    const sum = [T("{0} αισθητήρες", it.length), ok.length ? T("{0} εντάξει", ok.length) : "", bad.length ? T(bad.length === 1 ? "{0} πρόβλημα" : "{0} προβλήματα", bad.length) : "", na.length ? T("{0} μη διαθέσιμοι", na.length) : ""].filter(Boolean).join(" · ");
+    const found = discoverDiag(this._hass, this._c);
+    const nw = found.length ? `<div class="dgnew"><div><b>${esc(T(found.length === 1 ? "Βρέθηκε {0} νέος αισθητήρας" : "Βρέθηκαν {0} νέοι αισθητήρες", found.length))}</b><small>${esc(found.map((f) => f.label).join(", "))}</small></div>
+      <div class="btnrow"><button class="btn sm" data-dg-ignore>${esc(T("Αγνόηση"))}</button><button class="btn sm pl" data-dg-add>${ico("plus")} ${esc(T("Προσθήκη"))}</button></div></div>` : "";
+    return `<div class="hd"><h3>${esc(T("Διαγνωστικά"))}</h3><button class="x" data-close aria-label="Κλείσιμο">${ico("close")}</button></div>
+      <p class="dgsum ${bad.length ? "bad" : "ok"}">${bad.length ? "" : "✓ "}${esc(sum)}</p>
+      <div class="dgbody">${nw}${it.length ? "" : `<p class="hint">${esc(T("Δεν υπάρχουν αισθητήρες διαγνωστικών. Πρόσθεσέ τους από τις Ρυθμίσεις."))}</p>`}${sec("Προβλήματα", bad, "bad")}${sec("Μη διαθέσιμοι", na, "na")}${sec("Εντάξει", ok, "ok")}</div>
+      <div class="btnrow dgfoot"><button class="btn sm" data-dg-set>${ico("sliders")} ${esc(T("Ρυθμίσεις αισθητήρων"))}</button></div>`;
   }
 
   /* ───── κατάσταση οχήματος ───── */
@@ -1125,6 +1312,7 @@ class DeepalS05Card extends HTMLElement {
     const ac = this._n(acKey);
     return ac && ac > 0 ? `AC ${Math.round(ac)} ${this._unit(acKey) || "A"}` : "";
   }
+  _offline() { const s = this._s("binary_sensor.cloud_connection"); return s === "off" || s === "unavailable"; }
   _status(v) {
     const cloudOk = this._is("binary_sensor.cloud_connection", "on");
     const left = this._s("sensor.remaining_charge_time_h_mm");
@@ -1134,7 +1322,8 @@ class DeepalS05Card extends HTMLElement {
     }
     const pl = this._pending && this._pending.lock;
     if (pl) { const un = pl.before === "locked"; return { icon: un ? "unlock" : "lock", text: un ? "Ξεκλειδώνει…" : "Κλειδώνει…", sub: "Αναμονή επιβεβαίωσης από το όχημα", rgb: "var(--ds-warn)" }; }
-    if (!cloudOk) return { icon: "cloudoff", text: "Χωρίς σύνδεση", sub: "Δεν υπάρχει επικοινωνία με το Deepal Cloud", rgb: "var(--ds-bad)" };
+    if (this._s("binary_sensor.cloud_connection") === null && this._s("lock.doors") === null) return { icon: "alert", text: "Δεν βρέθηκε το όχημα", sub: "Έλεγξε το πρόθεμα στις Ρυθμίσεις → Αισθητήρες", rgb: "var(--ds-warn)" };
+    if (!cloudOk) return { icon: "cloudoff", text: "Εκτός σύνδεσης", sub: T("Τελευταία ενημέρωση {0}", this._age()), rgb: "var(--ds-bad)" };
     if (v.charging) return { icon: "bolt", text: "Φορτίζει", sub: "", rgb: "var(--ds-ok)" };
     const alerts = this._diagItems().filter((d) => d.on).length, warn = alerts ? T(alerts === 1 ? "{0} προειδοποίηση" : "{0} προειδοποιήσεις", alerts) : "";
     if (v.plugged) return { icon: "plug", text: "Φορτιστής συνδεδεμένος", sub: warn, rgb: "var(--ds-warn)" };
@@ -1167,6 +1356,7 @@ class DeepalS05Card extends HTMLElement {
     const lock = this._s("lock.doors"), win = this._s("cover.windows"), trunk = this._s("cover.trunk"), climate = this._s("climate.cabin_climate");
     const climateOn = this._climateIsOn();
     const cCall = climate === null ? null : this._climateCall(!climateOn);
+    const tg = (() => { const t = this._tgt(); const n = t ? parseFloat(t.state) : NaN; return Number.isFinite(n) ? n : null; })();
     const openTone = (s) => (s === "closed" ? "" : s === null ? "bad" : "warn");
     const txt = (s, closed, open) => (s === "closed" ? closed : s === "open" ? open : s === null ? "μη διαθέσιμο" : s);
     const all = {
@@ -1177,7 +1367,7 @@ class DeepalS05Card extends HTMLElement {
         watch: "cover.windows", confirm: win === "closed" ? "windows" : null, call: ["cover", "toggle", "cover.windows"] },
       trunk: { on: trunk === "open", icon: trunk === "open" ? "trunkopen" : "trunk", sub: txt(trunk, "κλειστό", "ανοιχτό"), tone: openTone(trunk), disabled: trunk === null, watch: "cover.trunk", confirm: trunk === "closed" ? "trunk" : null,
         call: ["cover", "toggle", "cover.trunk"] },
-      climate: { on: climateOn, icon: climateOn ? "snow" : "snowoff", sub: climate === null ? "μη διαθέσιμο" : climateOn ? "ενεργός" : "ανενεργός", tone: climate === null ? "bad" : "", disabled: climate === null, confirm: "climate",
+      climate: { on: climateOn, icon: climateOn ? "snow" : "snowoff", sub: climate === null ? "μη διαθέσιμο" : climateOn ? (tg !== null ? `ενεργός · ${this._fmtNum(tg, 1)}°` : "ενεργός") : "ανενεργός", tone: climate === null ? "bad" : "", disabled: climate === null, confirm: "climate",
         watch: this._obj("binary_sensor.climate_on") ? "binary_sensor.climate_on" : "climate.cabin_climate", timeout: 35000, call: cCall,
         unsupported: climateOn ? "Ο κλιματισμός δεν έχει εντολή απενεργοποίησης σε αυτή την οντότητα" : "Ο κλιματισμός δεν έχει εντολή ενεργοποίησης σε αυτή την οντότητα" },
       tires: (() => { const s = this._tiresSummary(); return { icon: "tirealert", ...s, open: "iso" }; })(),
@@ -1294,8 +1484,39 @@ class DeepalS05Card extends HTMLElement {
     this._toastTimer = setTimeout(() => { this._toastState = null; this._force(); }, ((Number(this._c.toast_duration) > 0 ? Number(this._c.toast_duration) : 5) + (type === "error" ? 3 : 0)) * 1000);
     this._force();
   }
-  _closeSheet() { clearTimeout(this._confirmTimer); this._confirm = null; const wasC = this._customize; this._customize = false; this._uiSave(); this._force(); if (wasC && this._yPend) { this._yPend = false; this._saveYaml(); } }
-  _vsheetOpen() { return !!this._view && !this._confirm && !this._customize; }
+  _diagAct(d) {
+    if (d.dgSet !== undefined) { this._diagSheet = false; this._stab = "sensors"; this._customize = true; return this._force(); }
+    const found = discoverDiag(this._hass, this._c);
+    if (d.dgAdd !== undefined) { this._patch({ diag_custom: [...(this._c.diag_custom || []), ...found.map((f) => ({ entity: f.entity, label: f.label, icon: f.icon }))] }); }
+    else if (d.dgIgnore !== undefined) { this._patch({ diag_ignore: [...new Set([...(this._c.diag_ignore || []), ...found.map((f) => f.entity)])] }); }
+    this._force();
+  }
+  _closeSheet() { clearTimeout(this._confirmTimer); if (this._confirm && this._confirm.temp !== undefined) this._tpend = undefined; this._confirm = null; const wasC = this._customize; this._customize = false; this._diagSheet = false; this._uiSave(); this._force(); if (wasC && this._yPend) { this._yPend = false; this._saveYaml(); } }
+  _popupBox() { if (!this._el) return null; if (this._confirm || this._customize || this._diagSheet) return this._el.box; return this._view ? this._el.vbox : null; }
+  _closeTop() { if (this._confirm || this._customize || this._diagSheet) return this._closeSheet(); if (this._view) { this._view = null; this._force(); } }
+  _key(e) {
+    const box = this._popupBox(); if (!box) return;
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); return this._closeTop(); }
+    if (e.key !== "Tab") return;
+    const f = [...box.querySelectorAll('button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter((x) => x.offsetParent !== null || x.getClientRects().length);
+    if (!f.length) return;
+    const act = this.shadowRoot.activeElement, i = f.indexOf(act);
+    if (e.shiftKey && (i <= 0)) { e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && (i === f.length - 1 || i < 0)) { e.preventDefault(); f[0].focus(); }
+  }
+  _focusSync() {
+    const open = !!this._popupBox();
+    if (open && !this._wasOpen) {
+      const a = this.shadowRoot.activeElement;
+      this._retSel = a ? (a.dataset.id ? `[data-id="${a.dataset.id}"]` : a.dataset.more !== undefined ? "[data-more]" : a.id ? `#${a.id}` : a.className ? `.${String(a.className).split(" ")[0]}` : null) : null;
+      requestAnimationFrame(() => { const b = this._popupBox(); const t = b && (b.querySelector(".go") || b.querySelector(".x") || b.querySelector("button")); if (t) t.focus({ preventScroll: true }); });
+    } else if (!open && this._wasOpen && this._retSel) {
+      const sel = this._retSel; this._retSel = null;
+      requestAnimationFrame(() => { const t = this.shadowRoot.querySelector(sel); if (t && !t.disabled) t.focus({ preventScroll: true }); });
+    }
+    this._wasOpen = open;
+  }
+  _vsheetOpen() { return !!this._view && !this._confirm && !this._customize && !this._diagSheet; }
 
   /* ───── εσωτερικό: επίπεδα καθισμάτων / τιμόνι / θερμοκρασία ───── */
   _level(key) {
@@ -1332,6 +1553,21 @@ class DeepalS05Card extends HTMLElement {
     if (!a || a.temperature == null) return null;
     return { state: String(a.temperature), attributes: { min: a.min_temp, max: a.max_temp, step: a.target_temp_step } };
   }
+  /* η αλλαγή στόχου όταν ο κλιματισμός είναι σβηστός τον ανοίγει → ζητά την ίδια επιβεβαίωση με το power */
+  _needTempConfirm() { return !this._climateIsOn() && this._c.confirm.includes("climate"); }
+  _askTemp(v) {
+    this._confirm = { id: "climate", key: "climate_temp", temp: v };
+    clearTimeout(this._confirmTimer);
+    this._confirmTimer = setTimeout(() => { this._confirm = null; this._tpend = undefined; this._force(); }, 8000);
+    this._force();
+  }
+  async _applyTemp(v) {
+    this._tpend = v; clearTimeout(this._tTimer2);
+    this._tTimer2 = setTimeout(() => { this._tpend = undefined; this._force(); }, 6000);
+    this._force();
+    try { await this._setTgt(v); }
+    catch (err) { this._tpend = undefined; this._toast(err?.message ? T("Απέτυχε: {0}", err.message) : T("Η εντολή απέτυχε"), "error"); }
+  }
   _setTgt(v) { return this._hass.callService("climate", "set_temperature", { entity_id: this._id("climate.cabin_climate"), temperature: v }); }
   _tempStep(d) {
     const o = this._tgt();
@@ -1343,6 +1579,7 @@ class DeepalS05Card extends HTMLElement {
     clearTimeout(this._tTimer);
     this._tTimer = setTimeout(async () => {
       const v = this._tpend;
+      if (this._needTempConfirm()) return this._askTemp(v);
       try { await this._setTgt(v); }
       catch (err) { this._toast(err?.message ? T("Απέτυχε: {0}", err.message) : T("Η εντολή απέτυχε"), "error"); }
       this._tTimer2 = setTimeout(() => { this._tpend = undefined; this._force(); }, 6000);
@@ -1458,6 +1695,8 @@ class DeepalS05Card extends HTMLElement {
     });
     const open = v.open.map((x) => x[1]);
     const bits = [...(open.length ? [`<span><b style="--c:var(--ds-bad)">Ανοιχτά:</b> ${esc(open.join(", "))}</span>`] : []), ...notes];
+    const hasTy = TIRES.some((t) => this._tire(t).bar !== null);
+    if (!bits.length && hasTy) bits.push(`<span><b style="--c:var(--ds-ok)">✓ ${esc(T("Όλα καλά"))}</b> — ${esc(T("όλα κλειστά, πιέσεις εντάξει"))}</span>`);
     el.vextra.innerHTML = bits.length ? `<div class="vline">${bits.join("")}</div>` : ""; el.vextra.hidden = !bits.length;
   }
 
@@ -1486,7 +1725,7 @@ class DeepalS05Card extends HTMLElement {
         <div class="diag" id="diag"></div>
         <div class="charge" id="charge" hidden></div>
         <button class="foot" id="foot" aria-label="Ρυθμίσεις κάρτας"><span class="age" id="age"></span><span class="sets">${ico("sliders")}Ρυθμίσεις</span></button>
-        <div class="sheet" id="vsheet"><div class="box wide" id="vbox">
+        <div class="sheet" id="vsheet"><div class="box wide" id="vbox" role="dialog" aria-modal="true" aria-labelledby="vtitle">
           <div class="hd"><h3 id="vtitle">Όχημα</h3><button class="x" data-vclose aria-label="Κλείσιμο">${ico("close")}</button></div>
           <div class="veh" id="veh">
             <div class="seg" id="vtabs"><button data-vv="iso">${ico("carside")}<span class="tx">Car View</span></button><button data-vv="climate">${ico("fan")}<span class="tx">Κλιματισμός</span></button><button data-vv="seats">${ico("seat")}<span class="tx">Καθίσματα</span></button></div>
@@ -1497,7 +1736,7 @@ class DeepalS05Card extends HTMLElement {
             <div id="vextra"></div>
           </div>
         </div></div>
-        <div class="sheet" id="sheet"><div class="box" id="box"></div></div>
+        <div class="sheet" id="sheet"><div class="box" id="box" role="dialog" aria-modal="true"></div></div>
       </ha-card>`;
     const sr = this.shadowRoot, g = (i) => sr.getElementById(i);
     this._dashKeys = {};
@@ -1527,12 +1766,17 @@ class DeepalS05Card extends HTMLElement {
     this._el.veh.addEventListener("load", (e) => { if (e.target?.dataset?.l === "base") this._el.vmiss.hidden = true; }, true);
     this._el.vbox = g("vbox");
     this._el.vbox.addEventListener("click", (e) => { if (e.target.closest("[data-vclose]")) { this._view = null; this._force(); } });
+    this._swipe(this._el.vbox, this._el.vsheet); this._swipe(this._el.box, this._el.sheet);
     this._pkInit(); this._bindPress();
     this._el.rfs.addEventListener("click", () => this._onAction("refresh"));
     this._el.stats.addEventListener("click", (e) => {
+      const tp = e.target.closest("[data-tp]"); if (tp) { if (!tp.disabled) this._tempStep(Number(tp.dataset.tp)); return; }
       const b = e.target.closest("[data-id]"); if (b) return this._onAction(b.dataset.id);
     });
-    this._el.actions.addEventListener("click", (e) => { const b = e.target.closest("[data-id]"); if (b) this._onAction(b.dataset.id); });
+    this._el.actions.addEventListener("click", (e) => {
+      if (e.target.closest("[data-more]")) { this._moreOpen = !this._moreOpen; lsWrite(`deepal-s05-more:${this._c.prefix}`, this._moreOpen ? 1 : null); return this._force(); }
+      const b = e.target.closest("[data-id]"); if (b) this._onAction(b.dataset.id);
+    });
     this._el.veh.addEventListener("click", (e) => {
       const t = e.target.closest("[data-vv],[data-spot],[data-t],[data-id],[data-tp]");
       if (!t) return;
@@ -1541,15 +1785,18 @@ class DeepalS05Card extends HTMLElement {
       if (t.dataset.id) return this._onAction(t.dataset.id);
       if (t.dataset.tp) return this._tempStep(Number(t.dataset.tp));
     });
-    this._el.tells.addEventListener("click", (e) => { if (e.target.closest("[data-open-cust]")) { this._stab = "sensors"; this._customize = true; this._force(); } });
+    this._el.tells.addEventListener("click", (e) => { if (e.target.closest("[data-diag-open]")) { this._diagSheet = true; this._force(); } });
     this._el.foot.addEventListener("click", () => { if (this._c.show_customize === false) return; this._stab = "sections"; this._customize = true; this._force(); });
     this._el.sheet.addEventListener("click", (e) => {
       if (e.target === this._el.sheet) return this._closeSheet();
+      const dg = e.target.closest("[data-dg-set],[data-dg-add],[data-dg-ignore]");
+      if (dg) return this._diagAct(dg.dataset);
       const t = e.target.closest("[data-sheet],[data-close]");
       if (!t) return;
       if (t.dataset.sheet === "yes") {
-        const a = this._actions().find((x) => x.id === this._confirm?.id);
-        this._closeSheet(); if (a) this._run(a); return;
+        const cf = this._confirm, a = this._actions().find((x) => x.id === cf?.id);
+        this._closeSheet(); if (cf && cf.temp !== undefined) return this._applyTemp(cf.temp);
+        if (a) this._run(a); return;
       }
       this._closeSheet();
     });
@@ -1632,20 +1879,37 @@ class DeepalS05Card extends HTMLElement {
     }
 
     /* κουμπιά */
-    const lay = ["grid", "scroll", "fit"].includes(c.button_layout) ? c.button_layout : "grid";
+    const off = this._offline();
+    const lay = ["split", "grid", "scroll", "fit"].includes(c.button_layout) ? c.button_layout : "split";
     const lab = c.button_labels, showT = lab === "title" || lab === "both", showS = lab === "status" || lab === "both";
-    el.actions.className = `actions ${lay} sz-${c.button_size}`;
     const acts = this._actions();
-    el.actions.innerHTML = c.buttons.filter((id) => !c.buttons_hidden.includes(id)).map((id) => {
+    const cellOf = (id) => {
       const a = acts.find((x) => x.id === id);
       const f = this._flashes[a.id], pend = !!this._pending[a.id], state = pend ? "pending" : f ? f.type : "";
       const icon = f && !pend ? (f.type === "success" ? "check" : "alert") : a.icon;
-      const dot = !state && (a.tone === "warn" || a.tone === "bad") ? '<span class="dot"></span>' : "";
+      const tone = off ? "" : a.tone || "";
+      const dot = !state && (tone === "warn" || tone === "bad") ? '<span class="dot"></span>' : "";
       const ring = pend ? '<svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><rect x="2.5" y="2.5" width="95" height="95" rx="47.5" pathLength="100"/></svg>' : "";
-      const label = `${a.label}: ${a.sub || ""}`;
-      const sub = pend ? "Αναμονή…" : f ? (f.type === "success" ? "Έτοιμο" : "Απέτυχε") : cap(a.sub || "");
-      return `<div class="cell ${a.tone || ""}"><button class="act ${a.tone || ""} ${a.on ? "on" : ""} ${state}" data-id="${a.id}" ${a.disabled ? "disabled" : ""} title="${esc(label)}" aria-label="${esc(label)}">${ico(icon)}${dot}${ring}</button>${showT ? `<span class="cap t">${esc(a.label)}</span>` : ""}${showS ? `<span class="cap s">${esc(sub)}</span>` : ""}</div>`;
-    }).join("");
+      const label = `${a.label}: ${off ? "" : a.sub || ""}`;
+      const sub = off ? "" : pend ? "Αναμονή…" : f ? (f.type === "success" ? "Έτοιμο" : "Απέτυχε") : cap(a.sub || "");
+      return `<div class="cell ${tone}"><button class="act ${tone} ${a.on && !off ? "on" : ""} ${state}" data-id="${a.id}" ${a.disabled || off ? "disabled" : ""} title="${esc(label)}" aria-label="${esc(label)}">${ico(icon)}${dot}${ring}</button>${showT ? `<span class="cap t">${esc(a.label)}</span>` : ""}${showS && sub ? `<span class="cap s">${esc(sub)}</span>` : ""}</div>`;
+    };
+    const vis = c.buttons.filter((id) => !c.buttons_hidden.includes(id));
+    if (this._moreOpen === undefined) this._moreOpen = !!lsRead(`deepal-s05-more:${c.prefix}`);
+    if (lay === "split") {
+      const np = Math.max(1, Math.min(5, Math.round(Number(c.button_primary)) || 4)), prim = vis.slice(0, np), more = vis.slice(np);
+      const keep = c.buttons_more === "show", open = keep || this._moreOpen;
+      const alert = !off && more.some((id) => { const t = (acts.find((x) => x.id === id) || {}).tone; return t === "warn" || t === "bad"; });
+      el.actions.className = `actions split sz-${c.button_size} ${open ? "moreopen" : ""} ${off ? "offline" : ""}`;
+      el.actions.style.setProperty("--np", String(prim.length));
+      el.actions.innerHTML = `<div class="prow">${prim.map(cellOf).join("")}</div>` +
+        (more.length ? `<div class="mwrap"><div class="mrow" id="mrow" ${open ? "" : "inert"}>${more.map(cellOf).join("")}</div></div>` +
+          (keep ? "" : `<button class="morebtn" data-more aria-expanded="${open}" aria-controls="mrow" title="${esc(T("Περισσότερα"))}" aria-label="${esc(T("Περισσότερα"))}"><span>Περισσότερα</span>${ico("chevd")}${alert ? '<span class="mdot"></span>' : ""}</button>`) : "");
+    } else {
+      el.actions.className = `actions ${lay} sz-${c.button_size} ${off ? "offline" : ""}`;
+      el.actions.style.removeProperty("--np");
+      el.actions.innerHTML = vis.map(cellOf).join("");
+    }
 
     /* κατάσταση (πάνω στην εικόνα) */
     const st = this._status(v);
@@ -1658,7 +1922,7 @@ class DeepalS05Card extends HTMLElement {
     const fuelPct = fl !== null && this._unit("sensor.fuel_level") === "%" ? fl : fuel !== null ? (fuel / c.fuel_max) * 100 : null;
     const hex2rgb = (h, d) => { const m = /^#?([0-9a-f]{6})$/i.exec(String(h || "").trim()); return m ? [0, 2, 4].map((i) => parseInt(m[1].substr(i, 2), 16)).join(",") : d; };
     const LC = { r: hex2rgb(c.lvl_red, "248,113,113"), o: hex2rgb(c.lvl_orange, "251,146,60"), y: hex2rgb(c.lvl_yellow, "250,204,21"), g: hex2rgb(c.lvl_green, "52,211,153") };
-    const lvl = (p, t1, t2, t3) => (p === null ? "148,163,184" : p < t1 ? LC.r : p < t2 ? LC.o : p < t3 ? LC.y : LC.g);
+    const lvl = (p, t1, t2, t3, top = LC.g) => (p === null ? "148,163,184" : p < t1 ? LC.r : p < t2 ? LC.o : p < t3 ? LC.y : top);
     const evRgb = lvl(bat, Number(c.bat_t1), Number(c.bat_t2), Number(c.bat_t3));
     const fuRgb = lvl(fuelPct, Number(c.fuel_t1), Number(c.fuel_t2), Number(c.fuel_t3));
     el.card.dataset.pad = c.card_padding || "normal"; el.card.dataset.ppad = c.popup_padding || "normal";
@@ -1670,6 +1934,7 @@ class DeepalS05Card extends HTMLElement {
     el.total.innerHTML = `<div class="big">${num(total)}<small>km</small></div><div class="cap">${fu ? "συνολική αυτονομία" : "αυτονομία"}</div>`;
     const cl = (x) => (x === null ? 0 : Math.min(100, Math.max(0, x)));
     const climOn = this._climateIsOn(), tgt = (() => { const t = this._tgt(); const n = t ? parseFloat(t.state) : NaN; return Number.isFinite(n) ? n : null; })(), pendC = !!this._pending.climate, climOk = this._s("climate.cabin_climate") !== null;
+    const tgtShown = this._tpend ?? tgt;
     const leftTxt = this._fmtLeft(this._s("sensor.remaining_charge_time_h_mm"));
     const chgSub = "";
     /* Κύκλος: το ποσοστό αντιστοιχεί στο ΟΡΑΤΟ τόξο (από το κάτω όριο του tile ως το δεξί όριο), όχι σε ολόκληρο τον κύκλο */
@@ -1678,10 +1943,15 @@ class DeepalS05Card extends HTMLElement {
     const oEnd = at(o0, o1, bat);
     const flow = v.charging && bat !== null && bat < 99.5 ? `<circle class="fg" cx="50" cy="50" r="44" stroke-width="7" pathLength="360" stroke-dasharray="${f1(o1 - oEnd)} 360" stroke-dashoffset="-${f1(oEnd)}"/><circle class="fp" cx="50" cy="50" r="44" stroke-width="7" pathLength="360" stroke-dasharray="25 360" style="--fs:-${f1(oEnd)};--fe:-${f1(Math.max(oEnd, o1 - 25))}"/>` : "";
     el.stats.innerHTML = `
-      <div class="t2 temp" data-open="climate" data-ent="${esc(this._id("climate.cabin_climate"))}" data-hold="${esc(JSON.stringify({ action: "more-info", entity: this._id("sensor.inside_temperature") }))}" role="button" tabindex="0" aria-label="Κλιματισμός">
+      ${c.climate_ui === "circle" ? `<div class="t2 tempc" data-open="climate" data-ent="${esc(this._id("climate.cabin_climate"))}" data-hold="${esc(JSON.stringify({ action: "more-info", entity: this._id("sensor.inside_temperature") }))}" role="button" tabindex="0" aria-label="Κλιματισμός">
         <div class="tt">Θερμοκρασία</div>
         <div class="ts">Μέσα<br><b>${temp === null ? "--" : this._fmtNum(temp, 0) + "°C"}</b>${tgt === null || !climOn ? "" : `<br><span class="sub">στόχος ${this._fmtNum(tgt, 1)}°</span>`}</div>
-        <button class="knob ${climOn ? "on" : ""} ${pendC ? "pending" : ""}" data-id="climate" ${climOk ? "" : "disabled"} aria-label="Κλιματισμός on/off">${ico("power")}${pendC ? RING : ""}</button></div>
+        <button class="knob ${climOn ? "on" : ""} ${pendC ? "pending" : ""}" data-id="climate" ${climOk && !off ? "" : "disabled"} aria-label="Κλιματισμός on/off">${ico("power")}${pendC ? RING : ""}</button></div>` : `<div class="t2 temp ${climOn ? "on" : ""}" data-open="climate" data-ent="${esc(this._id("climate.cabin_climate"))}" data-hold="${esc(JSON.stringify({ action: "more-info", entity: this._id("sensor.inside_temperature") }))}" role="button" tabindex="0" aria-label="Κλιματισμός">
+        <div class="tt">Κλιματισμός</div>
+        <button class="tpw ${climOn ? "on" : ""} ${pendC ? "pending" : ""}" data-id="climate" ${climOk && !off ? "" : "disabled"} aria-label="Κλιματισμός on/off">${ico("power")}${pendC ? RING : ""}</button>
+        <div class="ct"><span class="cur">${temp === null ? "--" : this._fmtNum(temp, 0) + "°"}</span><span class="lbl">Μέσα</span></div>
+        ${tgt === null ? "" : `<div class="cstep ${climOn ? "" : "idle"}"><button class="cs" data-tp="-1" ${off ? "disabled" : ""} aria-label="Μείωση θερμοκρασίας">${ico("minus")}</button><div class="cv"><small>στόχος</small><b>${this._fmtNum(tgtShown, 1)}°</b></div><button class="cs" data-tp="1" ${off ? "disabled" : ""} aria-label="Αύξηση θερμοκρασίας">${ico("plus")}</button></div>`}
+      </div>`}
       <div class="t2 batt" data-ent="${esc(this._id("sensor.battery_level"))}" role="button" tabindex="0">
         <div class="tt">${fu ? "Ενέργεια" : "Μπαταρία"}</div>
         <div class="ts ${v.charging ? "chg" : ""}"><b>${v.charging ? T("Φορτίζει τώρα") : T("Δεν φορτίζει")}</b>${chgSub ? `<br><span class="sub">${chgSub}</span>` : ""}</div>
@@ -1713,13 +1983,11 @@ class DeepalS05Card extends HTMLElement {
     }
     /* διαγνωστικά: εικονίδια-ενδείξεις πάνω στην εικόνα, μόνο όταν υπάρχει κάτι να δεις */
     const hidSec = new Set(c.hidden), items = hidSec.has("diagnostics") ? [] : this._diagItems(), all = c.diag_mode === "all";
-    const grp = new Map();
-    for (const d of items.filter((x) => all || x.on)) { const k = `${d.icon}|${d.on}|${d.na}`, g = grp.get(k); if (g) g.label += `, ${d.label}`; else grp.set(k, { ...d }); }
-    const shown = [...grp.values()], MAXT = 4;
-    el.tells.innerHTML = shown.slice(0, MAXT).map((d) => {
-      const k = d.on ? "bad" : d.na ? "na" : "ok";
-      return `<button class="tell ${k}" data-ent="${esc(d.ent)}" title="${esc(d.label)}" aria-label="${esc(d.label)}">${icoBadge(d.icon)}</button>`;
-    }).join("") + (shown.length > MAXT ? `<button class="tell more" data-open-cust title="Όλες οι ενδείξεις">+${shown.length - MAXT}</button>` : "");
+    const rank = { bad: 0, warn: 1, na: 2, ok: 3 }, dvis = items.filter((x) => all || x.on), grp = new Map();
+    for (const d of dvis) { const k = `${d.icon}|${d.st}`, g = grp.get(k); if (g) { g.n++; g.label += `, ${d.label}`; } else grp.set(k, { ...d, n: 1 }); }
+    const shown = [...grp.values()].sort((a, b) => rank[a.st] - rank[b.st]), hw = el.hero ? el.hero.clientWidth : 0, MAXT = !hw ? 4 : hw < 330 ? 2 : hw < 400 ? 3 : 4, top = shown.slice(0, MAXT), rest = dvis.length - top.reduce((t, g) => t + g.n, 0);
+    el.tells.innerHTML = top.map((d) => `<button class="tell ${d.st}" ${d.n > 1 ? "data-diag-open" : `data-ent="${esc(d.ent)}"`} title="${esc(d.label)}" aria-label="${esc(d.label)}">${icoBadge(d.icon)}${d.n > 1 ? `<b class="n">${d.n}</b>` : ""}</button>`).join("")
+      + (rest > 0 ? `<button class="tell more" data-diag-open title="${esc(T("Όλες οι ενδείξεις"))}" aria-label="${esc(T("Όλες οι ενδείξεις"))}">+${rest}</button>` : "");
     el.tells.toggleAttribute("hidden", !shown.length);
     el.info.innerHTML = tiles.join("");
     el.info.toggleAttribute("data-off", !tiles.length || hidSec.has("info"));
@@ -1748,6 +2016,11 @@ class DeepalS05Card extends HTMLElement {
       el.box.innerHTML = `<h3>${esc(title)}</h3><p class="c">${esc(text)}</p><div class="btnrow"><button class="btn" data-close>Ακύρωση</button><button class="btn go" data-sheet="yes">Επιβεβαίωση</button></div>`;
       this._setEl = null;
       el.sheet.classList.add("show");
+    } else if (this._diagSheet && !this._customize) {
+      el.box.className = "box wide dg";
+      el.box.innerHTML = this._diagHtml();
+      this._setEl = null;
+      el.sheet.classList.add("show");
     } else if (this._customize) {
       if (!this._setEl || !el.box.contains(this._setEl)) {
         el.box.className = "box";
@@ -1770,13 +2043,15 @@ class DeepalS05Card extends HTMLElement {
       this._setEl = null;
       el.sheet.classList.remove("show");
     }
+    el.box.setAttribute("aria-label", this._confirm ? (CONFIRM_TEXT[this._confirm.key] || ["Επιβεβαίωση"])[0] : this._diagSheet && !this._customize ? "Διαγνωστικά" : "Ρυθμίσεις κάρτας");
+    this._focusSync();
   }
 
   /* ───── πάτημα / παρατεταμένο πάτημα σε αισθητήρες ───── */
   _bindPress() {
     const root = this._el.card; let st = null;
     root.addEventListener("pointerdown", (e) => {
-      if (e.button > 0 || e.target.closest("[data-id]")) return;
+      if (e.button > 0 || e.target.closest("[data-id],[data-tp],[data-more]")) return;
       const t = e.target.closest("[data-ent],[data-open]"); if (!t) return;
       st = { t, x: e.clientX, y: e.clientY, held: false };
       st.timer = setTimeout(() => { if (st) { st.held = true; try { navigator.vibrate && navigator.vibrate(15); } catch (_) {} this._hold(st.t); } }, 520);
@@ -1786,6 +2061,29 @@ class DeepalS05Card extends HTMLElement {
     root.addEventListener("pointerup", () => end(false));
     root.addEventListener("pointercancel", () => end(true));
     root.addEventListener("contextmenu", (e) => { if (e.target.closest("[data-ent]")) e.preventDefault(); });
+  }
+  /* κινητό: το popup κλείνει με σύρσιμο προς τα κάτω από την κορυφή του (λαβή) */
+  _swipe(box, sheet) {
+    let st = null;
+    const mobile = () => window.matchMedia && window.matchMedia("(max-width: 639px)").matches;
+    box.addEventListener("pointerdown", (e) => {
+      if (e.button > 0 || !mobile() || e.target.closest("button,input,select,textarea,a")) return;
+      const r = box.getBoundingClientRect(); if (e.clientY - r.top > 64) return;
+      st = { y: e.clientY, id: e.pointerId, dy: 0, t: Date.now() }; try { box.setPointerCapture(e.pointerId); } catch (_) {}
+      box.style.transition = "none";
+    });
+    box.addEventListener("pointermove", (e) => {
+      if (!st || e.pointerId !== st.id) return;
+      st.dy = Math.max(0, e.clientY - st.y); box.style.transform = `translateY(${st.dy}px)`; sheet.style.background = `rgba(0,0,0,${Math.max(0.1, 0.62 - st.dy / 700)})`;
+    });
+    const end = (cancel) => {
+      if (!st) return; const s = st; st = null;
+      box.style.transition = "transform .22s ease"; sheet.style.background = "";
+      const fast = s.dy / Math.max(1, Date.now() - s.t) > 0.6;
+      if (!cancel && (s.dy > 90 || (fast && s.dy > 30))) { box.style.transform = "translateY(100%)"; setTimeout(() => { box.style.transition = ""; box.style.transform = ""; this._closeTop(); }, 200); }
+      else { box.style.transform = ""; setTimeout(() => { box.style.transition = ""; }, 240); }
+    };
+    box.addEventListener("pointerup", () => end(false)); box.addEventListener("pointercancel", () => end(true));
   }
   _cfgOf(t, k) { try { return t.dataset[k] ? JSON.parse(t.dataset[k]) : null; } catch (_) { return null; } }
   _tap(t) {
@@ -1855,6 +2153,7 @@ class DeepalS05Card extends HTMLElement {
     const o = this._tgt(); if (!o || !this._pk) return;
     const v = this._pk.vals[i], cur = parseFloat(o.state);
     if (Number.isFinite(cur) && Math.abs(cur - v) < 0.001) return;
+    if (this._needTempConfirm()) { this._tpend = v; return this._askTemp(v); }
     this._tpend = v; clearTimeout(this._tTimer2);
     this._tTimer2 = setTimeout(() => { this._tpend = undefined; this._force(); }, 6000);
     this._force();
@@ -1921,7 +2220,7 @@ class DeepalS05Settings extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" }); I18N.watch(this.shadowRoot);
-    this.mode = "card"; this.tab = "sections"; this._form = { entity: "", label: "", icon: "info", mkey: "", ment: "" };
+    this.mode = "card"; this.tab = "sections"; this._form = { entity: "", label: "", icon: "info", mkey: "", ment: "", mdi: "" }; this._disc = null;
     this._sig = null; this._note = "";
   }
   set hass(h) { this._hass = h; }
@@ -1960,7 +2259,14 @@ class DeepalS05Settings extends HTMLElement {
     return `<div class="add"><label class="field">Οντότητα<input type="text" list="ents" data-f="entity" placeholder="π.χ. sensor.my_value" value="${esc(this._form.entity)}"></label>
       <label class="field">Ετικέτα (προαιρετικά)<input type="text" data-f="label" value="${esc(this._form.label)}"></label>
       <div class="field">Εικονίδιο${this._iconPick()}</div>
+      <label class="field">Ή εικονίδιο του HA (προαιρετικά)<input type="text" data-f="mdi" placeholder="π.χ. mdi:car-brake-abs" value="${esc(this._form.mdi)}"></label>
       <button class="btn sm" data-add="${kind}">${ico("plus")} Προσθήκη</button></div>`;
+  }
+  _discHtml(c) {
+    const ign = (c.diag_ignore || []).length, list = this._disc;
+    const rows = list ? (list.length ? `<div class="list">${list.map((f) => `<div class="row">${icoBadge(f.icon)}<span>${esc(f.label)}<small>${esc(f.entity)}</small></span><button class="btn sm" data-dadd="${esc(f.entity)}">${ico("plus")} ${esc(T("Προσθήκη"))}</button></div>`).join("")}</div>
+      ${list.length > 1 ? `<div class="btnrow"><button class="btn sm pl" data-daddall>${ico("plus")} ${esc(T("Προσθήκη όλων"))}</button></div>` : ""}` : `<p class="hint">✓ ${esc(T("Δεν βρέθηκαν νέοι αισθητήρες."))}</p>`) : "";
+    return `<div id="sensors-disc"><div class="btnrow"><button class="btn sm" data-discover>${ico("refresh")} ${esc(T("Αναζήτηση νέων αισθητήρων"))}</button>${ign ? `<button class="btn sm" data-dreset>${esc(T("Εμφάνιση ξανά όσων αγνόησα"))} (${ign})</button>` : ""}</div>${rows}</div>`;
   }
   _customRows(arr, kind) {
     return arr.length ? `<div class="list">${arr.map((x, i) => `<div class="row">${ico(x.icon || "info")}<span>${esc(x.label || x.entity)}<small>${esc(x.entity)}</small></span>
@@ -1978,8 +2284,10 @@ class DeepalS05Settings extends HTMLElement {
     return `<p class="hint">Σειρά και εμφάνιση των κουμπιών ελέγχου.</p>
       ${this._orderList(BUTTON_IDS, c.buttons, c.buttons_hidden, (i) => BUTTON_LABELS[i], "btn")}
       <h4>Εμφάνιση</h4>
-      <label class="field inline">Διάταξη ${this._sel("button_layout", c.button_layout, [["grid", "Σειρές (5 ανά γραμμή)"], ["scroll", "Μία γραμμή με scroll"], ["fit", "Μία γραμμή (χωράνε όλα)"]])}</label>
+      <label class="field inline">Διάταξη ${this._sel("button_layout", c.button_layout, [["split", "Κύρια κουμπιά + «Περισσότερα»"], ["grid", "Σειρές (5 ανά γραμμή)"], ["scroll", "Μία γραμμή με scroll"], ["fit", "Μία γραμμή (χωράνε όλα)"]])}</label>
       <label class="field inline">Κείμενα ${this._sel("button_labels", c.button_labels, [["none", "Χωρίς κείμενο"], ["status", "Μόνο κατάσταση"], ["title", "Μόνο τίτλος"], ["both", "Τίτλος + κατάσταση (2 γραμμές)"]])}</label>
+      ${c.button_layout === "split" || !c.button_layout ? `${this._opt("Κύρια κουμπιά", this._seg("button_primary", String(c.button_primary || 4), [["3", "3"], ["4", "4"], ["5", "5"]]), "Τα πρώτα κουμπιά της λίστας μπαίνουν στην κύρια σειρά, τα υπόλοιπα στο «Περισσότερα».")}${this._opt("Τα υπόλοιπα", this._seg("buttons_more", c.buttons_more || "collapse", [["collapse", "Κρυμμένα"], ["show", "Πάντα ορατά"]]))}` : ""}
+      ${this._opt("Πλακίδιο κλιματισμού", this._seg("climate_ui", c.climate_ui === "circle" ? "circle" : "steps", [["steps", "Στόχος με − / +"], ["circle", "Μεγάλος κύκλος"]]), "Στόχος με − / +: δείχνει τη θερμοκρασία και ρυθμίζεις τον στόχο. Μεγάλος κύκλος: το κλασικό πλακίδιο με το μεγάλο κουμπί on/off.")}
       ${this._opt("Μέγεθος", this._seg("button_size", c.button_size, [["s", "Μικρά"], ["m", "Μεσαία"], ["l", "Μεγάλα"]]))}
       <h4>Ζητά επιβεβαίωση</h4>
       <div class="list">${conf.map(([k, l]) => `<button class="row tg ${c.confirm.includes(k) ? "on" : ""}" data-conf="${k}"><span>${l}</span><i class="sw ${c.confirm.includes(k) ? "on" : ""}"></i></button>`).join("")}</div>`;
@@ -1987,14 +2295,18 @@ class DeepalS05Settings extends HTMLElement {
   _tabSensors(c) {
     const selIds = Array.isArray(c.diag) ? c.diag : DIAG.map((d) => d[0]);
     const has = (k) => this._hass?.states?.[resolveId(this._hass, c, k)];
+    const nod = (k) => { const st = has(k)?.state; return st === "unknown" || st === "unavailable" ? ` <small class="nod">Χωρίς δεδομένα</small>` : ""; };
     const dRows = DIAG.filter((d) => has(d[0])).map((d) => `<button class="row tg ${selIds.includes(d[0]) ? "on" : ""}" data-diag="${d[0]}">${icoBadge(d[2])}<span>${esc(d[1])}</span><i class="sw ${selIds.includes(d[0]) ? "on" : ""}"></i></button>`).join("");
-    const iRows = INFO_IDS.filter((i) => has(INFO_ITEMS[i][0]) && (i !== "fuel_level" || hasFuel(this._hass, c))).map((i) => `<button class="row tg ${c.info.includes(i) ? "on" : ""}" data-info="${i}">${ico(INFO_ITEMS[i][2])}<span>${esc(INFO_ITEMS[i][1])}</span><i class="sw ${c.info.includes(i) ? "on" : ""}"></i></button>`).join("");
+    const iRows = INFO_IDS.filter((i) => has(INFO_ITEMS[i][0]) && (i !== "fuel_level" || hasFuel(this._hass, c))).map((i) => `<button class="row tg ${c.info.includes(i) ? "on" : ""}" data-info="${i}">${ico(INFO_ITEMS[i][2])}<span>${esc(INFO_ITEMS[i][1])}${nod(INFO_ITEMS[i][0])}</span><i class="sw ${c.info.includes(i) ? "on" : ""}"></i></button>`).join("");
     const ents = Object.entries(c.entities);
     return `${this._datalist()}
       <h4>Διαγνωστικά</h4>
       <div class="seg"><button data-dmode="alerts" class="${c.diag_mode === "alerts" ? "on" : ""}">Μόνο ειδοποιήσεις</button><button data-dmode="all" class="${c.diag_mode === "all" ? "on" : ""}">Πάντα όλες</button></div>
       <div class="list">${dRows}</div>
       <div class="btnrow"><button class="btn sm" data-dall="0">Καμία</button><button class="btn sm" data-dall="1">Όλες</button></div>
+      <h4>Νέοι αισθητήρες</h4>
+      <p class="hint">${T("Αν το integration προσθέσει νέες προειδοποιήσεις, η κάρτα μπορεί να τις βρει και να τις προσθέσει στα διαγνωστικά.")}</p>
+      ${this._discHtml(c)}
       <h4>Δικά μου διαγνωστικά</h4>
       <p class="hint">${T("Οποιαδήποτε οντότητα. Θεωρείται ενεργή όταν είναι on / problem / alarm.")}</p>
       ${this._customRows(c.diag_custom, "diag_custom")}${this._addForm("diag_custom")}
@@ -2054,7 +2366,7 @@ class DeepalS05Settings extends HTMLElement {
   }
   _tabCharge(c) {
     const hc = (k) => hexc(c[k], DEFAULTS[k]);
-    const lv = (t1, t2, t3) => { const a = Number(t1) || 0, b = Number(t2) || 0, d = Number(t3) || 0; return `background:linear-gradient(90deg, ${hc("lvl_red")} 0 ${a}%, ${hc("lvl_orange")} ${a}% ${b}%, ${hc("lvl_yellow")} ${b}% ${d}%, ${hc("lvl_green")} ${d}% 100%)`; };
+    const lv = (t1, t2, t3, top = "lvl_green") => { const a = Number(t1) || 0, b = Number(t2) || 0, d = Number(t3) || 0; return `background:linear-gradient(90deg, ${hc("lvl_red")} 0 ${a}%, ${hc("lvl_orange")} ${a}% ${b}%, ${hc("lvl_yellow")} ${b}% ${d}%, ${hc(top)} ${d}% 100%)`; };
     const sw = (k, l) => `<label class="sw-c"><input type="color" data-set="${k}" data-text value="${esc(hexc(c[k], DEFAULTS[k]))}"><span>${l}</span></label>`;
     const rowL = (k, l, bk, fk) => `<div class="lvrow">${sw(k, l)}${bk ? this._num(bk, c[bk], "1") : `<i class="dash">—</i>`}${fk ? this._num(fk, c[fk], "1") : `<i class="dash">—</i>`}</div>`;
     const fu = hasFuel(this._hass, c);
@@ -2178,14 +2490,21 @@ class DeepalS05Settings extends HTMLElement {
         return this._emit({ diag: [...cur] });
       }
       if (d.info) { const s = new Set(c.info); s.has(d.info) ? s.delete(d.info) : s.add(d.info); return this._emit({ info: INFO_IDS.filter((i) => s.has(i)) }); }
+      if (d.discover !== undefined) { this._disc = discoverDiag(this._hass, this._cfg); return this._render(); }
+      if (d.dadd !== undefined || d.daddall !== undefined) {
+        const pick = (this._disc || []).filter((f) => d.daddall !== undefined || f.entity === d.dadd);
+        this._disc = (this._disc || []).filter((f) => !pick.includes(f));
+        return this._emit({ diag_custom: [...c.diag_custom, ...pick.map((f) => ({ entity: f.entity, label: f.label, icon: f.icon }))] });
+      }
+      if (d.dreset !== undefined) { this._disc = null; return this._emit({ diag_ignore: [] }); }
       if (d.dmode) return this._emit({ diag_mode: d.dmode });
       if (d.dall !== undefined) return this._emit({ diag: d.dall === "1" ? DIAG.map((x) => x[0]) : [] });
       if (d.icon) { this._form.icon = d.icon; return this._render(); }
       if (d.add !== undefined) {
         const f = this._form, ent = f.entity.trim();
         if (!/^[a-z_]+\.[\w]+$/.test(ent)) { this._note = T("Γράψε έγκυρο entity_id"); return this._render(); }
-        const item = { entity: ent, label: f.label.trim(), icon: f.icon };
-        this._form = { ...this._form, entity: "", label: "" };
+        const item = { entity: ent, label: f.label.trim(), icon: MDI_RE.test(f.mdi.trim()) ? f.mdi.trim() : f.icon };
+        this._form = { ...this._form, entity: "", label: "", mdi: "" };
         return this._emit({ [d.add]: [...c[d.add], item] });
       }
       if (d.del) { const [k, i] = d.del.split("|"); const a = [...c[k]]; a.splice(Number(i), 1); return this._emit({ [k]: a }); }
@@ -2252,6 +2571,7 @@ class DeepalS05CardEditor extends HTMLElement {
     this._s.cfg = mergeConfig(this._config, null);
   }
 }
+
 
 customElements.define(SETTINGS_TAG, DeepalS05Settings);
 customElements.define(EDITOR_TAG, DeepalS05CardEditor);

@@ -1,4 +1,3 @@
-
 /* ───────────────────────── Κάρτα ───────────────────────── */
 const RING = '<svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><rect x="2.5" y="2.5" width="95" height="95" rx="47.5" pathLength="100"/></svg>';
 const REBUILD_KEYS = ["image_path", "layers_path", "images", "name", "image_scale", "image_aspect", "prefix", "entities"];
@@ -32,7 +31,7 @@ class DeepalS05Card extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" }); I18N.watch(this.shadowRoot);
     this._pending = {}; this._flashes = {}; this._opt = {}; this._last = {};
-    this._toastState = null; this._confirm = null; this._customize = false;
+    this._toastState = null; this._confirm = null; this._customize = false; this._diagSheet = false;
     this._sig = null; this._built = false; this._stab = "sections";
   }
 
@@ -61,9 +60,11 @@ class DeepalS05Card extends HTMLElement {
   }
   connectedCallback() {
     I18N.subs.add(this);
+    if (!this._onKey) this._onKey = (e) => this._key(e);
+    document.addEventListener("keydown", this._onKey, true);
     if (window.IntersectionObserver && !this._io) { this._io = new IntersectionObserver(([e]) => { if (this._el && this._el.card) this._el.card.classList.toggle("off", !e.isIntersecting); }); this._io.observe(this); }
   }
-  disconnectedCallback() { I18N.subs.delete(this); if (this._yPend) { this._yPend = false; this._customize = false; this._doSaveYaml(); } if (this._io) { this._io.disconnect(); this._io = null; } }
+  disconnectedCallback() { I18N.subs.delete(this); if (this._onKey) document.removeEventListener("keydown", this._onKey, true); if (this._yPend) { this._yPend = false; this._customize = false; this._doSaveYaml(); } if (this._io) { this._io.disconnect(); this._io = null; } }
   getCardSize() { return 9; }
   getGridOptions() { return { columns: 12, min_columns: 6, rows: "auto" }; }
 
@@ -184,19 +185,36 @@ class DeepalS05Card extends HTMLElement {
     const st = this._allKeys().map((k) => this._obj(k)?.state ?? "∅").join("|");
     const cu = [...(this._c.diag_custom || []), ...(this._c.info_custom || [])].map((x) => this._eobj(x.entity)?.state ?? "∅").join("|");
     return [st, cu, Math.floor(Date.now() / 60000), Object.keys(this._pending).join(","),
-      Object.entries(this._flashes).map(([k, v]) => k + v.type).join(","), this._confirm ? this._confirm.id : "", String(this._customize),
-      JSON.stringify(this._c), JSON.stringify(this._opt), String(this._tpend), String((this._tgt() || {}).state), String(this._view), this._toastState ? this._toastState.msg : ""].join("#");
+      Object.entries(this._flashes).map(([k, v]) => k + v.type).join(","), this._confirm ? this._confirm.id : "", String(this._customize), String(this._diagSheet),
+      JSON.stringify(this._c), JSON.stringify(this._opt), String(this._tpend), String(this._moreOpen), String((this._tgt() || {}).state), String(this._view), this._toastState ? this._toastState.msg : ""].join("#");
   }
   _force() { this._sig = null; if (this._hass && this._c) this._render(); }
   _diagAvail() { return DIAG.filter((d) => this._obj(d[0])); }
   _diagItems() {
     const c = this._c, avail = this._diagAvail(), selIds = Array.isArray(c.diag) ? c.diag : DIAG.map((d) => d[0]);
-    const items = avail.filter((d) => selIds.includes(d[0])).map((d) => ({ label: d[1], icon: d[2], ent: this._id(d[0]), on: this._is(d[0], "on"), na: this._s(d[0]) === null }));
+    const mk = (label, icon, ent, on, na, sev) => ({ label, icon, ent, on, na, st: on ? sev : na ? "na" : "ok" });
+    const items = avail.filter((d) => selIds.includes(d[0])).map((d) => mk(d[1], d[2], this._id(d[0]), this._is(d[0], "on"), this._s(d[0]) === null, d[3] === "r" ? "bad" : "warn"));
     for (const x of c.diag_custom || []) {
       const o = this._eobj(x.entity);
-      items.push({ label: x.label || o?.attributes?.friendly_name || x.entity, icon: x.icon || "alert", ent: x.entity, on: !!o && ["on", "true", "problem", "alarm", "low"].includes(String(o.state).toLowerCase()), na: !o || BAD.includes(o.state) });
+      items.push(mk(x.label || o?.attributes?.friendly_name || x.entity, x.icon || "alert", x.entity, !!o && ["on", "true", "problem", "alarm", "low"].includes(String(o.state).toLowerCase()), !o || BAD.includes(o.state), "bad"));
     }
     return items;
+  }
+  /* Popup «Διαγνωστικά»: όλοι οι αισθητήρες, χωρισμένοι σε προβλήματα / μη διαθέσιμοι / εντάξει */
+  _diagHtml() {
+    const it = this._diagItems(), rank = { bad: 0, warn: 1, na: 2, ok: 3 };
+    const bad = it.filter((x) => x.st === "bad" || x.st === "warn").sort((a, b) => rank[a.st] - rank[b.st]), na = it.filter((x) => x.st === "na"), ok = it.filter((x) => x.st === "ok");
+    const stTxt = { bad: "Πρόβλημα", warn: "Προειδοποίηση", na: "Μη διαθέσιμο", ok: "Εντάξει" };
+    const row = (d) => `<button class="dgrow ${d.st}" data-ent="${esc(d.ent)}" title="${esc(d.label)}">${icoBadge(d.icon)}<span><b>${esc(d.label)}</b><small>${esc(T(stTxt[d.st]))}</small></span></button>`;
+    const sec = (title, arr, cls) => arr.length ? `<h4 class="dgh ${cls}">${esc(T(title))} <em>${arr.length}</em></h4><div class="dglist ${cls}">${arr.map(row).join("")}</div>` : "";
+    const sum = [T("{0} αισθητήρες", it.length), ok.length ? T("{0} εντάξει", ok.length) : "", bad.length ? T(bad.length === 1 ? "{0} πρόβλημα" : "{0} προβλήματα", bad.length) : "", na.length ? T("{0} μη διαθέσιμοι", na.length) : ""].filter(Boolean).join(" · ");
+    const found = discoverDiag(this._hass, this._c);
+    const nw = found.length ? `<div class="dgnew"><div><b>${esc(T(found.length === 1 ? "Βρέθηκε {0} νέος αισθητήρας" : "Βρέθηκαν {0} νέοι αισθητήρες", found.length))}</b><small>${esc(found.map((f) => f.label).join(", "))}</small></div>
+      <div class="btnrow"><button class="btn sm" data-dg-ignore>${esc(T("Αγνόηση"))}</button><button class="btn sm pl" data-dg-add>${ico("plus")} ${esc(T("Προσθήκη"))}</button></div></div>` : "";
+    return `<div class="hd"><h3>${esc(T("Διαγνωστικά"))}</h3><button class="x" data-close aria-label="Κλείσιμο">${ico("close")}</button></div>
+      <p class="dgsum ${bad.length ? "bad" : "ok"}">${bad.length ? "" : "✓ "}${esc(sum)}</p>
+      <div class="dgbody">${nw}${it.length ? "" : `<p class="hint">${esc(T("Δεν υπάρχουν αισθητήρες διαγνωστικών. Πρόσθεσέ τους από τις Ρυθμίσεις."))}</p>`}${sec("Προβλήματα", bad, "bad")}${sec("Μη διαθέσιμοι", na, "na")}${sec("Εντάξει", ok, "ok")}</div>
+      <div class="btnrow dgfoot"><button class="btn sm" data-dg-set>${ico("sliders")} ${esc(T("Ρυθμίσεις αισθητήρων"))}</button></div>`;
   }
 
   /* ───── κατάσταση οχήματος ───── */
@@ -241,6 +259,7 @@ class DeepalS05Card extends HTMLElement {
     const ac = this._n(acKey);
     return ac && ac > 0 ? `AC ${Math.round(ac)} ${this._unit(acKey) || "A"}` : "";
   }
+  _offline() { const s = this._s("binary_sensor.cloud_connection"); return s === "off" || s === "unavailable"; }
   _status(v) {
     const cloudOk = this._is("binary_sensor.cloud_connection", "on");
     const left = this._s("sensor.remaining_charge_time_h_mm");
@@ -250,7 +269,8 @@ class DeepalS05Card extends HTMLElement {
     }
     const pl = this._pending && this._pending.lock;
     if (pl) { const un = pl.before === "locked"; return { icon: un ? "unlock" : "lock", text: un ? "Ξεκλειδώνει…" : "Κλειδώνει…", sub: "Αναμονή επιβεβαίωσης από το όχημα", rgb: "var(--ds-warn)" }; }
-    if (!cloudOk) return { icon: "cloudoff", text: "Χωρίς σύνδεση", sub: "Δεν υπάρχει επικοινωνία με το Deepal Cloud", rgb: "var(--ds-bad)" };
+    if (this._s("binary_sensor.cloud_connection") === null && this._s("lock.doors") === null) return { icon: "alert", text: "Δεν βρέθηκε το όχημα", sub: "Έλεγξε το πρόθεμα στις Ρυθμίσεις → Αισθητήρες", rgb: "var(--ds-warn)" };
+    if (!cloudOk) return { icon: "cloudoff", text: "Εκτός σύνδεσης", sub: T("Τελευταία ενημέρωση {0}", this._age()), rgb: "var(--ds-bad)" };
     if (v.charging) return { icon: "bolt", text: "Φορτίζει", sub: "", rgb: "var(--ds-ok)" };
     const alerts = this._diagItems().filter((d) => d.on).length, warn = alerts ? T(alerts === 1 ? "{0} προειδοποίηση" : "{0} προειδοποιήσεις", alerts) : "";
     if (v.plugged) return { icon: "plug", text: "Φορτιστής συνδεδεμένος", sub: warn, rgb: "var(--ds-warn)" };
@@ -283,6 +303,7 @@ class DeepalS05Card extends HTMLElement {
     const lock = this._s("lock.doors"), win = this._s("cover.windows"), trunk = this._s("cover.trunk"), climate = this._s("climate.cabin_climate");
     const climateOn = this._climateIsOn();
     const cCall = climate === null ? null : this._climateCall(!climateOn);
+    const tg = (() => { const t = this._tgt(); const n = t ? parseFloat(t.state) : NaN; return Number.isFinite(n) ? n : null; })();
     const openTone = (s) => (s === "closed" ? "" : s === null ? "bad" : "warn");
     const txt = (s, closed, open) => (s === "closed" ? closed : s === "open" ? open : s === null ? "μη διαθέσιμο" : s);
     const all = {
@@ -293,7 +314,7 @@ class DeepalS05Card extends HTMLElement {
         watch: "cover.windows", confirm: win === "closed" ? "windows" : null, call: ["cover", "toggle", "cover.windows"] },
       trunk: { on: trunk === "open", icon: trunk === "open" ? "trunkopen" : "trunk", sub: txt(trunk, "κλειστό", "ανοιχτό"), tone: openTone(trunk), disabled: trunk === null, watch: "cover.trunk", confirm: trunk === "closed" ? "trunk" : null,
         call: ["cover", "toggle", "cover.trunk"] },
-      climate: { on: climateOn, icon: climateOn ? "snow" : "snowoff", sub: climate === null ? "μη διαθέσιμο" : climateOn ? "ενεργός" : "ανενεργός", tone: climate === null ? "bad" : "", disabled: climate === null, confirm: "climate",
+      climate: { on: climateOn, icon: climateOn ? "snow" : "snowoff", sub: climate === null ? "μη διαθέσιμο" : climateOn ? (tg !== null ? `ενεργός · ${this._fmtNum(tg, 1)}°` : "ενεργός") : "ανενεργός", tone: climate === null ? "bad" : "", disabled: climate === null, confirm: "climate",
         watch: this._obj("binary_sensor.climate_on") ? "binary_sensor.climate_on" : "climate.cabin_climate", timeout: 35000, call: cCall,
         unsupported: climateOn ? "Ο κλιματισμός δεν έχει εντολή απενεργοποίησης σε αυτή την οντότητα" : "Ο κλιματισμός δεν έχει εντολή ενεργοποίησης σε αυτή την οντότητα" },
       tires: (() => { const s = this._tiresSummary(); return { icon: "tirealert", ...s, open: "iso" }; })(),
@@ -410,8 +431,39 @@ class DeepalS05Card extends HTMLElement {
     this._toastTimer = setTimeout(() => { this._toastState = null; this._force(); }, ((Number(this._c.toast_duration) > 0 ? Number(this._c.toast_duration) : 5) + (type === "error" ? 3 : 0)) * 1000);
     this._force();
   }
-  _closeSheet() { clearTimeout(this._confirmTimer); this._confirm = null; const wasC = this._customize; this._customize = false; this._uiSave(); this._force(); if (wasC && this._yPend) { this._yPend = false; this._saveYaml(); } }
-  _vsheetOpen() { return !!this._view && !this._confirm && !this._customize; }
+  _diagAct(d) {
+    if (d.dgSet !== undefined) { this._diagSheet = false; this._stab = "sensors"; this._customize = true; return this._force(); }
+    const found = discoverDiag(this._hass, this._c);
+    if (d.dgAdd !== undefined) { this._patch({ diag_custom: [...(this._c.diag_custom || []), ...found.map((f) => ({ entity: f.entity, label: f.label, icon: f.icon }))] }); }
+    else if (d.dgIgnore !== undefined) { this._patch({ diag_ignore: [...new Set([...(this._c.diag_ignore || []), ...found.map((f) => f.entity)])] }); }
+    this._force();
+  }
+  _closeSheet() { clearTimeout(this._confirmTimer); if (this._confirm && this._confirm.temp !== undefined) this._tpend = undefined; this._confirm = null; const wasC = this._customize; this._customize = false; this._diagSheet = false; this._uiSave(); this._force(); if (wasC && this._yPend) { this._yPend = false; this._saveYaml(); } }
+  _popupBox() { if (!this._el) return null; if (this._confirm || this._customize || this._diagSheet) return this._el.box; return this._view ? this._el.vbox : null; }
+  _closeTop() { if (this._confirm || this._customize || this._diagSheet) return this._closeSheet(); if (this._view) { this._view = null; this._force(); } }
+  _key(e) {
+    const box = this._popupBox(); if (!box) return;
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); return this._closeTop(); }
+    if (e.key !== "Tab") return;
+    const f = [...box.querySelectorAll('button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter((x) => x.offsetParent !== null || x.getClientRects().length);
+    if (!f.length) return;
+    const act = this.shadowRoot.activeElement, i = f.indexOf(act);
+    if (e.shiftKey && (i <= 0)) { e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && (i === f.length - 1 || i < 0)) { e.preventDefault(); f[0].focus(); }
+  }
+  _focusSync() {
+    const open = !!this._popupBox();
+    if (open && !this._wasOpen) {
+      const a = this.shadowRoot.activeElement;
+      this._retSel = a ? (a.dataset.id ? `[data-id="${a.dataset.id}"]` : a.dataset.more !== undefined ? "[data-more]" : a.id ? `#${a.id}` : a.className ? `.${String(a.className).split(" ")[0]}` : null) : null;
+      requestAnimationFrame(() => { const b = this._popupBox(); const t = b && (b.querySelector(".go") || b.querySelector(".x") || b.querySelector("button")); if (t) t.focus({ preventScroll: true }); });
+    } else if (!open && this._wasOpen && this._retSel) {
+      const sel = this._retSel; this._retSel = null;
+      requestAnimationFrame(() => { const t = this.shadowRoot.querySelector(sel); if (t && !t.disabled) t.focus({ preventScroll: true }); });
+    }
+    this._wasOpen = open;
+  }
+  _vsheetOpen() { return !!this._view && !this._confirm && !this._customize && !this._diagSheet; }
 
   /* ───── εσωτερικό: επίπεδα καθισμάτων / τιμόνι / θερμοκρασία ───── */
   _level(key) {
@@ -448,6 +500,21 @@ class DeepalS05Card extends HTMLElement {
     if (!a || a.temperature == null) return null;
     return { state: String(a.temperature), attributes: { min: a.min_temp, max: a.max_temp, step: a.target_temp_step } };
   }
+  /* η αλλαγή στόχου όταν ο κλιματισμός είναι σβηστός τον ανοίγει → ζητά την ίδια επιβεβαίωση με το power */
+  _needTempConfirm() { return !this._climateIsOn() && this._c.confirm.includes("climate"); }
+  _askTemp(v) {
+    this._confirm = { id: "climate", key: "climate_temp", temp: v };
+    clearTimeout(this._confirmTimer);
+    this._confirmTimer = setTimeout(() => { this._confirm = null; this._tpend = undefined; this._force(); }, 8000);
+    this._force();
+  }
+  async _applyTemp(v) {
+    this._tpend = v; clearTimeout(this._tTimer2);
+    this._tTimer2 = setTimeout(() => { this._tpend = undefined; this._force(); }, 6000);
+    this._force();
+    try { await this._setTgt(v); }
+    catch (err) { this._tpend = undefined; this._toast(err?.message ? T("Απέτυχε: {0}", err.message) : T("Η εντολή απέτυχε"), "error"); }
+  }
   _setTgt(v) { return this._hass.callService("climate", "set_temperature", { entity_id: this._id("climate.cabin_climate"), temperature: v }); }
   _tempStep(d) {
     const o = this._tgt();
@@ -459,6 +526,7 @@ class DeepalS05Card extends HTMLElement {
     clearTimeout(this._tTimer);
     this._tTimer = setTimeout(async () => {
       const v = this._tpend;
+      if (this._needTempConfirm()) return this._askTemp(v);
       try { await this._setTgt(v); }
       catch (err) { this._toast(err?.message ? T("Απέτυχε: {0}", err.message) : T("Η εντολή απέτυχε"), "error"); }
       this._tTimer2 = setTimeout(() => { this._tpend = undefined; this._force(); }, 6000);
@@ -574,6 +642,8 @@ class DeepalS05Card extends HTMLElement {
     });
     const open = v.open.map((x) => x[1]);
     const bits = [...(open.length ? [`<span><b style="--c:var(--ds-bad)">Ανοιχτά:</b> ${esc(open.join(", "))}</span>`] : []), ...notes];
+    const hasTy = TIRES.some((t) => this._tire(t).bar !== null);
+    if (!bits.length && hasTy) bits.push(`<span><b style="--c:var(--ds-ok)">✓ ${esc(T("Όλα καλά"))}</b> — ${esc(T("όλα κλειστά, πιέσεις εντάξει"))}</span>`);
     el.vextra.innerHTML = bits.length ? `<div class="vline">${bits.join("")}</div>` : ""; el.vextra.hidden = !bits.length;
   }
 
@@ -602,7 +672,7 @@ class DeepalS05Card extends HTMLElement {
         <div class="diag" id="diag"></div>
         <div class="charge" id="charge" hidden></div>
         <button class="foot" id="foot" aria-label="Ρυθμίσεις κάρτας"><span class="age" id="age"></span><span class="sets">${ico("sliders")}Ρυθμίσεις</span></button>
-        <div class="sheet" id="vsheet"><div class="box wide" id="vbox">
+        <div class="sheet" id="vsheet"><div class="box wide" id="vbox" role="dialog" aria-modal="true" aria-labelledby="vtitle">
           <div class="hd"><h3 id="vtitle">Όχημα</h3><button class="x" data-vclose aria-label="Κλείσιμο">${ico("close")}</button></div>
           <div class="veh" id="veh">
             <div class="seg" id="vtabs"><button data-vv="iso">${ico("carside")}<span class="tx">Car View</span></button><button data-vv="climate">${ico("fan")}<span class="tx">Κλιματισμός</span></button><button data-vv="seats">${ico("seat")}<span class="tx">Καθίσματα</span></button></div>
@@ -613,7 +683,7 @@ class DeepalS05Card extends HTMLElement {
             <div id="vextra"></div>
           </div>
         </div></div>
-        <div class="sheet" id="sheet"><div class="box" id="box"></div></div>
+        <div class="sheet" id="sheet"><div class="box" id="box" role="dialog" aria-modal="true"></div></div>
       </ha-card>`;
     const sr = this.shadowRoot, g = (i) => sr.getElementById(i);
     this._dashKeys = {};
@@ -643,12 +713,17 @@ class DeepalS05Card extends HTMLElement {
     this._el.veh.addEventListener("load", (e) => { if (e.target?.dataset?.l === "base") this._el.vmiss.hidden = true; }, true);
     this._el.vbox = g("vbox");
     this._el.vbox.addEventListener("click", (e) => { if (e.target.closest("[data-vclose]")) { this._view = null; this._force(); } });
+    this._swipe(this._el.vbox, this._el.vsheet); this._swipe(this._el.box, this._el.sheet);
     this._pkInit(); this._bindPress();
     this._el.rfs.addEventListener("click", () => this._onAction("refresh"));
     this._el.stats.addEventListener("click", (e) => {
+      const tp = e.target.closest("[data-tp]"); if (tp) { if (!tp.disabled) this._tempStep(Number(tp.dataset.tp)); return; }
       const b = e.target.closest("[data-id]"); if (b) return this._onAction(b.dataset.id);
     });
-    this._el.actions.addEventListener("click", (e) => { const b = e.target.closest("[data-id]"); if (b) this._onAction(b.dataset.id); });
+    this._el.actions.addEventListener("click", (e) => {
+      if (e.target.closest("[data-more]")) { this._moreOpen = !this._moreOpen; lsWrite(`deepal-s05-more:${this._c.prefix}`, this._moreOpen ? 1 : null); return this._force(); }
+      const b = e.target.closest("[data-id]"); if (b) this._onAction(b.dataset.id);
+    });
     this._el.veh.addEventListener("click", (e) => {
       const t = e.target.closest("[data-vv],[data-spot],[data-t],[data-id],[data-tp]");
       if (!t) return;
@@ -657,15 +732,18 @@ class DeepalS05Card extends HTMLElement {
       if (t.dataset.id) return this._onAction(t.dataset.id);
       if (t.dataset.tp) return this._tempStep(Number(t.dataset.tp));
     });
-    this._el.tells.addEventListener("click", (e) => { if (e.target.closest("[data-open-cust]")) { this._stab = "sensors"; this._customize = true; this._force(); } });
+    this._el.tells.addEventListener("click", (e) => { if (e.target.closest("[data-diag-open]")) { this._diagSheet = true; this._force(); } });
     this._el.foot.addEventListener("click", () => { if (this._c.show_customize === false) return; this._stab = "sections"; this._customize = true; this._force(); });
     this._el.sheet.addEventListener("click", (e) => {
       if (e.target === this._el.sheet) return this._closeSheet();
+      const dg = e.target.closest("[data-dg-set],[data-dg-add],[data-dg-ignore]");
+      if (dg) return this._diagAct(dg.dataset);
       const t = e.target.closest("[data-sheet],[data-close]");
       if (!t) return;
       if (t.dataset.sheet === "yes") {
-        const a = this._actions().find((x) => x.id === this._confirm?.id);
-        this._closeSheet(); if (a) this._run(a); return;
+        const cf = this._confirm, a = this._actions().find((x) => x.id === cf?.id);
+        this._closeSheet(); if (cf && cf.temp !== undefined) return this._applyTemp(cf.temp);
+        if (a) this._run(a); return;
       }
       this._closeSheet();
     });
@@ -748,20 +826,37 @@ class DeepalS05Card extends HTMLElement {
     }
 
     /* κουμπιά */
-    const lay = ["grid", "scroll", "fit"].includes(c.button_layout) ? c.button_layout : "grid";
+    const off = this._offline();
+    const lay = ["split", "grid", "scroll", "fit"].includes(c.button_layout) ? c.button_layout : "split";
     const lab = c.button_labels, showT = lab === "title" || lab === "both", showS = lab === "status" || lab === "both";
-    el.actions.className = `actions ${lay} sz-${c.button_size}`;
     const acts = this._actions();
-    el.actions.innerHTML = c.buttons.filter((id) => !c.buttons_hidden.includes(id)).map((id) => {
+    const cellOf = (id) => {
       const a = acts.find((x) => x.id === id);
       const f = this._flashes[a.id], pend = !!this._pending[a.id], state = pend ? "pending" : f ? f.type : "";
       const icon = f && !pend ? (f.type === "success" ? "check" : "alert") : a.icon;
-      const dot = !state && (a.tone === "warn" || a.tone === "bad") ? '<span class="dot"></span>' : "";
+      const tone = off ? "" : a.tone || "";
+      const dot = !state && (tone === "warn" || tone === "bad") ? '<span class="dot"></span>' : "";
       const ring = pend ? '<svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><rect x="2.5" y="2.5" width="95" height="95" rx="47.5" pathLength="100"/></svg>' : "";
-      const label = `${a.label}: ${a.sub || ""}`;
-      const sub = pend ? "Αναμονή…" : f ? (f.type === "success" ? "Έτοιμο" : "Απέτυχε") : cap(a.sub || "");
-      return `<div class="cell ${a.tone || ""}"><button class="act ${a.tone || ""} ${a.on ? "on" : ""} ${state}" data-id="${a.id}" ${a.disabled ? "disabled" : ""} title="${esc(label)}" aria-label="${esc(label)}">${ico(icon)}${dot}${ring}</button>${showT ? `<span class="cap t">${esc(a.label)}</span>` : ""}${showS ? `<span class="cap s">${esc(sub)}</span>` : ""}</div>`;
-    }).join("");
+      const label = `${a.label}: ${off ? "" : a.sub || ""}`;
+      const sub = off ? "" : pend ? "Αναμονή…" : f ? (f.type === "success" ? "Έτοιμο" : "Απέτυχε") : cap(a.sub || "");
+      return `<div class="cell ${tone}"><button class="act ${tone} ${a.on && !off ? "on" : ""} ${state}" data-id="${a.id}" ${a.disabled || off ? "disabled" : ""} title="${esc(label)}" aria-label="${esc(label)}">${ico(icon)}${dot}${ring}</button>${showT ? `<span class="cap t">${esc(a.label)}</span>` : ""}${showS && sub ? `<span class="cap s">${esc(sub)}</span>` : ""}</div>`;
+    };
+    const vis = c.buttons.filter((id) => !c.buttons_hidden.includes(id));
+    if (this._moreOpen === undefined) this._moreOpen = !!lsRead(`deepal-s05-more:${c.prefix}`);
+    if (lay === "split") {
+      const np = Math.max(1, Math.min(5, Math.round(Number(c.button_primary)) || 4)), prim = vis.slice(0, np), more = vis.slice(np);
+      const keep = c.buttons_more === "show", open = keep || this._moreOpen;
+      const alert = !off && more.some((id) => { const t = (acts.find((x) => x.id === id) || {}).tone; return t === "warn" || t === "bad"; });
+      el.actions.className = `actions split sz-${c.button_size} ${open ? "moreopen" : ""} ${off ? "offline" : ""}`;
+      el.actions.style.setProperty("--np", String(prim.length));
+      el.actions.innerHTML = `<div class="prow">${prim.map(cellOf).join("")}</div>` +
+        (more.length ? `<div class="mwrap"><div class="mrow" id="mrow" ${open ? "" : "inert"}>${more.map(cellOf).join("")}</div></div>` +
+          (keep ? "" : `<button class="morebtn" data-more aria-expanded="${open}" aria-controls="mrow" title="${esc(T("Περισσότερα"))}" aria-label="${esc(T("Περισσότερα"))}"><span>Περισσότερα</span>${ico("chevd")}${alert ? '<span class="mdot"></span>' : ""}</button>`) : "");
+    } else {
+      el.actions.className = `actions ${lay} sz-${c.button_size} ${off ? "offline" : ""}`;
+      el.actions.style.removeProperty("--np");
+      el.actions.innerHTML = vis.map(cellOf).join("");
+    }
 
     /* κατάσταση (πάνω στην εικόνα) */
     const st = this._status(v);
@@ -774,7 +869,7 @@ class DeepalS05Card extends HTMLElement {
     const fuelPct = fl !== null && this._unit("sensor.fuel_level") === "%" ? fl : fuel !== null ? (fuel / c.fuel_max) * 100 : null;
     const hex2rgb = (h, d) => { const m = /^#?([0-9a-f]{6})$/i.exec(String(h || "").trim()); return m ? [0, 2, 4].map((i) => parseInt(m[1].substr(i, 2), 16)).join(",") : d; };
     const LC = { r: hex2rgb(c.lvl_red, "248,113,113"), o: hex2rgb(c.lvl_orange, "251,146,60"), y: hex2rgb(c.lvl_yellow, "250,204,21"), g: hex2rgb(c.lvl_green, "52,211,153") };
-    const lvl = (p, t1, t2, t3) => (p === null ? "148,163,184" : p < t1 ? LC.r : p < t2 ? LC.o : p < t3 ? LC.y : LC.g);
+    const lvl = (p, t1, t2, t3, top = LC.g) => (p === null ? "148,163,184" : p < t1 ? LC.r : p < t2 ? LC.o : p < t3 ? LC.y : top);
     const evRgb = lvl(bat, Number(c.bat_t1), Number(c.bat_t2), Number(c.bat_t3));
     const fuRgb = lvl(fuelPct, Number(c.fuel_t1), Number(c.fuel_t2), Number(c.fuel_t3));
     el.card.dataset.pad = c.card_padding || "normal"; el.card.dataset.ppad = c.popup_padding || "normal";
@@ -786,6 +881,7 @@ class DeepalS05Card extends HTMLElement {
     el.total.innerHTML = `<div class="big">${num(total)}<small>km</small></div><div class="cap">${fu ? "συνολική αυτονομία" : "αυτονομία"}</div>`;
     const cl = (x) => (x === null ? 0 : Math.min(100, Math.max(0, x)));
     const climOn = this._climateIsOn(), tgt = (() => { const t = this._tgt(); const n = t ? parseFloat(t.state) : NaN; return Number.isFinite(n) ? n : null; })(), pendC = !!this._pending.climate, climOk = this._s("climate.cabin_climate") !== null;
+    const tgtShown = this._tpend ?? tgt;
     const leftTxt = this._fmtLeft(this._s("sensor.remaining_charge_time_h_mm"));
     const chgSub = "";
     /* Κύκλος: το ποσοστό αντιστοιχεί στο ΟΡΑΤΟ τόξο (από το κάτω όριο του tile ως το δεξί όριο), όχι σε ολόκληρο τον κύκλο */
@@ -794,10 +890,15 @@ class DeepalS05Card extends HTMLElement {
     const oEnd = at(o0, o1, bat);
     const flow = v.charging && bat !== null && bat < 99.5 ? `<circle class="fg" cx="50" cy="50" r="44" stroke-width="7" pathLength="360" stroke-dasharray="${f1(o1 - oEnd)} 360" stroke-dashoffset="-${f1(oEnd)}"/><circle class="fp" cx="50" cy="50" r="44" stroke-width="7" pathLength="360" stroke-dasharray="25 360" style="--fs:-${f1(oEnd)};--fe:-${f1(Math.max(oEnd, o1 - 25))}"/>` : "";
     el.stats.innerHTML = `
-      <div class="t2 temp" data-open="climate" data-ent="${esc(this._id("climate.cabin_climate"))}" data-hold="${esc(JSON.stringify({ action: "more-info", entity: this._id("sensor.inside_temperature") }))}" role="button" tabindex="0" aria-label="Κλιματισμός">
+      ${c.climate_ui === "circle" ? `<div class="t2 tempc" data-open="climate" data-ent="${esc(this._id("climate.cabin_climate"))}" data-hold="${esc(JSON.stringify({ action: "more-info", entity: this._id("sensor.inside_temperature") }))}" role="button" tabindex="0" aria-label="Κλιματισμός">
         <div class="tt">Θερμοκρασία</div>
         <div class="ts">Μέσα<br><b>${temp === null ? "--" : this._fmtNum(temp, 0) + "°C"}</b>${tgt === null || !climOn ? "" : `<br><span class="sub">στόχος ${this._fmtNum(tgt, 1)}°</span>`}</div>
-        <button class="knob ${climOn ? "on" : ""} ${pendC ? "pending" : ""}" data-id="climate" ${climOk ? "" : "disabled"} aria-label="Κλιματισμός on/off">${ico("power")}${pendC ? RING : ""}</button></div>
+        <button class="knob ${climOn ? "on" : ""} ${pendC ? "pending" : ""}" data-id="climate" ${climOk && !off ? "" : "disabled"} aria-label="Κλιματισμός on/off">${ico("power")}${pendC ? RING : ""}</button></div>` : `<div class="t2 temp ${climOn ? "on" : ""}" data-open="climate" data-ent="${esc(this._id("climate.cabin_climate"))}" data-hold="${esc(JSON.stringify({ action: "more-info", entity: this._id("sensor.inside_temperature") }))}" role="button" tabindex="0" aria-label="Κλιματισμός">
+        <div class="tt">Κλιματισμός</div>
+        <button class="tpw ${climOn ? "on" : ""} ${pendC ? "pending" : ""}" data-id="climate" ${climOk && !off ? "" : "disabled"} aria-label="Κλιματισμός on/off">${ico("power")}${pendC ? RING : ""}</button>
+        <div class="ct"><span class="cur">${temp === null ? "--" : this._fmtNum(temp, 0) + "°"}</span><span class="lbl">Μέσα</span></div>
+        ${tgt === null ? "" : `<div class="cstep ${climOn ? "" : "idle"}"><button class="cs" data-tp="-1" ${off ? "disabled" : ""} aria-label="Μείωση θερμοκρασίας">${ico("minus")}</button><div class="cv"><small>στόχος</small><b>${this._fmtNum(tgtShown, 1)}°</b></div><button class="cs" data-tp="1" ${off ? "disabled" : ""} aria-label="Αύξηση θερμοκρασίας">${ico("plus")}</button></div>`}
+      </div>`}
       <div class="t2 batt" data-ent="${esc(this._id("sensor.battery_level"))}" role="button" tabindex="0">
         <div class="tt">${fu ? "Ενέργεια" : "Μπαταρία"}</div>
         <div class="ts ${v.charging ? "chg" : ""}"><b>${v.charging ? T("Φορτίζει τώρα") : T("Δεν φορτίζει")}</b>${chgSub ? `<br><span class="sub">${chgSub}</span>` : ""}</div>
@@ -829,13 +930,11 @@ class DeepalS05Card extends HTMLElement {
     }
     /* διαγνωστικά: εικονίδια-ενδείξεις πάνω στην εικόνα, μόνο όταν υπάρχει κάτι να δεις */
     const hidSec = new Set(c.hidden), items = hidSec.has("diagnostics") ? [] : this._diagItems(), all = c.diag_mode === "all";
-    const grp = new Map();
-    for (const d of items.filter((x) => all || x.on)) { const k = `${d.icon}|${d.on}|${d.na}`, g = grp.get(k); if (g) g.label += `, ${d.label}`; else grp.set(k, { ...d }); }
-    const shown = [...grp.values()], MAXT = 4;
-    el.tells.innerHTML = shown.slice(0, MAXT).map((d) => {
-      const k = d.on ? "bad" : d.na ? "na" : "ok";
-      return `<button class="tell ${k}" data-ent="${esc(d.ent)}" title="${esc(d.label)}" aria-label="${esc(d.label)}">${icoBadge(d.icon)}</button>`;
-    }).join("") + (shown.length > MAXT ? `<button class="tell more" data-open-cust title="Όλες οι ενδείξεις">+${shown.length - MAXT}</button>` : "");
+    const rank = { bad: 0, warn: 1, na: 2, ok: 3 }, dvis = items.filter((x) => all || x.on), grp = new Map();
+    for (const d of dvis) { const k = `${d.icon}|${d.st}`, g = grp.get(k); if (g) { g.n++; g.label += `, ${d.label}`; } else grp.set(k, { ...d, n: 1 }); }
+    const shown = [...grp.values()].sort((a, b) => rank[a.st] - rank[b.st]), hw = el.hero ? el.hero.clientWidth : 0, MAXT = !hw ? 4 : hw < 330 ? 2 : hw < 400 ? 3 : 4, top = shown.slice(0, MAXT), rest = dvis.length - top.reduce((t, g) => t + g.n, 0);
+    el.tells.innerHTML = top.map((d) => `<button class="tell ${d.st}" ${d.n > 1 ? "data-diag-open" : `data-ent="${esc(d.ent)}"`} title="${esc(d.label)}" aria-label="${esc(d.label)}">${icoBadge(d.icon)}${d.n > 1 ? `<b class="n">${d.n}</b>` : ""}</button>`).join("")
+      + (rest > 0 ? `<button class="tell more" data-diag-open title="${esc(T("Όλες οι ενδείξεις"))}" aria-label="${esc(T("Όλες οι ενδείξεις"))}">+${rest}</button>` : "");
     el.tells.toggleAttribute("hidden", !shown.length);
     el.info.innerHTML = tiles.join("");
     el.info.toggleAttribute("data-off", !tiles.length || hidSec.has("info"));
@@ -864,6 +963,11 @@ class DeepalS05Card extends HTMLElement {
       el.box.innerHTML = `<h3>${esc(title)}</h3><p class="c">${esc(text)}</p><div class="btnrow"><button class="btn" data-close>Ακύρωση</button><button class="btn go" data-sheet="yes">Επιβεβαίωση</button></div>`;
       this._setEl = null;
       el.sheet.classList.add("show");
+    } else if (this._diagSheet && !this._customize) {
+      el.box.className = "box wide dg";
+      el.box.innerHTML = this._diagHtml();
+      this._setEl = null;
+      el.sheet.classList.add("show");
     } else if (this._customize) {
       if (!this._setEl || !el.box.contains(this._setEl)) {
         el.box.className = "box";
@@ -886,13 +990,15 @@ class DeepalS05Card extends HTMLElement {
       this._setEl = null;
       el.sheet.classList.remove("show");
     }
+    el.box.setAttribute("aria-label", this._confirm ? (CONFIRM_TEXT[this._confirm.key] || ["Επιβεβαίωση"])[0] : this._diagSheet && !this._customize ? "Διαγνωστικά" : "Ρυθμίσεις κάρτας");
+    this._focusSync();
   }
 
   /* ───── πάτημα / παρατεταμένο πάτημα σε αισθητήρες ───── */
   _bindPress() {
     const root = this._el.card; let st = null;
     root.addEventListener("pointerdown", (e) => {
-      if (e.button > 0 || e.target.closest("[data-id]")) return;
+      if (e.button > 0 || e.target.closest("[data-id],[data-tp],[data-more]")) return;
       const t = e.target.closest("[data-ent],[data-open]"); if (!t) return;
       st = { t, x: e.clientX, y: e.clientY, held: false };
       st.timer = setTimeout(() => { if (st) { st.held = true; try { navigator.vibrate && navigator.vibrate(15); } catch (_) {} this._hold(st.t); } }, 520);
@@ -902,6 +1008,29 @@ class DeepalS05Card extends HTMLElement {
     root.addEventListener("pointerup", () => end(false));
     root.addEventListener("pointercancel", () => end(true));
     root.addEventListener("contextmenu", (e) => { if (e.target.closest("[data-ent]")) e.preventDefault(); });
+  }
+  /* κινητό: το popup κλείνει με σύρσιμο προς τα κάτω από την κορυφή του (λαβή) */
+  _swipe(box, sheet) {
+    let st = null;
+    const mobile = () => window.matchMedia && window.matchMedia("(max-width: 639px)").matches;
+    box.addEventListener("pointerdown", (e) => {
+      if (e.button > 0 || !mobile() || e.target.closest("button,input,select,textarea,a")) return;
+      const r = box.getBoundingClientRect(); if (e.clientY - r.top > 64) return;
+      st = { y: e.clientY, id: e.pointerId, dy: 0, t: Date.now() }; try { box.setPointerCapture(e.pointerId); } catch (_) {}
+      box.style.transition = "none";
+    });
+    box.addEventListener("pointermove", (e) => {
+      if (!st || e.pointerId !== st.id) return;
+      st.dy = Math.max(0, e.clientY - st.y); box.style.transform = `translateY(${st.dy}px)`; sheet.style.background = `rgba(0,0,0,${Math.max(0.1, 0.62 - st.dy / 700)})`;
+    });
+    const end = (cancel) => {
+      if (!st) return; const s = st; st = null;
+      box.style.transition = "transform .22s ease"; sheet.style.background = "";
+      const fast = s.dy / Math.max(1, Date.now() - s.t) > 0.6;
+      if (!cancel && (s.dy > 90 || (fast && s.dy > 30))) { box.style.transform = "translateY(100%)"; setTimeout(() => { box.style.transition = ""; box.style.transform = ""; this._closeTop(); }, 200); }
+      else { box.style.transform = ""; setTimeout(() => { box.style.transition = ""; }, 240); }
+    };
+    box.addEventListener("pointerup", () => end(false)); box.addEventListener("pointercancel", () => end(true));
   }
   _cfgOf(t, k) { try { return t.dataset[k] ? JSON.parse(t.dataset[k]) : null; } catch (_) { return null; } }
   _tap(t) {
@@ -971,6 +1100,7 @@ class DeepalS05Card extends HTMLElement {
     const o = this._tgt(); if (!o || !this._pk) return;
     const v = this._pk.vals[i], cur = parseFloat(o.state);
     if (Number.isFinite(cur) && Math.abs(cur - v) < 0.001) return;
+    if (this._needTempConfirm()) { this._tpend = v; return this._askTemp(v); }
     this._tpend = v; clearTimeout(this._tTimer2);
     this._tTimer2 = setTimeout(() => { this._tpend = undefined; this._force(); }, 6000);
     this._force();
@@ -1025,3 +1155,4 @@ class DeepalS05Card extends HTMLElement {
     }
   }
 }
+

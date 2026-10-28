@@ -16,6 +16,7 @@ Funciona con la integración [Deepal Alternative](https://github.com/Sunek0/ha-d
 | | |
 |---|---|
 | ![Overview](docs/images/overview.jpg) | ![Charging](docs/images/charging.jpg) |
+| ![Diagnostics](docs/images/diagnostics.jpg) | ![New sensors](docs/images/new-sensors.jpg) |
 | ![Car View](docs/images/tyres.jpg) | ![Seats](docs/images/seats.jpg) |
 | ![Climate](docs/images/climate.jpg) | ![Settings](docs/images/settings.jpg) |
 | ![Sections](docs/images/sections.jpg) | ![Tyre settings](docs/images/settings-tyres.jpg) |
@@ -31,7 +32,7 @@ _(Las imágenes están en inglés.)_
 - Estado de carga: corriente, tiempo restante y tipo como texto junto al puerto de carga (4 estilos), más un efecto animado opcional sobre el coche (flujo en el cable / pulso en el puerto / barrido de luz).
 - Ventana **Car View**: un render 3/4 real del coche en cinco colores con puertas, capó, portón, ventanillas y luces en vivo, y las cuatro presiones de los neumáticos unidas a sus ruedas (verde OK / rojo alerta).
 - Ventana de clima con selector de temperatura y flujo de aire animado que toma el color de la temperatura objetivo, además de calefacción/ventilación de asientos y calefacción del volante.
-- Diagnósticos como pequeños iconos de aviso (airbag, ABS, frenos, neumáticos, batería de 12 V…), personalizables.
+- Diagnóstico con iconos grandes al estilo del tablero y color según el estado (airbag, ABS, frenos, neumáticos, batería de 12 V…). Pulsa «+N» para ver todos los sensores; los sensores nuevos se descubren con un botón.
 - Tarjetas de información propias: añade cualquier sensor.
 - **EV o PHEV**: los elementos de combustible se ocultan automáticamente si el coche no tiene sensores de combustible (o lo fuerzas en los ajustes).
 - **Idiomas**: inglés, español y griego incluidos; sigue el idioma de Home Assistant. Un idioma nuevo es un archivo pequeño ([cómo](docs/LANGUAGES.md)).

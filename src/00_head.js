@@ -9,7 +9,7 @@
  * (MIT) — δες THIRD_PARTY_NOTICES.md στον φάκελο της κάρτας.
  */
 (() => {
-const CARD_VERSION = "1.1.0";
+const CARD_VERSION = "1.2.0";
 const TAG = "deepal-s05-card";
 const SETTINGS_TAG = "deepal-s05-settings";
 const EDITOR_TAG = "deepal-s05-card-editor";
@@ -72,12 +72,16 @@ const DEFAULTS = {
   hidden: [],
   buttons: BUTTON_IDS.slice(),
   buttons_hidden: [],
-  button_layout: "grid", // grid (σειρές) | scroll (μία γραμμή με scroll) | fit (μία γραμμή, χωράνε όλα)
+  button_layout: "split", // split (κύρια κουμπιά + «Περισσότερα») | grid (σειρές) | scroll (μία γραμμή με scroll) | fit (μία γραμμή, χωράνε όλα)
+  climate_ui: "steps", // πλακίδιο κλιματισμού: steps (στόχος με − / + και μικρό power) | circle (κλασικό: μεγάλος κύκλος on/off)
+  button_primary: 4, // split: πόσα κουμπιά (από την αρχή της λίστας) μπαίνουν στην κύρια σειρά
+  buttons_more: "collapse", // split: collapse (κρυμμένα πίσω από το «Περισσότερα») | show
   button_labels: "both", // none | status | title | both
   button_size: "m", // s | m | l
   diag: null, // null = όλα
   diag_mode: "alerts", // alerts | all
   diag_custom: [],
+  diag_ignore: [], // αισθητήρες που βρέθηκαν από την «Ανακάλυψη» και ο χρήστης αγνόησε
   hero_show: ["name", "plate", "range"], // τι φαίνεται πάνω στην εικόνα: name, plate, range, cloud, updated
   info: ["odometer", "fuel_level"],
   info_custom: [], // [{entity, label, icon, unit}]
@@ -208,10 +212,10 @@ const ICONS = {
   /* ── Κουμπιά ελέγχου ── */
   lock: '<rect class="a" x="5" y="10.4" width="14" height="9.8" rx="3.4"/><path d="M8.2 10.4V8.2a3.8 3.8 0 0 1 7.6 0v2.2"/><circle cx="12" cy="14.4" r="1.15" class="k"/><path d="M12 15v2"/>',
   unlock: '<rect class="a" x="5" y="10.4" width="14" height="9.8" rx="3.4"/><path d="M8.2 10.4V8.2a3.8 3.8 0 0 1 7.3-1.5"/><circle cx="12" cy="14.4" r="1.15" class="k"/><path d="M12 15v2"/>',
-  windowclosed: '<path d="M4.5 19V10.3l3.7-5c.3-.4.8-.6 1.3-.6H18c.8 0 1.5.7 1.5 1.5V19z"/><path class="a" d="M8.2 10.2l2.2-3h6.4v3.6H8.2z"/><path d="M14.4 17V12.6M12.2 14.6l2.2-2.2 2.2 2.2"/>',
-  windowopen: '<path d="M4.5 19V10.3l3.7-5c.3-.4.8-.6 1.3-.6H18c.8 0 1.5.7 1.5 1.5V19z"/><path class="a" d="M8.2 7.2l.7-.9h7.9v.9z"/><path d="M14.4 10.8v4.6M12.2 13.2l2.2 2.2 2.2-2.2"/>',
-  trunk: CARBODY + '<path class="a" d="M4.6 12.5 6.3 9.2h1.9l-.9 3.3z"/>',
-  trunkopen: '<path d="M9.4 11.4l.8-1.6c.3-.6.9-.9 1.5-.9h4.4c.6 0 1.1.3 1.5.7l2.2 2.9 1.4.4c.9.3 1.4 1 1.4 1.9v3.3h-1.4M14.8 17.2H9.2M5.2 17.2H3v-3c0-.9.6-1.6 1.4-1.8l1-.3"/><circle cx="7.2" cy="17.2" r="2"/><circle cx="16.8" cy="17.2" r="2"/><path class="a" d="M5.4 12.3 2.9 6 5.2 5.2l2.9 6.3z"/>',
+  windowclosed: '<path d="M4.6 20.2V9.2l3.5-4.4c.3-.4.8-.6 1.3-.6H18c.8 0 1.4.6 1.4 1.4v14.6z"/><path class="a" d="M8.2 9.4l2.3-3.2h7v8.4H8.2z"/><path d="M12.9 13.1V8.7M10.9 10.7l2-2 2 2"/>',
+  windowopen: '<path d="M4.6 20.2V9.2l3.5-4.4c.3-.4.8-.6 1.3-.6H18c.8 0 1.4.6 1.4 1.4v14.6z"/><path class="a" d="M8.2 9.4l1.1-1.5h8.2v1.5z"/><path d="M12.9 12.2v4.6M10.9 14.8l2 2 2-2"/>',
+  trunk: '<g transform="scale(0.02674)" stroke-width="34"><path d="M32 548V442Q34 408 92 388C170 362 262 338 336 314C420 252 480 214 560 190C650 164 800 162 1002 172L1012 180C1100 232 1200 268 1288 322Q1304 340 1312 372C1322 420 1322 480 1318 520L1300 546H1163A130 130 0 0 0 903 546H342A130 130 0 0 0 82 546Z"/><path d="M482 316Q562 262 648 228H660V316ZM716 228H866Q934 244 976 292L716 312Z"/><path d="M690 334Q696 430 692 505"/><path d="M1012 184C1100 226 1196 262 1262 306"/><circle cx="212" cy="567" r="93"/><circle cx="1033" cy="565" r="94"/><circle cx="212" cy="567" r="15" fill="currentColor" stroke="none"/><circle cx="1033" cy="565" r="15" fill="currentColor" stroke="none"/></g>',
+  trunkopen: '<g transform="scale(0.02674)" stroke-width="34"><path d="M32 548V442Q34 408 92 388C170 362 262 338 336 314C420 252 480 214 560 190C650 164 800 162 1002 172L1012 180C1100 232 1200 268 1288 322Q1304 340 1312 372C1322 420 1322 480 1318 520L1300 546H1163A130 130 0 0 0 903 546H342A130 130 0 0 0 82 546Z"/><path d="M482 316Q562 262 648 228H660V316ZM716 228H866Q934 244 976 292L716 312Z"/><path d="M690 334Q696 430 692 505"/><path d="M1010 176L1180 22Q1330 -4 1476 62Q1468 100 1424 100L1290 100L1062 184ZM1120 160L1222 70Q1320 58 1400 84"/><circle cx="212" cy="567" r="93"/><circle cx="1033" cy="565" r="94"/><circle cx="212" cy="567" r="15" fill="currentColor" stroke="none"/><circle cx="1033" cy="565" r="15" fill="currentColor" stroke="none"/></g>',
   tirealert: '<path d="M7.2 5.9A7.6 7.6 0 0 0 4.6 11.4c0 2.1.9 4 2.3 5.4.5.5 1.2.8 1.9.8h6.4c.7 0 1.4-.3 1.9-.8a7.6 7.6 0 0 0 2.3-5.4c0-2.2-1-4.2-2.6-5.5"/><path d="M12 8.2v4.4"/><path d="M12 15.2h.01" stroke-width="2.2"/>',
   interioron: '<path d="M7.6 6.2c-1 0-1.7.9-1.4 1.9l1.4 5.4c.2.8.9 1.3 1.7 1.3h6.3"/><path class="a" d="M9.2 15.4h6.5c1.2 0 2.2 1 2.2 2.2v.3H9.9c-.9 0-1.6-.6-1.8-1.4z"/><path d="M8.8 20.6h9.2"/><path d="M13.6 3.4c-1.2 1 1.2 2 0 3M17.2 3.4c-1.2 1 1.2 2 0 3"/>',
   snow: '<path d="M12 3.2v17.6M4.4 7.6l15.2 8.8M4.4 16.4l15.2-8.8"/><path d="M9.7 4.9 12 6.8l2.3-1.9M9.7 19.1 12 17.2l2.3 1.9M5.5 10.2l2.9-.5-.8-2.8M18.5 13.8l-2.9.5.8 2.8M5.5 13.8l2.9.5-.8 2.8M18.5 10.2l-2.9-.5.8-2.8"/>',
@@ -233,6 +237,7 @@ const ICONS = {
   minus: '<path d="M5.5 12h13"/>',
   up: '<path d="M6.5 14.5l5.5-5.5 5.5 5.5"/>',
   down: '<path d="M6.5 9.5l5.5 5.5 5.5-5.5"/>',
+  chevd: '<path d="M6.5 9.5l5.5 5.5 5.5-5.5"/>',
   chevr: '<path d="M9.5 6.5l5.5 5.5-5.5 5.5"/>',
   sliders: '<path d="M4 7h8.2M17 7h3M4 17h3M12.2 17H20"/><circle cx="14.6" cy="7" r="2.3"/><circle cx="9.6" cy="17" r="2.3"/>',
   eye: '<path d="M2.8 12S6 6.2 12 6.2 21.2 12 21.2 12 18 17.8 12 17.8 2.8 12 2.8 12z"/><circle class="a" cx="12" cy="12" r="2.7"/>',
@@ -273,16 +278,21 @@ const ICONS = {
   key: '<circle cx="7.9" cy="12" r="3.5"/><path d="M11.4 12H21M17.4 12v3.2M20.1 12v2.2"/>',
   speedlimit: '<path d="M4.6 17.6a8.2 8.2 0 1 1 14.8 0"/><path d="M12 14.4l-3.6-3.2"/><path d="M5 20h14" stroke-width="1.8"/>',
 };
-const ico = (n, cls = "") => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n] || ICONS.info}</svg>`;
-/* Εικονίδια διαγνωστικών: όλα μέσα στον ίδιο δαχτυλίδι (ISO-style «ενδεικτική λυχνία»). Τα airbag/abs/brake έχουν ήδη δαχτυλίδι. */
-const BADGE_NATIVE = new Set(["airbag", "abs", "brake"]);
-const icoBadge = (n, cls = "") => BADGE_NATIVE.has(n) ? ico(n, cls)
+/* Εικονίδια από το HA: «mdi:car-brake-abs» κ.λπ. (Material Design Icons, Apache-2.0 — ήδη μέσα στο HA, χωρίς λήψη από το διαδίκτυο) */
+const MDI_RE = /^[a-z][a-z0-9]*:[a-z0-9][a-z0-9-]*$/i;
+const ICON_VB = { trunk: "-0.8 -0.8 41.6 19.8", trunkopen: "-0.8 -0.8 41.6 19.8" }; /* πλάγια όψη: ευρύ εικονίδιο */
+const ico = (n, cls = "") => MDI_RE.test(n || "") ? `<ha-icon class="i ${cls}" icon="${n}"></ha-icon>`
+  : !ICONS[n] && TT[n] ? tt(n, cls) : `<svg class="i ${ICON_VB[n] ? "w " : ""}${cls}" viewBox="${ICON_VB[n] || "0 0 24 24"}" aria-hidden="true">${ICONS[n] || ICONS.info}</svg>`;
+/* Εικονίδια διαγνωστικών: γεμάτα εικονογράμματα ταμπλό (02_telltales.js). Ό,τι δεν έχει δικό του μπαίνει στον ίδιο δαχτυλίδι. */
+const BADGE_NATIVE = new Set(["airbag", "abs"]); /* έχουν ήδη δικό τους δαχτυλίδι (όπως τα ήθελε ο χρήστης) */
+const icoBadge = (n, cls = "") => TT[n] ? tt(n, cls) : BADGE_NATIVE.has(n) || MDI_RE.test(n || "") ? ico(n, cls)
   : `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.6" stroke-width="1.7"/><g transform="translate(12 12) scale(.58) translate(-12 -12)" stroke-width="2.7">${ICONS[n] || ICONS.info}</g></svg>`;
 const ICON_NAMES = Object.keys(ICONS);
 // Εικονίδια που προσφέρονται στον χρήστη για δικούς του αισθητήρες
 const PICKABLE_ICONS = [
   "info", "alert", "gauge", "thermo", "drop", "fuel", "battery", "battery12", "bolt", "plug", "leaf", "road",
-  "tire", "tirealert", "brake", "fluid", "engine", "key", "airbag", "abs", "door", "hood", "trunk", "seat", "steering",
+  "tire", "tirealert", "brake", "fluid", "engine", "key", "airbag", "abs", "evfault", "turtle", "oil", "door", "hood", "trunk", "seat", "steering",
   "heatwave", "fan", "headlight", "lock", "cartop", "cloudcheck", "speedlimit",
 ];
+
 

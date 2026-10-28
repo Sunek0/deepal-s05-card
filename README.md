@@ -16,6 +16,7 @@ It works with the [Deepal Alternative](https://github.com/Sunek0/ha-deepal-alter
 | | |
 |---|---|
 | ![Overview](docs/images/overview.jpg) | ![Charging](docs/images/charging.jpg) |
+| ![Diagnostics](docs/images/diagnostics.jpg) | ![New sensors](docs/images/new-sensors.jpg) |
 | ![Car View](docs/images/tyres.jpg) | ![Seats](docs/images/seats.jpg) |
 | ![Climate](docs/images/climate.jpg) | ![Settings](docs/images/settings.jpg) |
 | ![Sections](docs/images/sections.jpg) | ![Tyre settings](docs/images/settings-tyres.jpg) |
@@ -29,7 +30,7 @@ It works with the [Deepal Alternative](https://github.com/Sunek0/ha-deepal-alter
 - Charging status: current, time remaining and type as text next to the charge port (4 styles), plus an optional animated effect on the car (cable flow / charge-port pulse / light sweep).
 - **Car View** popup: a real 3/4 render of the car in five colours with live doors, bonnet, tailgate, windows and lights, and the four tyre pressures connected to their wheels (green OK / red alert).
 - Climate popup with a temperature picker and animated airflow coloured by the target temperature, plus seat heating/ventilation and steering-wheel heating.
-- Diagnostics shown as small warning icons (airbag, ABS, brakes, tyres, 12 V battery…), customisable.
+- Diagnostics shown as large, status-coloured dashboard icons (airbag, ABS, brakes, tyres, 12 V battery…). Tap “+N” for the full list of sensors; new sensors can be discovered with one button.
 - Custom info tiles: add any sensor.
 - **EV or PHEV**: fuel items are hidden automatically when the car has no fuel sensors (or force it in settings).
 - **Languages**: English, Spanish and Greek built in, follows the Home Assistant language. More languages = one small file ([how](docs/LANGUAGES.md)).

@@ -1,4 +1,3 @@
-
 /* ───────────────────────── Ρυθμίσεις (UI) ─────────────────────────
  * Ένα κοινό στοιχείο που χρησιμοποιείται και μέσα στην κάρτα (αποθήκευση στη συσκευή)
  * και στον επεξεργαστή του Home Assistant (αποθήκευση στο YAML της κάρτας). */
@@ -10,7 +9,7 @@ class DeepalS05Settings extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" }); I18N.watch(this.shadowRoot);
-    this.mode = "card"; this.tab = "sections"; this._form = { entity: "", label: "", icon: "info", mkey: "", ment: "" };
+    this.mode = "card"; this.tab = "sections"; this._form = { entity: "", label: "", icon: "info", mkey: "", ment: "", mdi: "" }; this._disc = null;
     this._sig = null; this._note = "";
   }
   set hass(h) { this._hass = h; }
@@ -49,7 +48,14 @@ class DeepalS05Settings extends HTMLElement {
     return `<div class="add"><label class="field">Οντότητα<input type="text" list="ents" data-f="entity" placeholder="π.χ. sensor.my_value" value="${esc(this._form.entity)}"></label>
       <label class="field">Ετικέτα (προαιρετικά)<input type="text" data-f="label" value="${esc(this._form.label)}"></label>
       <div class="field">Εικονίδιο${this._iconPick()}</div>
+      <label class="field">Ή εικονίδιο του HA (προαιρετικά)<input type="text" data-f="mdi" placeholder="π.χ. mdi:car-brake-abs" value="${esc(this._form.mdi)}"></label>
       <button class="btn sm" data-add="${kind}">${ico("plus")} Προσθήκη</button></div>`;
+  }
+  _discHtml(c) {
+    const ign = (c.diag_ignore || []).length, list = this._disc;
+    const rows = list ? (list.length ? `<div class="list">${list.map((f) => `<div class="row">${icoBadge(f.icon)}<span>${esc(f.label)}<small>${esc(f.entity)}</small></span><button class="btn sm" data-dadd="${esc(f.entity)}">${ico("plus")} ${esc(T("Προσθήκη"))}</button></div>`).join("")}</div>
+      ${list.length > 1 ? `<div class="btnrow"><button class="btn sm pl" data-daddall>${ico("plus")} ${esc(T("Προσθήκη όλων"))}</button></div>` : ""}` : `<p class="hint">✓ ${esc(T("Δεν βρέθηκαν νέοι αισθητήρες."))}</p>`) : "";
+    return `<div id="sensors-disc"><div class="btnrow"><button class="btn sm" data-discover>${ico("refresh")} ${esc(T("Αναζήτηση νέων αισθητήρων"))}</button>${ign ? `<button class="btn sm" data-dreset>${esc(T("Εμφάνιση ξανά όσων αγνόησα"))} (${ign})</button>` : ""}</div>${rows}</div>`;
   }
   _customRows(arr, kind) {
     return arr.length ? `<div class="list">${arr.map((x, i) => `<div class="row">${ico(x.icon || "info")}<span>${esc(x.label || x.entity)}<small>${esc(x.entity)}</small></span>
@@ -67,8 +73,10 @@ class DeepalS05Settings extends HTMLElement {
     return `<p class="hint">Σειρά και εμφάνιση των κουμπιών ελέγχου.</p>
       ${this._orderList(BUTTON_IDS, c.buttons, c.buttons_hidden, (i) => BUTTON_LABELS[i], "btn")}
       <h4>Εμφάνιση</h4>
-      <label class="field inline">Διάταξη ${this._sel("button_layout", c.button_layout, [["grid", "Σειρές (5 ανά γραμμή)"], ["scroll", "Μία γραμμή με scroll"], ["fit", "Μία γραμμή (χωράνε όλα)"]])}</label>
+      <label class="field inline">Διάταξη ${this._sel("button_layout", c.button_layout, [["split", "Κύρια κουμπιά + «Περισσότερα»"], ["grid", "Σειρές (5 ανά γραμμή)"], ["scroll", "Μία γραμμή με scroll"], ["fit", "Μία γραμμή (χωράνε όλα)"]])}</label>
       <label class="field inline">Κείμενα ${this._sel("button_labels", c.button_labels, [["none", "Χωρίς κείμενο"], ["status", "Μόνο κατάσταση"], ["title", "Μόνο τίτλος"], ["both", "Τίτλος + κατάσταση (2 γραμμές)"]])}</label>
+      ${c.button_layout === "split" || !c.button_layout ? `${this._opt("Κύρια κουμπιά", this._seg("button_primary", String(c.button_primary || 4), [["3", "3"], ["4", "4"], ["5", "5"]]), "Τα πρώτα κουμπιά της λίστας μπαίνουν στην κύρια σειρά, τα υπόλοιπα στο «Περισσότερα».")}${this._opt("Τα υπόλοιπα", this._seg("buttons_more", c.buttons_more || "collapse", [["collapse", "Κρυμμένα"], ["show", "Πάντα ορατά"]]))}` : ""}
+      ${this._opt("Πλακίδιο κλιματισμού", this._seg("climate_ui", c.climate_ui === "circle" ? "circle" : "steps", [["steps", "Στόχος με − / +"], ["circle", "Μεγάλος κύκλος"]]), "Στόχος με − / +: δείχνει τη θερμοκρασία και ρυθμίζεις τον στόχο. Μεγάλος κύκλος: το κλασικό πλακίδιο με το μεγάλο κουμπί on/off.")}
       ${this._opt("Μέγεθος", this._seg("button_size", c.button_size, [["s", "Μικρά"], ["m", "Μεσαία"], ["l", "Μεγάλα"]]))}
       <h4>Ζητά επιβεβαίωση</h4>
       <div class="list">${conf.map(([k, l]) => `<button class="row tg ${c.confirm.includes(k) ? "on" : ""}" data-conf="${k}"><span>${l}</span><i class="sw ${c.confirm.includes(k) ? "on" : ""}"></i></button>`).join("")}</div>`;
@@ -76,14 +84,18 @@ class DeepalS05Settings extends HTMLElement {
   _tabSensors(c) {
     const selIds = Array.isArray(c.diag) ? c.diag : DIAG.map((d) => d[0]);
     const has = (k) => this._hass?.states?.[resolveId(this._hass, c, k)];
+    const nod = (k) => { const st = has(k)?.state; return st === "unknown" || st === "unavailable" ? ` <small class="nod">Χωρίς δεδομένα</small>` : ""; };
     const dRows = DIAG.filter((d) => has(d[0])).map((d) => `<button class="row tg ${selIds.includes(d[0]) ? "on" : ""}" data-diag="${d[0]}">${icoBadge(d[2])}<span>${esc(d[1])}</span><i class="sw ${selIds.includes(d[0]) ? "on" : ""}"></i></button>`).join("");
-    const iRows = INFO_IDS.filter((i) => has(INFO_ITEMS[i][0]) && (i !== "fuel_level" || hasFuel(this._hass, c))).map((i) => `<button class="row tg ${c.info.includes(i) ? "on" : ""}" data-info="${i}">${ico(INFO_ITEMS[i][2])}<span>${esc(INFO_ITEMS[i][1])}</span><i class="sw ${c.info.includes(i) ? "on" : ""}"></i></button>`).join("");
+    const iRows = INFO_IDS.filter((i) => has(INFO_ITEMS[i][0]) && (i !== "fuel_level" || hasFuel(this._hass, c))).map((i) => `<button class="row tg ${c.info.includes(i) ? "on" : ""}" data-info="${i}">${ico(INFO_ITEMS[i][2])}<span>${esc(INFO_ITEMS[i][1])}${nod(INFO_ITEMS[i][0])}</span><i class="sw ${c.info.includes(i) ? "on" : ""}"></i></button>`).join("");
     const ents = Object.entries(c.entities);
     return `${this._datalist()}
       <h4>Διαγνωστικά</h4>
       <div class="seg"><button data-dmode="alerts" class="${c.diag_mode === "alerts" ? "on" : ""}">Μόνο ειδοποιήσεις</button><button data-dmode="all" class="${c.diag_mode === "all" ? "on" : ""}">Πάντα όλες</button></div>
       <div class="list">${dRows}</div>
       <div class="btnrow"><button class="btn sm" data-dall="0">Καμία</button><button class="btn sm" data-dall="1">Όλες</button></div>
+      <h4>Νέοι αισθητήρες</h4>
+      <p class="hint">${T("Αν το integration προσθέσει νέες προειδοποιήσεις, η κάρτα μπορεί να τις βρει και να τις προσθέσει στα διαγνωστικά.")}</p>
+      ${this._discHtml(c)}
       <h4>Δικά μου διαγνωστικά</h4>
       <p class="hint">${T("Οποιαδήποτε οντότητα. Θεωρείται ενεργή όταν είναι on / problem / alarm.")}</p>
       ${this._customRows(c.diag_custom, "diag_custom")}${this._addForm("diag_custom")}
@@ -143,7 +155,7 @@ class DeepalS05Settings extends HTMLElement {
   }
   _tabCharge(c) {
     const hc = (k) => hexc(c[k], DEFAULTS[k]);
-    const lv = (t1, t2, t3) => { const a = Number(t1) || 0, b = Number(t2) || 0, d = Number(t3) || 0; return `background:linear-gradient(90deg, ${hc("lvl_red")} 0 ${a}%, ${hc("lvl_orange")} ${a}% ${b}%, ${hc("lvl_yellow")} ${b}% ${d}%, ${hc("lvl_green")} ${d}% 100%)`; };
+    const lv = (t1, t2, t3, top = "lvl_green") => { const a = Number(t1) || 0, b = Number(t2) || 0, d = Number(t3) || 0; return `background:linear-gradient(90deg, ${hc("lvl_red")} 0 ${a}%, ${hc("lvl_orange")} ${a}% ${b}%, ${hc("lvl_yellow")} ${b}% ${d}%, ${hc(top)} ${d}% 100%)`; };
     const sw = (k, l) => `<label class="sw-c"><input type="color" data-set="${k}" data-text value="${esc(hexc(c[k], DEFAULTS[k]))}"><span>${l}</span></label>`;
     const rowL = (k, l, bk, fk) => `<div class="lvrow">${sw(k, l)}${bk ? this._num(bk, c[bk], "1") : `<i class="dash">—</i>`}${fk ? this._num(fk, c[fk], "1") : `<i class="dash">—</i>`}</div>`;
     const fu = hasFuel(this._hass, c);
@@ -267,14 +279,21 @@ class DeepalS05Settings extends HTMLElement {
         return this._emit({ diag: [...cur] });
       }
       if (d.info) { const s = new Set(c.info); s.has(d.info) ? s.delete(d.info) : s.add(d.info); return this._emit({ info: INFO_IDS.filter((i) => s.has(i)) }); }
+      if (d.discover !== undefined) { this._disc = discoverDiag(this._hass, this._cfg); return this._render(); }
+      if (d.dadd !== undefined || d.daddall !== undefined) {
+        const pick = (this._disc || []).filter((f) => d.daddall !== undefined || f.entity === d.dadd);
+        this._disc = (this._disc || []).filter((f) => !pick.includes(f));
+        return this._emit({ diag_custom: [...c.diag_custom, ...pick.map((f) => ({ entity: f.entity, label: f.label, icon: f.icon }))] });
+      }
+      if (d.dreset !== undefined) { this._disc = null; return this._emit({ diag_ignore: [] }); }
       if (d.dmode) return this._emit({ diag_mode: d.dmode });
       if (d.dall !== undefined) return this._emit({ diag: d.dall === "1" ? DIAG.map((x) => x[0]) : [] });
       if (d.icon) { this._form.icon = d.icon; return this._render(); }
       if (d.add !== undefined) {
         const f = this._form, ent = f.entity.trim();
         if (!/^[a-z_]+\.[\w]+$/.test(ent)) { this._note = T("Γράψε έγκυρο entity_id"); return this._render(); }
-        const item = { entity: ent, label: f.label.trim(), icon: f.icon };
-        this._form = { ...this._form, entity: "", label: "" };
+        const item = { entity: ent, label: f.label.trim(), icon: MDI_RE.test(f.mdi.trim()) ? f.mdi.trim() : f.icon };
+        this._form = { ...this._form, entity: "", label: "", mdi: "" };
         return this._emit({ [d.add]: [...c[d.add], item] });
       }
       if (d.del) { const [k, i] = d.del.split("|"); const a = [...c[k]]; a.splice(Number(i), 1); return this._emit({ [k]: a }); }
@@ -341,3 +360,4 @@ class DeepalS05CardEditor extends HTMLElement {
     this._s.cfg = mergeConfig(this._config, null);
   }
 }
+

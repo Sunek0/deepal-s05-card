@@ -23,7 +23,10 @@ name: Deepal S05
 | `hidden` | `[]` | Sections to hide. |
 | `buttons` | all | Button order: `lock`, `windows`, `trunk`, `climate`, `tires`, `cabin`, `flash`, `honk`, `find`. |
 | `buttons_hidden` | `[]` | Buttons to hide. |
-| `button_layout` | `grid` | `grid` (5 per row), `scroll` (one row, scrolls), `fit` (one row, all fit). |
+| `button_layout` | `split` | `split` (main buttons + a small “More” row), `grid` (5 per row), `scroll` (one row, scrolls), `fit` (one row, all fit). |
+| `button_primary` | `4` | `split` layout: how many buttons stay in the main row (3–5). The rest go behind the small “More” chevron. |
+| `buttons_more` | `collapse` | `split` layout: `collapse` (the rest stay hidden until “More” is pressed) or `show` (always visible). |
+| `climate_ui` | `steps` | Climate tile: `steps` (target temperature with − / +) or `circle` (large round on/off button). |
 | `button_labels` | `both` | `none`, `status`, `title`, `both`. |
 | `button_size` | `m` | `s`, `m`, `l`. |
 | `confirm` | `unlock`, `trunk`, `windows` | Actions that ask for confirmation. Any of `lock`, `unlock`, `windows`, `trunk`, `climate`, `flash`, `honk`, `find`, `refresh`. |
@@ -39,7 +42,8 @@ name: Deepal S05
 | `charge_style` | `line` | Charging details on the hero image: `line`, `text`, `big` or `beside`. |
 | `diag` | all | List of diagnostic entities to watch (`null` = all known). |
 | `diag_mode` | `alerts` | `alerts` (only active warnings) or `all`. |
-| `diag_custom` | `[]` | Extra diagnostics: `{entity, label, icon}`. |
+| `diag_custom` | `[]` | Extra diagnostics: `{entity, label, icon}`. `icon` is one of the built-in names (`airbag`, `abs`, `brake`, `fluid`, `battery12`, `battery`, `evfault`, `turtle`, `steering`, `tirealert`, `engine`, `oil`, `key`, `alert`…) or any Home Assistant icon such as `mdi:car-brake-abs`. |
+| `diag_ignore` | `[]` | Entities found by *Settings → Sensors → Search for new sensors* that you chose to ignore. |
 | `info` | `odometer`, `fuel_level` | Built-in info tiles. |
 | `info_custom` | `[]` | Extra tiles: `{entity, label, icon, unit, tap_action, hold_action}`. |
 | `entities` | `{}` | Per-entity override, e.g. `sensor.battery_level: sensor.my_other_battery`. |
@@ -68,3 +72,11 @@ The card reads and uses these entities (all prefixed with `<prefix>_`):
 `button.flash_lights_and_honk`, `button.refresh_vehicle_data`, `switch.steering_wheel_heating`,
 `number.*_seat_heating_level`, `number.*_seat_ventilation_level`, and sensors/binary sensors for battery,
 range, fuel, charging, doors, windows, tyres, lamps and warnings. Missing entities are skipped.
+
+## Diagnostics
+
+Each diagnostic sensor has a colour: **green** (OK), **amber** (warning), **red** (critical, e.g. airbag, brakes, power system) and **grey** (unavailable).
+Icons with the same symbol and state (for example four tyre alarms) are shown as one icon with a small counter; the **+N** chip counts the sensors that did not fit.
+Tap the counter or **+N** to open the *Diagnostics* popup: every sensor, split into *Problems*, *Unavailable* and *OK*. Tap a sensor for its history.
+
+**New sensors.** If the integration adds a warning the card does not know yet (a `binary_sensor` of your vehicle with device class `problem`/`safety`/`battery`, or a name ending in `_warning`, `_alarm`, `_fault`, `_error`, `_low`), the popup offers to add it. The same search runs on demand from *Settings → Sensors → Search for new sensors*. Added sensors are saved in `diag_custom`; ignored ones in `diag_ignore`.
