@@ -55,7 +55,7 @@ class DeepalS05Card extends HTMLElement {
     if (this._c) this._render();
   }
   _syncLang() {
-    const l = this._c && this._c.language && this._c.language !== "auto" ? this._c.language : this._hass?.locale?.language || this._hass?.language || "el";
+    const l = this._c && this._c.language && this._c.language !== "auto" ? this._c.language : this._hass?.locale?.language || this._hass?.language || "en";
     I18N.request(l);
   }
   connectedCallback() {

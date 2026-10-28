@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.2.1
+
+Language fix. · Διόρθωση γλώσσας. · Corrección del idioma.
+
+**Fixed**
+
+- On a fresh install the card could appear in Greek even when Home Assistant was set to English or Spanish: the English and Spanish texts lived only in the `lang/` folder, and when that folder was not installed (for example by HACS, which may download only the `.js` file) the card fell back to Greek. English and Spanish are now built into the card file. Any other language still loads from `lang/`, and anything that is not available falls back to **English** — Greek is used only when Home Assistant itself is in Greek.
+
+<details><summary>Ελληνικά</summary>
+
+**Διορθώσεις**
+
+- Σε νέα εγκατάσταση η κάρτα μπορούσε να εμφανιστεί στα ελληνικά ακόμα κι όταν το Home Assistant ήταν στα αγγλικά ή στα ισπανικά: τα αγγλικά και τα ισπανικά βρίσκονταν μόνο στον φάκελο `lang/` και, όταν ο φάκελος δεν εγκαθίσταται (π.χ. από το HACS, που μπορεί να κατεβάζει μόνο το `.js`), η κάρτα έπεφτε στα ελληνικά. Τα αγγλικά και τα ισπανικά είναι πλέον μέσα στο ίδιο το αρχείο της κάρτας. Κάθε άλλη γλώσσα φορτώνει ακόμα από το `lang/`, και ό,τι δεν υπάρχει πέφτει στα **αγγλικά** — τα ελληνικά μόνο όταν το ίδιο το Home Assistant είναι στα ελληνικά.
+
+</details>
+
+<details><summary>Español</summary>
+
+**Corregido**
+
+- En una instalación nueva la tarjeta podía aparecer en griego aunque Home Assistant estuviera en inglés o en español: los textos en inglés y español estaban solo en la carpeta `lang/` y, cuando esa carpeta no se instala (por ejemplo con HACS, que puede descargar solo el `.js`), la tarjeta recurría al griego. El inglés y el español están ahora dentro del propio archivo de la tarjeta. Cualquier otro idioma se sigue cargando desde `lang/`, y lo que no exista se muestra en **inglés** — el griego solo cuando el propio Home Assistant está en griego.
+
+</details>
+
 ## 1.2.0
 
 Summary of everything that changed since 1.1.0. · Συγκεντρωτικά όσα άλλαξαν από την 1.1.0. · Resumen de todo lo que cambió desde la 1.1.0.
