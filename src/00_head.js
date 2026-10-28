@@ -251,8 +251,8 @@ const ICONS = {
   road: '<path d="M8.4 3.6 5 20.4M15.6 3.6 19 20.4"/><path d="M12 5v2.6M12 10.7v2.6M12 16.4V19" stroke-width="1.8"/>',
   /* ── Διαγνωστικά (telltales) ── */
   airbag: '<circle cx="12" cy="12" r="9.6" stroke-width="1.7"/><circle cx="11.2" cy="9.1" r="2.4" class="k"/><circle cx="15.6" cy="7.6" r="1.25" class="k"/><path d="M7.9 16.5l3-4" stroke-width="1.8"/><path d="M12.7 13.5l3.1-3" stroke-width="2.3"/><path d="M13.7 14.8l.2 2.2" stroke-width="1.3"/><path d="M17.7 9.2l1-.5" stroke-width="1"/>',
-  abs: '<circle cx="12" cy="12" r="7.8"/><path d="M4.6 8.4c-1.4 2.1-1.4 5.1 0 7.2M19.4 8.4c1.4 2.1 1.4 5.1 0 7.2"/><text x="12" y="14.5" text-anchor="middle" font-size="6.2" font-weight="700" font-family="sans-serif" fill="currentColor" stroke="none">ABS</text>',
-  brake: '<circle cx="12" cy="12" r="5.2"/><path d="M12 9.6v3.1"/><path d="M12 14.8h.01" stroke-width="2"/><path d="M5.7 7.4c-1.5 2.6-1.5 6.6 0 9.2M18.3 7.4c1.5 2.6 1.5 6.6 0 9.2"/>',
+  abs: '<circle cx="12" cy="12" r="9.6" stroke-width="1.7"/><text x="12" y="14.4" text-anchor="middle" font-size="6.6" font-weight="700" font-family="sans-serif" fill="currentColor" stroke="none">ABS</text>',
+  brake: '<circle cx="12" cy="12" r="9.6" stroke-width="1.7"/><path d="M7.3 8.6c-1.3 2-1.3 4.8 0 6.8M16.7 8.6c1.3 2 1.3 4.8 0 6.8"/><path d="M12 8.6v3.8"/><path d="M12 15.3h.01" stroke-width="2.1"/>',
   fluid: '<path class="a" d="M12 3.8s5.2 5.4 5.2 9.2a5.2 5.2 0 0 1-10.4 0c0-3.8 5.2-9.2 5.2-9.2z"/><path d="M12 11v3"/><path d="M12 16.4h.01" stroke-width="2"/>',
   engine: '<path d="M4 10v5M20 10v5M6.4 7h2.5l1.2-1.6h4.4L15.7 7h2.4c.5 0 .9.4.9.9v8.4c0 .5-.4.9-.9.9H6.4c-.5 0-.9-.4-.9-.9V7.9c0-.5.4-.9.9-.9z"/><path class="a" d="M9.2 11h5.6v3H9.2z"/>',
   tire: '<circle cx="12" cy="12" r="8.4"/><circle class="a" cx="12" cy="12" r="3.3"/><path d="M12 8.7V3.6M12 20.4v-5.1M8.7 12H3.6M20.4 12h-5.1" stroke-width="1.4"/>',
@@ -260,6 +260,10 @@ const ICONS = {
   speedlimit: '<path d="M4.6 17.6a8.2 8.2 0 1 1 14.8 0"/><path d="M12 14.4l-3.6-3.2"/><path d="M5 20h14" stroke-width="1.8"/>',
 };
 const ico = (n, cls = "") => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n] || ICONS.info}</svg>`;
+/* Εικονίδια διαγνωστικών: όλα μέσα στον ίδιο δαχτυλίδι (ISO-style «ενδεικτική λυχνία»). Τα airbag/abs/brake έχουν ήδη δαχτυλίδι. */
+const BADGE_NATIVE = new Set(["airbag", "abs", "brake"]);
+const icoBadge = (n, cls = "") => BADGE_NATIVE.has(n) ? ico(n, cls)
+  : `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.6" stroke-width="1.7"/><g transform="translate(12 12) scale(.58) translate(-12 -12)" stroke-width="2.7">${ICONS[n] || ICONS.info}</g></svg>`;
 const ICON_NAMES = Object.keys(ICONS);
 // Εικονίδια που προσφέρονται στον χρήστη για δικούς του αισθητήρες
 const PICKABLE_ICONS = [

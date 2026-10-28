@@ -82,7 +82,7 @@ class DeepalS05Settings extends HTMLElement {
   _tabSensors(c) {
     const selIds = Array.isArray(c.diag) ? c.diag : DIAG.map((d) => d[0]);
     const has = (k) => this._hass?.states?.[resolveId(this._hass, c, k)];
-    const dRows = DIAG.filter((d) => has(d[0])).map((d) => `<button class="row tg ${selIds.includes(d[0]) ? "on" : ""}" data-diag="${d[0]}">${ico(d[2])}<span>${esc(d[1])}</span><i class="sw ${selIds.includes(d[0]) ? "on" : ""}"></i></button>`).join("");
+    const dRows = DIAG.filter((d) => has(d[0])).map((d) => `<button class="row tg ${selIds.includes(d[0]) ? "on" : ""}" data-diag="${d[0]}">${icoBadge(d[2])}<span>${esc(d[1])}</span><i class="sw ${selIds.includes(d[0]) ? "on" : ""}"></i></button>`).join("");
     const iRows = INFO_IDS.filter((i) => has(INFO_ITEMS[i][0]) && (i !== "fuel_level" || hasFuel(this._hass, c))).map((i) => `<button class="row tg ${c.info.includes(i) ? "on" : ""}" data-info="${i}">${ico(INFO_ITEMS[i][2])}<span>${esc(INFO_ITEMS[i][1])}</span><i class="sw ${c.info.includes(i) ? "on" : ""}"></i></button>`).join("");
     const ents = Object.entries(c.entities);
     return `${this._datalist()}

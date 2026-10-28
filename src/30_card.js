@@ -761,7 +761,7 @@ class DeepalS05Card extends HTMLElement {
     const shown = [...grp.values()], MAXT = 4;
     el.tells.innerHTML = shown.slice(0, MAXT).map((d) => {
       const k = d.on ? "bad" : d.na ? "na" : "ok";
-      return `<button class="tell ${k}" data-ent="${esc(d.ent)}" title="${esc(d.label)}" aria-label="${esc(d.label)}">${ico(d.icon)}</button>`;
+      return `<button class="tell ${k}" data-ent="${esc(d.ent)}" title="${esc(d.label)}" aria-label="${esc(d.label)}">${icoBadge(d.icon)}</button>`;
     }).join("") + (shown.length > MAXT ? `<button class="tell more" data-open-cust title="Όλες οι ενδείξεις">+${shown.length - MAXT}</button>` : "");
     el.tells.toggleAttribute("hidden", !shown.length);
     el.info.innerHTML = tiles.join("");
