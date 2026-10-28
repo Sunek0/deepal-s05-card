@@ -42,7 +42,7 @@ class DeepalS05Card extends HTMLElement {
   setConfig(config) {
     if (!config) throw new Error("Λείπει το config");
     this._yaml = config;
-    this._local = lsRead(this._lsKey()) || {};
+    this._local = onlySettings(lsRead(this._lsKey()));
     this._c = mergeConfig(config, this._local);
     this._last = lsRead(`deepal-s05-last:${this._c.prefix}`) || {};
     this._built = false; this._sig = null; this._remoteLoaded = false;
@@ -59,8 +59,11 @@ class DeepalS05Card extends HTMLElement {
     const l = this._c && this._c.language && this._c.language !== "auto" ? this._c.language : this._hass?.locale?.language || this._hass?.language || "el";
     I18N.request(l);
   }
-  connectedCallback() { I18N.subs.add(this); }
-  disconnectedCallback() { I18N.subs.delete(this); }
+  connectedCallback() {
+    I18N.subs.add(this);
+    if (window.IntersectionObserver && !this._io) { this._io = new IntersectionObserver(([e]) => { if (this._el && this._el.card) this._el.card.classList.toggle("off", !e.isIntersecting); }); this._io.observe(this); }
+  }
+  disconnectedCallback() { I18N.subs.delete(this); if (this._io) { this._io.disconnect(); this._io = null; } }
   getCardSize() { return 9; }
   getGridOptions() { return { columns: 12, min_columns: 6, rows: "auto" }; }
 
@@ -134,7 +137,7 @@ class DeepalS05Card extends HTMLElement {
   async _loadRemote() {
     try {
       const r = await this._hass.callWS({ type: "frontend/get_user_data", key: this._rkey() });
-      const v = r && r.value;
+      const v = r && r.value ? onlySettings(r.value) : null;
       if (v && typeof v === "object" && Object.keys(v).length) {
         if (JSON.stringify(v) !== JSON.stringify(this._local || {})) {
           this._local = v; lsWrite(this._lsKey(), v);
@@ -708,8 +711,13 @@ class DeepalS05Card extends HTMLElement {
 
     /* αυτονομία / θερμοκρασία */
     const bat = v.battery, range = this._n("sensor.remaining_range"), fuel = this._n("sensor.fuel_range"), temp = this._n("sensor.inside_temperature");
-    const evRgb = bat === null ? "148,163,184" : bat < 30 ? "248,113,113" : bat < 50 ? "251,146,60" : bat < 70 ? "250,204,21" : "52,211,153";
-    const fuRgb = fuel === null ? "148,163,184" : fuel < 100 ? "248,113,113" : fuel < 250 ? "250,204,21" : fuel < 400 ? "251,146,60" : "52,211,153";
+    const fl = this._n("sensor.fuel_level");
+    const fuelPct = fl !== null && this._unit("sensor.fuel_level") === "%" ? fl : fuel !== null ? (fuel / c.fuel_max) * 100 : null;
+    const hex2rgb = (h, d) => { const m = /^#?([0-9a-f]{6})$/i.exec(String(h || "").trim()); return m ? [0, 2, 4].map((i) => parseInt(m[1].substr(i, 2), 16)).join(",") : d; };
+    const LC = { r: hex2rgb(c.lvl_red, "248,113,113"), o: hex2rgb(c.lvl_orange, "251,146,60"), y: hex2rgb(c.lvl_yellow, "250,204,21"), g: hex2rgb(c.lvl_green, "52,211,153") };
+    const lvl = (p, t1, t2, t3) => (p === null ? "148,163,184" : p < t1 ? LC.r : p < t2 ? LC.o : p < t3 ? LC.y : LC.g);
+    const evRgb = lvl(bat, Number(c.bat_t1), Number(c.bat_t2), Number(c.bat_t3));
+    const fuRgb = lvl(fuelPct, Number(c.fuel_t1), Number(c.fuel_t2), Number(c.fuel_t3));
     el.card.dataset.pad = c.card_padding || "normal"; el.card.dataset.ppad = c.popup_padding || "normal";
     el.card.style.setProperty("--ds-ev", evRgb); el.card.style.setProperty("--ds-fu", fuRgb);
     const num = (n) => (n === null ? "--" : Math.round(n));
@@ -717,25 +725,27 @@ class DeepalS05Card extends HTMLElement {
     const parts = [range, fu ? fuel : null].filter((x) => x !== null), total = parts.length ? parts.reduce((s, x) => s + x, 0) : null;
     el.total.dataset.ent = this._id("sensor.remaining_range");
     el.total.innerHTML = `<div class="big">${num(total)}<small>km</small></div><div class="cap">${fu ? "συνολική αυτονομία" : "αυτονομία"}</div>`;
-    const fl = this._n("sensor.fuel_level");
-    const fuelPct = fl !== null && this._unit("sensor.fuel_level") === "%" ? fl : fuel !== null ? (fuel / c.fuel_max) * 100 : null;
     const cl = (x) => (x === null ? 0 : Math.min(100, Math.max(0, x)));
     const climOn = this._climateIsOn(), tgt = (() => { const t = this._tgt(); const n = t ? parseFloat(t.state) : NaN; return Number.isFinite(n) ? n : null; })(), pendC = !!this._pending.climate, climOk = this._s("climate.cabin_climate") !== null;
     const leftTxt = this._fmtLeft(this._s("sensor.remaining_charge_time_h_mm"));
     const chgSub = v.charging ? [this._chargeCurrent(), leftTxt ? T("απομένουν {0}", leftTxt) : ""].filter(Boolean).map(esc).join("<br>") : "";
-    const flow = v.charging && bat !== null && bat < 99.5 ? `<circle class="fg" cx="50" cy="50" r="44" stroke-width="7" pathLength="100" stroke-dasharray="${((100 - bat) * 0.75).toFixed(1)} 100" stroke-dashoffset="-${(bat * 0.75).toFixed(1)}"/><circle class="fp" cx="50" cy="50" r="44" stroke-width="7" pathLength="100" stroke-dasharray="7 100" style="--fs:-${(bat * 0.75).toFixed(1)};--fe:-${Math.max(bat * 0.75, 75 - 7).toFixed(1)}"/>` : "";
+    /* Κύκλος: το ποσοστό αντιστοιχεί στο ΟΡΑΤΟ τόξο (από το κάτω όριο του tile ως το δεξί όριο), όχι σε ολόκληρο τον κύκλο */
+    const GD = 40, GS = 1.5, arc = (r) => { const rp = r * GS, a = (x) => (x * 180) / Math.PI; return [180 - a(Math.asin(Math.min(1, GD / rp))) - 4, 360 - a(Math.acos(Math.min(1, GD / rp))) + 4]; };
+    const [o0, o1] = arc(44), [i0, i1] = arc(33), at = (a0, a1, p) => a0 + ((a1 - a0) * cl(p)) / 100, f1 = (x) => x.toFixed(1);
+    const oEnd = at(o0, o1, bat);
+    const flow = v.charging && bat !== null && bat < 99.5 ? `<circle class="fg" cx="50" cy="50" r="44" stroke-width="7" pathLength="360" stroke-dasharray="${f1(o1 - oEnd)} 360" stroke-dashoffset="-${f1(oEnd)}"/><circle class="fp" cx="50" cy="50" r="44" stroke-width="7" pathLength="360" stroke-dasharray="25 360" style="--fs:-${f1(oEnd)};--fe:-${f1(Math.max(oEnd, o1 - 25))}"/>` : "";
     el.stats.innerHTML = `
       <div class="t2 temp" data-open="climate" data-ent="${esc(this._id("climate.cabin_climate"))}" data-hold="${esc(JSON.stringify({ action: "more-info", entity: this._id("sensor.inside_temperature") }))}" role="button" tabindex="0" aria-label="Κλιματισμός">
         <div class="tt">Θερμοκρασία</div>
         <div class="ts">Μέσα<br><b>${temp === null ? "--" : this._fmtNum(temp, 0) + "°C"}</b>${tgt === null || !climOn ? "" : ` · στόχος ${this._fmtNum(tgt, 1)}°`}</div>
         <button class="knob ${climOn ? "on" : ""} ${pendC ? "pending" : ""}" data-id="climate" ${climOk ? "" : "disabled"} aria-label="Κλιματισμός on/off">${ico("power")}${pendC ? RING : ""}</button></div>
       <div class="t2 batt" data-ent="${esc(this._id("sensor.battery_level"))}" role="button" tabindex="0">
-        <div class="tt">${fu ? "Μπαταρία &amp; καύσιμο" : "Μπαταρία"}</div>
+        <div class="tt">${fu ? "Ενέργεια" : "Μπαταρία"}</div>
         <div class="ts ${v.charging ? "chg" : ""}"><b>${v.charging ? T("Φορτίζει τώρα") : T("Δεν φορτίζει")}</b>${chgSub ? `<br><span class="sub">${chgSub}</span>` : ""}</div>
         <div class="lg"><span style="color:rgb(${evRgb})">${ico("bolt")}<b>${num(range)}</b><small>km</small></span>${fu ? `<span style="color:rgb(${fuRgb})">${ico("fuel")}<b>${num(fuel)}</b><small>km</small></span>` : ""}</div>
         <div class="gauge"><svg viewBox="0 0 100 100" aria-hidden="true">
-          <circle class="tr" cx="50" cy="50" r="44" stroke-width="7" pathLength="100" stroke-dasharray="75 25"/><circle class="ev" cx="50" cy="50" r="44" stroke-width="7" pathLength="100" stroke-dasharray="${(cl(bat) * 0.75).toFixed(1)} 100"/>${flow}
-          ${fu ? `<circle class="tr" cx="50" cy="50" r="33" stroke-width="7" pathLength="100" stroke-dasharray="75 25"/><circle class="fu" cx="50" cy="50" r="33" stroke-width="7" pathLength="100" stroke-dasharray="${(cl(fuelPct) * 0.75).toFixed(1)} 100"/>` : ""}</svg>
+          <circle class="tr" cx="50" cy="50" r="44" stroke-width="7" pathLength="360" stroke-dasharray="${f1(o1 - o0)} 360" stroke-dashoffset="-${f1(o0)}"/><circle class="ev" cx="50" cy="50" r="44" stroke-width="7" pathLength="360" stroke-dasharray="${f1(oEnd - o0)} 360" stroke-dashoffset="-${f1(o0)}"/>${flow}
+          ${fu ? `<circle class="tr" cx="50" cy="50" r="33" stroke-width="7" pathLength="360" stroke-dasharray="${f1(i1 - i0)} 360" stroke-dashoffset="-${f1(i0)}"/><circle class="fu" cx="50" cy="50" r="33" stroke-width="7" pathLength="360" stroke-dasharray="${f1(at(i0, i1, fuelPct) - i0)} 360" stroke-dashoffset="-${f1(i0)}"/>` : ""}</svg>
           <div class="c"><span>${bat === null ? "--" : Math.round(bat)}<small>%</small></span>${fu ? `<span class="gf" style="color:rgb(${fuRgb})">${ico("fuel")}${fuelPct === null ? "--" : Math.round(cl(fuelPct))}<small>%</small></span>` : ""}</div></div></div>`;
 
     this._renderVehicle(v);
@@ -847,8 +857,8 @@ class DeepalS05Card extends HTMLElement {
       return this._hass.callService(dom, svc, { ...(cfg.data || cfg.service_data || {}), ...(cfg.target || {}) })
         .then(() => this._toast("Η ενέργεια εστάλη", "ok")).catch((err) => this._toast(err?.message || "Η ενέργεια απέτυχε", "error"));
     }
-    if (a === "navigate" && cfg.navigation_path) { history.pushState(null, "", cfg.navigation_path); window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } })); return; }
-    if (a === "url" && cfg.url_path) window.open(cfg.url_path, "_blank");
+    if (a === "navigate" && /^\/(?!\/)/.test(String(cfg.navigation_path || ""))) { history.pushState(null, "", cfg.navigation_path); window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } })); return; }
+    if (a === "url" && /^(https?:\/\/|\/(?!\/))/i.test(String(cfg.url_path || ""))) window.open(cfg.url_path, "_blank", "noopener,noreferrer"); // ασφάλεια: όχι javascript:/data:
   }
 
   /* ───── number picker (προσαρμογή του deepal-number-picker) ───── */

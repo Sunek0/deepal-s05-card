@@ -8,7 +8,7 @@
  * (MIT) — δες LICENSE-NOTICE.txt στον φάκελο της κάρτας.
  */
 (() => {
-const CARD_VERSION = "1.0.3";
+const CARD_VERSION = "1.0.4";
 const TAG = "deepal-s05-card";
 const SETTINGS_TAG = "deepal-s05-settings";
 const EDITOR_TAG = "deepal-s05-card-editor";
@@ -95,6 +95,9 @@ const DEFAULTS = {
   popup_padding: "normal", // normal | half | none
   toast_position: "bottom", // πάνω στην εικόνα: bottom | top
   toast_duration: 5, // δευτερόλεπτα
+  lvl_red: "#f87171", lvl_orange: "#fb923c", lvl_yellow: "#facc15", lvl_green: "#34d399", // χρώματα επιπέδων μπαταρίας/καυσίμου
+  bat_t1: 30, bat_t2: 50, bat_t3: 70, // μπαταρία %: κάτω από t1 κόκκινο, t2 πορτοκαλί, t3 κίτρινο, αλλιώς πράσινο
+  fuel_t1: 10, fuel_t2: 25, fuel_t3: 40, // καύσιμο % της δεξαμενής
 };
 // Κλειδιά που αλλάζουν από το UI ρυθμίσεων
 /* Αυτόματη αναγνώριση προθέματος: αν το ορισμένο δεν βρίσκεται (π.χ. άλλο όνομα συσκευής: mycar_…), ψάχνουμε στο HA ποιο πρόθεμα έχει τους αισθητήρες του οχήματος */

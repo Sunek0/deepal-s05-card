@@ -10,7 +10,7 @@ const LANGS = (window.__DEEPAL_S05_LANGS = window.__DEEPAL_S05_LANGS || {});
 const GL = "Ͱ-Ͽἀ-῿";
 const I18N = {
   lang: "el", wanted: null, ready: true, dict: null, re: null, subs: new Set(), roots: new Set(),
-  rec: new WeakMap(), arec: new WeakMap(), attrs: ["title", "aria-label", "placeholder", "alt"],
+  rec: new WeakMap(), arec: new WeakMap(), memo: new Map(), attrs: ["title", "aria-label", "placeholder", "alt"],
   norm(c) { return String(c || "el").toLowerCase().replace("_", "-"); },
   available() { const o = { el: "Ελληνικά", en: "English", es: "Español" }; for (const [k, v] of Object.entries(LANGS)) o[k] = v.name || k; return Object.entries(o); },
   numLocale() { return this.lang === "el" ? "el-GR" : this.lang; },
@@ -24,7 +24,7 @@ const I18N = {
     });
   },
   _set(code, table) {
-    this.lang = code;
+    this.lang = code; this.memo.clear();
     if (!table) { this.dict = null; this.tdict = null; this.re = null; return; }
     const d = {}, cp = (s, f) => (s ? f(s[0]) + s.slice(1) : s);
     for (const [k, v] of Object.entries(table.dict || {})) {
@@ -41,6 +41,7 @@ const I18N = {
   request(want) {
     const code = this.norm(want);
     if (code === this.wanted) return;
+    if (!/^[a-z]{2,3}(-[a-z0-9]{2,8})?$/.test(code)) return; // ασφάλεια: ο κωδικός γλώσσας μπαίνει σε διαδρομή αρχείου
     this.wanted = code;
     const base = code.split("-")[0];
     if (base === "el") { this._set("el", null); this.ready = true; this.changed(); return; }
@@ -53,7 +54,12 @@ const I18N = {
     })();
   },
   changed() { this.roots.forEach((r) => this.node(r)); this.subs.forEach((c) => { try { c._built = false; c._sig = null; c._force && c._force(); } catch (_) {} }); },
-  tr(s) { return this.re ? s.replace(this.re, (m) => this.dict[m]) : s; },
+  tr(s) {
+    if (!this.re) return s;
+    let o = this.memo.get(s);
+    if (o === undefined) { o = s.replace(this.re, (m) => this.dict[m]); if (this.memo.size > 3000) this.memo.clear(); this.memo.set(s, o); }
+    return o;
+  },
   t(s, a) { let o = (this.tdict && this.tdict[s]) ?? s; return a && a.length ? o.replace(/\{(\d+)\}/g, (m, i) => (a[i] ?? "")) : o; },
   text(n) {
     if (!this.re && !this.rec.has(n)) return;

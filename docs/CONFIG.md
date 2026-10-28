@@ -32,6 +32,9 @@ name: Deepal S05
 | `toast_position` | `bottom` | Message position on the image: `bottom` or `top`. |
 | `toast_duration` | `5` | Seconds a message stays visible (errors +3). |
 | `hero_show` | `name`, `plate`, `range` | What is shown on the hero image: `name`, `plate`, `range`, `cloud`, `updated`. |
+| `lvl_red` / `lvl_orange` / `lvl_yellow` / `lvl_green` | `#f87171` / `#fb923c` / `#facc15` / `#34d399` | Colours of the battery and fuel level (`#rrggbb`). The charging effect uses the same colour as the bar. |
+| `bat_t1` / `bat_t2` / `bat_t3` | `30` / `50` / `70` | Battery %: below `t1` red, below `t2` orange, below `t3` yellow, otherwise green. |
+| `fuel_t1` / `fuel_t2` / `fuel_t3` | `10` / `25` / `40` | Same thresholds for the fuel level (% of the tank). |
 | `charge_fx` | `flow_port` | Charging effect on the car: `flow_port`, `flow`, `port`, `sweep`, `none`. |
 | `diag` | all | List of diagnostic entities to watch (`null` = all known). |
 | `diag_mode` | `alerts` | `alerts` (only active warnings) or `all`. |

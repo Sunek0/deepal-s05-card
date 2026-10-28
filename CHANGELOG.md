@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.4
+
+- Settings redesigned: eight tabs with icons (Sections, Buttons, Sensors, Charging, Tyres, Appearance, Images, General), grouped cards, segmented controls and colour swatches. Tabs have an opaque bar and arrow buttons (plus mouse drag), so they can be scrolled without a wheel.
+- Battery/fuel level colours and thresholds are configurable (Settings → Charging); the charging effect now has exactly the colour of the bar.
+- Battery/fuel gauge: the percentages map to the visible arc, the ring is cropped by the tile corner, and the numbers are larger. The tile title is "Energy" on PHEV.
+- Images tab is back, limited to the hero/dashboard photos (the layer check lists were removed).
+- Performance: effects behind a popup and off-screen are paused (60 fps instead of ~41 with Settings open while charging), translations are cached, and Settings no longer re-attaches its event listeners on every refresh (a bug that made controls act on stale values).
+- Security: colour values are validated (`#rrggbb`), `url`/`navigate` tap actions accept only `http(s)` and local paths, saved settings keep only known keys, language codes are validated before loading `lang/<code>.js`.
+
 ## 1.0.3
 
 - Spanish translation (`lang/es.js`).

@@ -5,10 +5,9 @@
 const TOP_FILES_ALL = ["base", "low_beam_on", "hood_open", "hood_closed", "trunk_open", "trunk_closed", "door_front_left_open", "door_front_left_closed",
   "door_front_right_open", "door_front_right_closed", "door_rear_left_open", "door_rear_left_closed", "door_rear_right_open", "door_rear_right_closed",
   "window_front_left_open", "window_front_right_open", "window_rear_left_open", "window_rear_right_open"];
-const ALL_FILES = { ...HERO_FILES, ...DASH_FILES };
 const INT_FILES_ALL = ["base", ...INT_LAYERS];
+const ALL_FILES = { ...HERO_FILES, ...DASH_FILES };
 const heroBases = (c) => (c.image_path ? [normPath(c.image_path)] : [`${SCRIPT_BASE}images/car/`]);
-const layerBase = (c) => (c.layers_path ? normPath(c.layers_path) : `${SCRIPT_BASE}images/`);
 
 class DeepalS05Settings extends HTMLElement {
   constructor() {
@@ -28,8 +27,8 @@ class DeepalS05Settings extends HTMLElement {
   _setTab(t) { this.tab = t; this.onTab && this.onTab(t); this._render(); }
 
   _tabs() {
-    const T = [["sections", "Ενότητες"], ["buttons", "Κουμπιά"], ["sensors", "Αισθητήρες"], ["images", "Εικόνες"], ["general", "Γενικά"]];
-    return `<div class="tabs">${T.map(([k, l]) => `<button data-tab="${k}" class="${this.tab === k ? "on" : ""}">${l}</button>`).join("")}</div>`;
+    const T = [["sections", "Ενότητες", "eye"], ["buttons", "Κουμπιά", "power"], ["sensors", "Αισθητήρες", "gauge"], ["charge", "Φόρτιση", "bolt"], ["tires", "Ελαστικά", "tire"], ["look", "Εμφάνιση", "sliders"], ["images", "Εικόνες", "image"], ["general", "Γενικά", "info"]];
+    return `<div class="tabbar"><button class="tn l" data-tn="-1" aria-label="Προηγούμενες καρτέλες" hidden>${ico("chevr")}</button><div class="tabs">${T.map(([k, l, i]) => `<button data-tab="${k}" class="${this.tab === k ? "on" : ""}">${ico(i)}<span>${l}</span></button>`).join("")}</div><button class="tn r" data-tn="1" aria-label="Επόμενες καρτέλες" hidden>${ico("chevr")}</button></div>`;
   }
   _orderList(all, order, hidden, labelOf, kind) {
     return `<div class="list">${order.map((id, i) => {
@@ -66,7 +65,7 @@ class DeepalS05Settings extends HTMLElement {
       <h4>Πάνω στην εικόνα</h4>
       <div class="list">${HERO_SHOW_OPTS.map(([k, l]) => `<button class="row tg ${(c.hero_show || []).includes(k) ? "on" : ""}" data-hs="${k}"><span>${l}</span><i class="sw ${(c.hero_show || []).includes(k) ? "on" : ""}"></i></button>`).join("")}</div>
       <h4>Κάτοψη</h4>
-      <label class="field inline">Κάτοψη ${this._sel("top_orientation", c.top_orientation, [["horizontal", "Οριζόντια"], ["vertical", "Κάθετη"]])}</label>`;
+      ${this._opt("Κάτοψη", this._seg("top_orientation", c.top_orientation, [["horizontal", "Οριζόντια"], ["vertical", "Κάθετη"]]))}`;
   }
   _tabButtons(c) {
     const conf = [["lock", "Κλείδωμα"], ["unlock", "Ξεκλείδωμα"], ["windows", "Άνοιγμα παραθύρων"], ["trunk", "Άνοιγμα πορτμπαγκάζ"], ["climate", "Κλιματισμός"], ["flash", "Φώτα"], ["honk", "Κόρνα"], ["find", "Εντοπισμός"], ["refresh", "Ανανέωση δεδομένων"]];
@@ -75,7 +74,7 @@ class DeepalS05Settings extends HTMLElement {
       <h4>Εμφάνιση</h4>
       <label class="field inline">Διάταξη ${this._sel("button_layout", c.button_layout, [["grid", "Σειρές (5 ανά γραμμή)"], ["scroll", "Μία γραμμή με scroll"], ["fit", "Μία γραμμή (χωράνε όλα)"]])}</label>
       <label class="field inline">Κείμενα ${this._sel("button_labels", c.button_labels, [["none", "Χωρίς κείμενο"], ["status", "Μόνο κατάσταση"], ["title", "Μόνο τίτλος"], ["both", "Τίτλος + κατάσταση (2 γραμμές)"]])}</label>
-      <label class="field inline">Μέγεθος ${this._sel("button_size", c.button_size, [["s", "Μικρά"], ["m", "Μεσαία"], ["l", "Μεγάλα"]])}</label>
+      ${this._opt("Μέγεθος", this._seg("button_size", c.button_size, [["s", "Μικρά"], ["m", "Μεσαία"], ["l", "Μεγάλα"]]))}
       <h4>Ζητά επιβεβαίωση</h4>
       <div class="list">${conf.map(([k, l]) => `<button class="row tg ${c.confirm.includes(k) ? "on" : ""}" data-conf="${k}"><span>${l}</span><i class="sw ${c.confirm.includes(k) ? "on" : ""}"></i></button>`).join("")}</div>`;
   }
@@ -104,44 +103,80 @@ class DeepalS05Settings extends HTMLElement {
         <button class="btn sm" data-addent>${ico("plus")} Αντιστοίχιση</button></div>`;
   }
   _tabImages(c) {
-    const hb = heroBases(c), lb = layerBase(c);
-    return `<p class="hint">${T("Οι φωτογραφίες και τα layers φορτώνονται από τον φάκελο {0} δίπλα στην κάρτα. Το ανέβασμα αρχείων γίνεται από τον φάκελο, όχι από την κάρτα — εδώ μπορείς να ορίσεις άλλες διαδρομές και να ελέγξεις ότι βρίσκονται.", "<code>images/</code>")}</p>
+    return `<p class="hint">${T("Οι φωτογραφίες φορτώνονται από τον φάκελο {0} δίπλα στην κάρτα. Εδώ μπορείς να ορίσεις άλλον φάκελο ή άλλο αρχείο για κάθε φωτογραφία και να ελέγξεις ότι βρίσκεται.", "<code>images/car/</code>")}</p>
       <label class="field">Φάκελος φωτογραφιών hero (κενό = αυτόματα)<input type="text" data-set="image_path" data-text value="${esc(c.image_path || "")}" placeholder="${esc(SCRIPT_BASE)}images/car/"></label>
-      <label class="field">Φάκελος layers (κενό = images/ δίπλα στην κάρτα)<input type="text" data-set="layers_path" data-text value="${esc(c.layers_path || "")}" placeholder="${esc(SCRIPT_BASE)}images/"></label>
       <div class="grid2"><label class="field">Μεγέθυνση εικόνας${this._num("image_scale", c.image_scale, "0.05")}</label>
         <label class="field">Λόγος διαστάσεων (π.χ. 16 / 9)<input type="text" data-set="image_aspect" data-text value="${esc(c.image_aspect || "")}" placeholder="auto"></label></div>
       <h4>Φωτογραφίες (hero & ταμπλό)</h4>
-      <div class="list">${Object.keys(ALL_FILES).map((k) => `<div class="chk"><span class="th" data-probe-hero="${k}"></span><div style="min-width:0;flex:1"><div>${esc(HERO_LABELS[k])}</div><input type="text" data-img="${k}" value="${esc(c.images[k] || "")}" placeholder="${esc(ALL_FILES[k])}"></div><span class="st" data-st-hero="${k}">…</span></div>`).join("")}</div>
-      <h4>Layers κάτοψης</h4><div class="list" id="ltop"></div>
-      <h4>Layers εσωτερικού</h4><div class="list" id="lint"></div>
-      <p class="hint">${T("Φάκελος layers: {0}", `<code>${esc(lb)}</code>`)}</p>`;
+      <div class="list">${Object.keys(ALL_FILES).map((k) => `<div class="chk"><span class="th" data-probe-hero="${k}"></span><div style="min-width:0;flex:1"><div>${esc(HERO_LABELS[k])}</div><input type="text" data-img="${k}" value="${esc(c.images[k] || "")}" placeholder="${esc(ALL_FILES[k])}"></div><span class="st" data-st-hero="${k}">…</span></div>`).join("")}</div>`;
   }
+  _probe() {
+    const c = this._cfg, sr = this.shadowRoot, hb = heroBases(c);
+    const test = (urls, cb) => { const im = new Image(); let i = 0; im.onload = () => cb(urls[i]); im.onerror = () => { i++; i < urls.length ? (im.src = urls[i]) : cb(null); }; im.src = urls[0]; };
+    Object.keys(ALL_FILES).forEach((k) => {
+      const f = c.images[k] || ALL_FILES[k];
+      const urls = /^(https?:)?\/\/|^\//.test(f) ? [f] : hb.map((b) => b + f);
+      test(urls, (u) => {
+        const th = sr.querySelector(`[data-probe-hero="${k}"]`), st = sr.querySelector(`[data-st-hero="${k}"]`);
+        if (th && u) th.style.backgroundImage = `url("${String(u).replace(/["\\\n\r()]/g, encodeURIComponent)}")`;
+        if (st) { st.textContent = u ? "✓" : "✗"; st.className = `st ${u ? "ok" : "no"}`; }
+      });
+    });
+  }
+  /* helpers σχεδίασης */
+  _seg(name, val, opts) { return `<div class="seg wide">${opts.map(([v, l]) => `<button data-sset="${name}|${v}" class="${String(v) === String(val) ? "on" : ""}">${esc(l)}</button>`).join("")}</div>`; }
+  _opt(label, ctrl, sub) { return `<div class="opt"><div class="ol">${label}${sub ? `<small>${sub}</small>` : ""}</div>${ctrl}</div>`; }
+  _tg(key, on, label, sub) { return `<button class="row tg ${on ? "on" : ""}" data-tgl="${key}"><span>${label}${sub ? `<small>${sub}</small>` : ""}</span><i class="sw ${on ? "on" : ""}"></i></button>`; }
   _tabGeneral(c) {
     const cfgOut = this._exportObj();
-    return `<label class="field">Όνομα κάρτας<input type="text" data-set="name" data-text value="${esc(c.name)}"></label>
-      <label class="field">Γλώσσα${this._sel("language", c.language || "auto", [["auto", "Αυτόματα (γλώσσα του HA)"], ...I18N.available()])}</label>
-      <label class="field">Τύπος οχήματος${this._sel("powertrain", c.powertrain || "auto", [["auto", "Αυτόματα (από τους αισθητήρες καυσίμου)"], ["phev", "Plug-in υβριδικό (ρεύμα + βενζίνη)"], ["ev", "Μόνο ηλεκτρικό"]])}</label>
-      <label class="field">Εφέ φόρτισης πάνω στο αμάξι${this._sel("charge_fx", c.charge_fx || "flow_port", [["flow_port", "Ροή στο καλώδιο + παλμός στη θύρα"], ["flow", "Ροή ενέργειας στο καλώδιο"], ["port", "Παλμός στη θύρα φόρτισης"], ["sweep", "Σάρωση φωτός πάνω στο αμάξι"], ["none", "Κανένα"]])}</label>
-      <div class="list"><button class="row tg ${c.show_customize !== false ? "on" : ""}" data-tgl="show_customize"><span>Κουμπί «Ρυθμίσεις» στην κάρτα</span><i class="sw ${c.show_customize !== false ? "on" : ""}"></i></button></div>
-      <p class="hint">${T("Αν το κρύψεις, οι ρυθμίσεις ανοίγουν μόνο από τον επεξεργαστή της κάρτας (Επεξεργασία dashboard).")}</p>
-      <div class="list"><button class="row tg ${c.toasts !== false ? "on" : ""}" data-tgl="toasts"><span>Μηνύματα πάνω στην οθόνη</span><i class="sw ${c.toasts !== false ? "on" : ""}"></i></button></div>
-      <label class="field inline">Περιθώρια κάρτας ${this._sel("card_padding", c.card_padding || "normal", [["normal", "Κανονικά"], ["half", "Μισά"], ["none", "Χωρίς (εικόνα από άκρη σε άκρη)"]])}</label>
-      <label class="field inline">Περιθώρια popup ${this._sel("popup_padding", c.popup_padding || "normal", [["normal", "Κανονικά"], ["half", "Μισά"], ["none", "Χωρίς"]])}</label>
-      <label class="field inline">Θέση μηνυμάτων (πάνω στην εικόνα) ${this._sel("toast_position", c.toast_position || "bottom", [["bottom", "Κάτω"], ["top", "Πάνω"]])}</label>
-      <label class="field inline">Διάρκεια μηνυμάτων ${this._sel("toast_duration", String(c.toast_duration || 5), [["3", "3 δευτ."], ["5", "5 δευτ."], ["8", "8 δευτ."], ["12", "12 δευτ."]])}</label>
+    return `<h4>Κάρτα</h4>
+      <label class="field">Όνομα κάρτας<input type="text" data-set="name" data-text value="${esc(c.name)}"></label>
+      ${this._opt("Γλώσσα", this._sel("language", c.language || "auto", [["auto", "Αυτόματα (γλώσσα του HA)"], ...I18N.available()]))}
+      <h4>Όχημα</h4>
+      ${this._opt("Τύπος οχήματος", this._seg("powertrain", c.powertrain || "auto", [["auto", "Αυτόματα"], ["phev", "Plug-in υβριδικό"], ["ev", "Ηλεκτρικό"]]), "Το «Αυτόματα» βρίσκει τον τύπο από τους αισθητήρες καυσίμου.")}
       <label class="field">Πρόθεμα οντοτήτων (π.χ. s05)<input type="text" data-set="prefix" data-text value="${esc(c.prefix)}" list="dl-pfx"></label>
       <datalist id="dl-pfx">${pfxCandidates(this._hass).map((p) => `<option value="${esc(p)}"></option>`).join("")}</datalist>
       ${(() => { const e = effPrefix(this._hass, c); return e !== c.prefix ? `<p class="hint">${T("Το πρόθεμα {0} δεν βρέθηκε· χρησιμοποιείται αυτόματα το {1}. Πάτησε το πεδίο για να το αποθηκεύσεις.", `<code>${esc(c.prefix)}</code>`, `<code>${esc(e)}</code>`)}</p>` : ""; })()}
-      <h4>Ελαστικά</h4>
-      <div class="grid2"><label class="field">Μονάδα${this._sel("tire_unit", c.tire_unit, [["bar", "bar"], ["kPa", "kPa"], ["psi", "psi"]])}</label>
-        <label class="field">Κλιματισμός on-mode<input type="text" data-set="climate_on_mode" data-text value="${esc(c.climate_on_mode || "")}" placeholder="auto"></label>
-        <label class="field">Ελάχιστη (bar)${this._num("tire_min", c.tire_min)}</label><label class="field">Μέγιστη (bar)${this._num("tire_max", c.tire_max)}</label>
-        ${hasFuel(this._hass, c) ? `<label class="field">Δεξαμενή (km)${this._num("fuel_max", c.fuel_max, "1")}</label>` : ""}</div>
+      <label class="field">Κλιματισμός on-mode<input type="text" data-set="climate_on_mode" data-text value="${esc(c.climate_on_mode || "")}" placeholder="auto"></label>
+      <h4>Ρυθμίσεις στην κάρτα</h4>
+      ${this._tg("show_customize", c.show_customize !== false, "Κουμπί «Ρυθμίσεις» στην κάρτα", "Αν το κρύψεις, οι ρυθμίσεις ανοίγουν μόνο από τον επεξεργαστή της κάρτας (Επεξεργασία dashboard).")}
       <h4>Εξαγωγή / επαναφορά</h4>
       <p class="hint">${this.mode === "card" ? T("Οι ρυθμίσεις γράφονται αυτόματα στο YAML της κάρτας στο dashboard, άρα είναι κοινές σε όλες τις συσκευές και τους χρήστες. Αν το dashboard δεν επιτρέπει αποθήκευση (όχι διαχειριστής ή YAML mode), αποθηκεύονται στον λογαριασμό σου και μπορείς να αντιγράψεις το YAML παρακάτω.") : T("Οι ρυθμίσεις αποθηκεύονται στο YAML της κάρτας.")}</p>
       <textarea readonly id="yaml">${esc(toYaml(cfgOut))}</textarea>
       <div class="btnrow"><button class="btn sm" data-copy>${ico("copy")} Αντιγραφή YAML</button><button class="btn sm" data-reset>${ico("refresh")} Επαναφορά</button></div>
       <div class="note" id="note">${esc(this._note)}</div>`;
+  }
+  _tabCharge(c) {
+    const hc = (k) => hexc(c[k], DEFAULTS[k]);
+    const lv = (t1, t2, t3) => { const a = Number(t1) || 0, b = Number(t2) || 0, d = Number(t3) || 0; return `background:linear-gradient(90deg, ${hc("lvl_red")} 0 ${a}%, ${hc("lvl_orange")} ${a}% ${b}%, ${hc("lvl_yellow")} ${b}% ${d}%, ${hc("lvl_green")} ${d}% 100%)`; };
+    const sw = (k, l) => `<label class="sw-c"><input type="color" data-set="${k}" data-text value="${esc(hexc(c[k], DEFAULTS[k]))}"><span>${l}</span></label>`;
+    const rowL = (k, l, bk, fk) => `<div class="lvrow">${sw(k, l)}${bk ? this._num(bk, c[bk], "1") : `<i class="dash">—</i>`}${fk ? this._num(fk, c[fk], "1") : `<i class="dash">—</i>`}</div>`;
+    const fu = hasFuel(this._hass, c);
+    return `<h4>Εφέ φόρτισης</h4>
+      <label class="field">Εφέ φόρτισης πάνω στο αμάξι${this._sel("charge_fx", c.charge_fx || "flow_port", [["flow_port", "Ροή στο καλώδιο + παλμός στη θύρα"], ["flow", "Ροή ενέργειας στο καλώδιο"], ["port", "Παλμός στη θύρα φόρτισης"], ["sweep", "Σάρωση φωτός πάνω στο αμάξι"], ["none", "Κανένα"]])}</label>
+      <h4>Χρώματα επιπέδων</h4>
+      <p class="hint">Η μπάρα μπαταρίας και καυσίμου αλλάζει χρώμα ανάλογα με το ποσοστό. Όρισε τα όρια (κάτω από κάθε τιμή) και τα χρώματα.</p>
+      <div class="lvhead"><span></span><span>Μπαταρία (%)</span><span>Καύσιμο (%)</span></div>
+      ${rowL("lvl_red", "Κόκκινο", "bat_t1", "fuel_t1")}${rowL("lvl_orange", "Πορτοκαλί", "bat_t2", "fuel_t2")}${rowL("lvl_yellow", "Κίτρινο", "bat_t3", "fuel_t3")}${rowL("lvl_green", "Πράσινο", null, null)}
+      <div class="lvbar" style="${lv(c.bat_t1, c.bat_t2, c.bat_t3)}"></div>
+      ${fu ? `<div class="lvbar" style="${lv(c.fuel_t1, c.fuel_t2, c.fuel_t3)}"></div>
+      <h4>Δεξαμενή</h4>
+      ${this._opt("Δεξαμενή (km)", this._num("fuel_max", c.fuel_max, "1"), "Αυτονομία με γεμάτη δεξαμενή, για τον υπολογισμό του ποσοστού.")}` : ""}`;
+  }
+  _tabTires(c) {
+    return `<h4>Ελαστικά</h4>
+      ${this._opt("Μονάδα", this._seg("tire_unit", c.tire_unit, [["bar", "bar"], ["kPa", "kPa"], ["psi", "psi"]]))}
+      <div class="grid2"><label class="field">Ελάχιστη (bar)${this._num("tire_min", c.tire_min)}</label><label class="field">Μέγιστη (bar)${this._num("tire_max", c.tire_max)}</label></div>
+      <p class="hint">Εκτός ορίων η πίεση εμφανίζεται ως «χαμηλή» ή «υψηλή».</p>`;
+  }
+  _tabLook(c) {
+    return `<h4>Περιθώρια</h4>
+      ${this._opt("Περιθώρια κάρτας", this._seg("card_padding", c.card_padding || "normal", [["normal", "Κανονικά"], ["half", "Μισά"], ["none", "Χωρίς"]]), "«Χωρίς»: η εικόνα πηγαίνει από άκρη σε άκρη.")}
+      ${this._opt("Περιθώρια popup", this._seg("popup_padding", c.popup_padding || "normal", [["normal", "Κανονικά"], ["half", "Μισά"], ["none", "Χωρίς"]]))}
+      <h4>Μηνύματα</h4>
+      ${this._tg("toasts", c.toasts !== false, "Μηνύματα πάνω στην οθόνη")}
+      ${this._opt("Θέση μηνυμάτων (πάνω στην εικόνα)", this._seg("toast_position", c.toast_position || "bottom", [["bottom", "Κάτω"], ["top", "Πάνω"]]))}
+      ${this._opt("Διάρκεια μηνυμάτων", this._seg("toast_duration", String(c.toast_duration || 5), [["3", "3 δευτ."], ["5", "5 δευτ."], ["8", "8 δευτ."], ["12", "12 δευτ."]]))}`;
   }
   _exportObj() {
     const c = this._cfg, o = { type: this.yamlBase?.type || `custom:${TAG}` };
@@ -155,39 +190,44 @@ class DeepalS05Settings extends HTMLElement {
   _render() {
     const c = this._cfg;
     if (!c) return;
-    const body = { sections: () => this._tabSections(c), buttons: () => this._tabButtons(c), sensors: () => this._tabSensors(c), images: () => this._tabImages(c), general: () => this._tabGeneral(c) }[this.tab]();
-    this.shadowRoot.innerHTML = `<style>${SETTINGS_CSS}</style><div class="wrap">${this._tabs()}${body}</div>`;
-    this._bind();
+    if (!["general", "sections", "buttons", "sensors", "charge", "tires", "look", "images"].includes(this.tab)) this.tab = "sections";
+    const body = { sections: () => this._tabSections(c), buttons: () => this._tabButtons(c), sensors: () => this._tabSensors(c), images: () => this._tabImages(c), general: () => this._tabGeneral(c), charge: () => this._tabCharge(c), tires: () => this._tabTires(c), look: () => this._tabLook(c) }[this.tab]();
+    const parts = body.split("<h4>"), grouped = parts[0] + parts.slice(1).map((x) => `<section class="grp"><h4>${x}</section>`).join("");
+    this.shadowRoot.innerHTML = `<style>${SETTINGS_CSS}</style><div class="wrap">${this._tabs()}${grouped}</div>`;
+    this._bind(); this._wireTabs();
     if (this.tab === "images") this._probe();
   }
 
-  _probe() {
-    const c = this._cfg, sr = this.shadowRoot, hb = heroBases(c), lb = layerBase(c);
-    const test = (urls, cb) => { const im = new Image(); let i = 0; im.onload = () => cb(urls[i]); im.onerror = () => { i++; i < urls.length ? (im.src = urls[i]) : cb(null); }; im.src = urls[0]; };
-    Object.keys(ALL_FILES).forEach((k) => {
-      const f = c.images[k] || ALL_FILES[k];
-      const urls = /^(https?:)?\/\/|^\//.test(f) ? [f] : hb.map((b) => b + f);
-      test(urls, (u) => {
-        const th = sr.querySelector(`[data-probe-hero="${k}"]`), st = sr.querySelector(`[data-st-hero="${k}"]`);
-        if (th && u) th.style.backgroundImage = `url("${u}")`;
-        if (st) { st.textContent = u ? "✓" : "✗"; st.className = `st ${u ? "ok" : "no"}`; }
-      });
-    });
-    const fill = (id, dir, files) => {
-      const box = sr.getElementById(id); if (!box) return;
-      box.innerHTML = files.map((f) => `<div class="chk"><code style="flex:1">${esc(dir + f)}.webp</code><span class="st" data-l="${dir}${f}">…</span></div>`).join("");
-      files.forEach((f) => test([`${lb}${dir}${f}.webp`], (u) => {
-        const st = box.querySelector(`[data-l="${dir}${f}"]`); if (st) { st.textContent = u ? "✓" : "✗"; st.className = `st ${u ? "ok" : "no"}`; }
-      }));
-    };
-    fill("ltop", "top/", TOP_FILES_ALL); fill("lint", "interior/", INT_FILES_ALL);
+  _navUpd() {
+    const sr = this.shadowRoot, tb = sr.querySelector(".tabs"); if (!tb) return;
+    const l = sr.querySelector(".tn.l"), r = sr.querySelector(".tn.r"), max = tb.scrollWidth - tb.clientWidth;
+    if (l) l.hidden = tb.scrollLeft < 4; if (r) r.hidden = max <= 4 || tb.scrollLeft > max - 4;
   }
-
+  _wireTabs() {
+    const tb = this.shadowRoot.querySelector(".tabs"); if (!tb) return;
+    tb.scrollLeft = this._tx || 0;
+    const on = tb.querySelector(".on");
+    if (on && (on.offsetLeft < tb.scrollLeft || on.offsetLeft + on.offsetWidth > tb.scrollLeft + tb.clientWidth)) tb.scrollLeft = on.offsetLeft - (tb.clientWidth - on.offsetWidth) / 2;
+    this._tx = tb.scrollLeft; this._navUpd();
+    tb.addEventListener("scroll", () => { this._tx = tb.scrollLeft; this._navUpd(); }, { passive: true });
+    // σύρσιμο με το ποντίκι (στην αφή το scroll δουλεύει από μόνο του)
+    let down = null, moved = false;
+    tb.addEventListener("pointerdown", (e) => { if (e.pointerType === "mouse") { down = { x: e.clientX, l: tb.scrollLeft }; moved = false; } });
+    tb.addEventListener("pointermove", (e) => { if (!down) return; const dx = e.clientX - down.x; if (Math.abs(dx) > 5) moved = true; if (moved) tb.scrollLeft = down.l - dx; });
+    const end = () => { down = null; };
+    tb.addEventListener("pointerup", end); tb.addEventListener("pointerleave", end);
+    tb.addEventListener("click", (e) => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+    requestAnimationFrame(() => this._navUpd());
+  }
   _bind() {
-    const sr = this.shadowRoot, c = this._cfg;
+    const sr = this.shadowRoot;
+    sr.querySelectorAll('select[data-set="_mkey"]').forEach((s) => s.addEventListener("change", () => (this._form.mkey = s.value)));
+    if (this._bnd) return; this._bnd = true; // οι ακροατές μπαίνουν μία φορά· διαβάζουν πάντα την τρέχουσα ρύθμιση
+    const c = new Proxy({}, { get: (_, k) => (this._cfg ? this._cfg[k] : undefined) });
     sr.addEventListener("click", (e) => {
       const t = e.target.closest("button,[data-tab]");
       if (!t) return;
+      if (t.dataset.tn) { const tb = sr.querySelector(".tabs"); return tb && tb.scrollBy({ left: Number(t.dataset.tn) * Math.max(120, tb.clientWidth * 0.7), behavior: "smooth" }); }
       const d = t.dataset;
       if (d.tab) return this._setTab(d.tab);
       if (d.mv) {
@@ -202,6 +242,7 @@ class DeepalS05Settings extends HTMLElement {
         s.has(id) ? s.delete(id) : s.add(id);
         return this._emit({ [key]: [...s] });
       }
+      if (d.sset) { const i = d.sset.indexOf("|"); return this._emit({ [d.sset.slice(0, i)]: d.sset.slice(i + 1) }); }
       if (d.tgl) return this._emit({ [d.tgl]: c[d.tgl] === false });
       if (d.hs) { const x = new Set(c.hero_show || []); x.has(d.hs) ? x.delete(d.hs) : x.add(d.hs); return this._emit({ hero_show: HERO_SHOW_OPTS.map((o) => o[0]).filter((k) => x.has(k)) }); }
       if (d.conf) { const s = new Set(c.confirm); s.has(d.conf) ? s.delete(d.conf) : s.add(d.conf); return this._emit({ confirm: [...s] }); }
@@ -251,7 +292,6 @@ class DeepalS05Settings extends HTMLElement {
       const t = e.target;
       if (t.dataset.f) this._form[t.dataset.f] = t.value;
     });
-    sr.querySelectorAll('select[data-set="_mkey"]').forEach((s) => s.addEventListener("change", () => (this._form.mkey = s.value)));
   }
 }
 
