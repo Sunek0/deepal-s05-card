@@ -16,7 +16,7 @@ It works with the [Deepal Alternative](https://github.com/Sunek0/ha-deepal-alter
 | ![Overview](docs/images/overview.jpg) | ![Charging](docs/images/charging.jpg) |
 | ![Top view](docs/images/tyres.jpg) | ![Seats](docs/images/seats.jpg) |
 | ![Climate](docs/images/climate.jpg) | ![Settings](docs/images/settings.jpg) |
-| ![Tyre settings](docs/images/settings-tyres.jpg) | |
+| ![Tyre settings](docs/images/settings-tyres.jpg) | ![EV and PHEV](docs/images/phev-ev.jpg) |
 
 ## Features
 
