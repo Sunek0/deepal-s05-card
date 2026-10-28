@@ -89,7 +89,7 @@ See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the origin and licences
 
 | Problem | Fix |
 |---|---|
-| "Vehicle images not found" | The `images/` folder is not next to the card file. Update to 1.2.2 or later via HACS (earlier HACS installs only got the `.js` file) or copy the whole `dist/` content. |
+| "Vehicle images not found" | The `images/` folder is not next to the card file. Update to 1.2.2 or later via HACS (earlier HACS installs only got the `.js` file). If the folders are still missing after the update, restart Home Assistant and use HACS → the card → ⋮ → **Redownload**; or copy the whole `dist/` content by hand. |
 | All values show `--` | Wrong prefix. Set `prefix:` to the part between the domain and the sensor name (`sensor.`**`s05`**`_battery_level`). |
 | Settings are not saved to YAML | Needs an administrator account and a UI-managed dashboard. Otherwise they are stored in your user profile and you can copy the YAML from *Settings → General*. |
 | Buttons do nothing | The integration documents that remote commands on the S05 are experimental and need the remote-control PIN. |

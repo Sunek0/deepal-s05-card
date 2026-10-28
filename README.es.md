@@ -91,7 +91,7 @@ Consulta [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) para el origen y las l
 
 | Problema | Solución |
 |---|---|
-| «Vehicle images not found» | La carpeta `images/` no está junto al archivo de la tarjeta. Actualiza a la 1.2.2 o posterior con HACS (las versiones anteriores solo instalaban el archivo `.js`) o copia todo el contenido de `dist/`. |
+| «Vehicle images not found» | La carpeta `images/` no está junto al archivo de la tarjeta. Actualiza a la 1.2.2 o posterior con HACS (las versiones anteriores solo instalaban el archivo `.js`). Si las carpetas siguen sin aparecer tras actualizar, reinicia Home Assistant y usa HACS → la tarjeta → ⋮ → **Redownload**; o copia todo el contenido de `dist/`. |
 | Todos los valores muestran `--` | Prefijo incorrecto. Define `prefix:` con la parte entre el dominio y el nombre del sensor (`sensor.`**`s05`**`_battery_level`). |
 | Los ajustes no se guardan en el YAML | Necesita una cuenta de administrador y un panel gestionado desde la interfaz. Si no, se guardan en tu perfil y puedes copiar el YAML desde *Ajustes → General*. |
 | Los botones no hacen nada | La integración indica que los comandos remotos del S05 son experimentales y requieren el PIN de control remoto. |
