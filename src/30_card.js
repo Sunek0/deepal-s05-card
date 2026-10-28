@@ -901,7 +901,7 @@ class DeepalS05Card extends HTMLElement {
       </div>`}
       <div class="t2 batt" data-ent="${esc(this._id("sensor.battery_level"))}" role="button" tabindex="0">
         <div class="tt">${fu ? "Ενέργεια" : "Μπαταρία"}</div>
-        <div class="ts ${v.charging ? "chg" : ""}"><b>${v.charging ? T("Φορτίζει τώρα") : T("Δεν φορτίζει")}</b>${chgSub ? `<br><span class="sub">${chgSub}</span>` : ""}</div>
+        ${v.charging ? `<div class="ts chg"><b>${T("Φορτίζει τώρα")}</b>${chgSub ? `<br><span class="sub">${chgSub}</span>` : ""}</div>` : ""}
         <div class="lg"><span style="color:rgb(${evRgb})">${ico("bolt")}<b>${num(range)}</b><small>km</small></span>${fu ? `<span style="color:rgb(${fuRgb})">${ico("fuel")}<b>${num(fuel)}</b><small>km</small></span>` : ""}</div>
         <div class="gauge"><svg viewBox="0 0 100 100" aria-hidden="true">
           <circle class="tr" cx="50" cy="50" r="44" stroke-width="7" pathLength="360" stroke-dasharray="${f1(o1 - o0)} 360" stroke-dashoffset="-${f1(o0)}"/><circle class="ev" cx="50" cy="50" r="44" stroke-width="7" pathLength="360" stroke-dasharray="${f1(oEnd - o0)} 360" stroke-dashoffset="-${f1(o0)}"/>${flow}

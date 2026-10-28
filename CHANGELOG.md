@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.2.5
+
+Energy tile. · Πλακίδιο ενέργειας. · Mosaico de energía.
+
+**Changed**
+
+- The energy tile no longer shows "Not charging" when the car is idle. The status line appears only while charging.
+
+<details><summary>Ελληνικά</summary>
+
+**Αλλαγές**
+
+- Το πλακίδιο ενέργειας δεν δείχνει πια «Δεν φορτίζει» όταν το όχημα δεν φορτίζει. Η γραμμή κατάστασης εμφανίζεται μόνο όταν φορτίζει.
+
+</details>
+
+<details><summary>Español</summary>
+
+**Cambios**
+
+- El mosaico de energía ya no muestra «No está cargando» cuando el coche está parado. La línea de estado aparece solo mientras carga.
+
+</details>
+
 ## 1.2.4
 
 Cleanup. · Τακτοποίηση. · Limpieza.
