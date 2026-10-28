@@ -50,7 +50,7 @@ _(Las imágenes están en inglés.)_
 ### HACS (recomendado)
 
 1. HACS → ⋮ → **Custom repositories** → añade `https://github.com/rmxs/deepal-s05-card`, categoría **Dashboard**.
-2. Instala **Deepal S05 Card** y recarga el navegador (hard refresh).
+2. Instala **Deepal S05 Card** y recarga el navegador (hard refresh). HACS instala la carpeta `dist/` completa, incluidos `lang/` e `images/`.
 3. HACS registra el recurso por ti. Si no lo hace, añádelo a mano:
    *Ajustes → Paneles → ⋮ → Recursos* → `/hacsfiles/deepal-s05-card/deepal-s05-card.js`, tipo **Módulo JavaScript**.
 
@@ -92,6 +92,7 @@ Consulta [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) para el origen y las l
 | Problema | Solución |
 |---|---|
 | «Vehicle images not found» | La carpeta `images/` no está junto al archivo de la tarjeta. Reinstala con HACS o copia todo el contenido de `dist/`. |
+| El texto de la tarjeta sale siempre en griego (o faltan las imágenes) | Las carpetas `lang/` e `images/` no están junto al archivo de la tarjeta. Afectó a las versiones hasta la v1.2.0, en las que HACS instalaba solo el JS; reinstala la última versión o copia `dist/lang/` y `dist/images/` junto a `deepal-s05-card.js`. |
 | Todos los valores muestran `--` | Prefijo incorrecto. Define `prefix:` con la parte entre el dominio y el nombre del sensor (`sensor.`**`s05`**`_battery_level`). |
 | Los ajustes no se guardan en el YAML | Necesita una cuenta de administrador y un panel gestionado desde la interfaz. Si no, se guardan en tu perfil y puedes copiar el YAML desde *Ajustes → General*. |
 | Los botones no hacen nada | La integración indica que los comandos remotos del S05 son experimentales y requieren el PIN de control remoto. |

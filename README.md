@@ -48,7 +48,7 @@ It works with the [Deepal Alternative](https://github.com/Sunek0/ha-deepal-alter
 ### HACS (recommended)
 
 1. HACS → ⋮ → **Custom repositories** → add `https://github.com/rmxs/deepal-s05-card`, category **Dashboard**.
-2. Install **Deepal S05 Card** and reload the browser (hard refresh).
+2. Install **Deepal S05 Card** and reload the browser (hard refresh). HACS installs the complete `dist/` folder, including `lang/` and `images/`.
 3. HACS registers the resource for you. If it does not, add it manually:
    *Settings → Dashboards → ⋮ → Resources* → `/hacsfiles/deepal-s05-card/deepal-s05-card.js`, type **JavaScript module**.
 
@@ -90,6 +90,7 @@ See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the origin and licences
 | Problem | Fix |
 |---|---|
 | "Vehicle images not found" | The `images/` folder is not next to the card file. Reinstall via HACS or copy the whole `dist/` content. |
+| Card text is always Greek (or images are missing) | The `lang/` and `images/` folders are not next to the card file. Releases up to v1.2.0 installed only the JS via HACS; reinstall the latest release or copy `dist/lang/` and `dist/images/` next to `deepal-s05-card.js`. |
 | All values show `--` | Wrong prefix. Set `prefix:` to the part between the domain and the sensor name (`sensor.`**`s05`**`_battery_level`). |
 | Settings are not saved to YAML | Needs an administrator account and a UI-managed dashboard. Otherwise they are stored in your user profile and you can copy the YAML from *Settings → General*. |
 | Buttons do nothing | The integration documents that remote commands on the S05 are experimental and need the remote-control PIN. |

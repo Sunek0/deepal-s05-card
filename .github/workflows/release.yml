@@ -2,6 +2,15 @@ name: Release
 
 # Creates a GitHub release automatically whenever CARD_VERSION in src/00_head.js
 # is bumped on main (tag = v<CARD_VERSION>). Notes come from CHANGELOG.md.
+#
+# Do not attach dist/deepal-s05-card.js as a release asset: when the latest
+# release contains an asset named after the repository, HACS installs only that
+# file and skips dist/lang/ and dist/images/, so the card falls back to Greek
+# and the vehicle images are missing. Without assets HACS installs the whole
+# dist/ tree from the tag (card, translations and images).
+#
+# Releases published before this change (<= v1.2.0) still have the single-file
+# asset; remove it manually or publish a new version so HACS reinstalls the tree.
 on:
   push:
     branches: [main]
@@ -32,9 +41,8 @@ jobs:
           tag="v$v"
           if gh release view "$tag" >/dev/null 2>&1; then
             echo "Release $tag already exists - nothing to do"
-            gh release upload "$tag" dist/deepal-s05-card.js --clobber
             exit 0
           fi
           awk -v ver="$v" '$0 ~ "^## "ver"$" {f=1; next} /^## / {f=0} f' CHANGELOG.md > notes.md
           test -s notes.md || echo "Release $tag" > notes.md
-          gh release create "$tag" dist/deepal-s05-card.js --target "$GITHUB_SHA" --title "$tag" --notes-file notes.md
+          gh release create "$tag" --target "$GITHUB_SHA" --title "$tag" --notes-file notes.md
