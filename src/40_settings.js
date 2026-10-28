@@ -152,7 +152,9 @@ class DeepalS05Settings extends HTMLElement {
     const sw = (k, l) => `<label class="sw-c"><input type="color" data-set="${k}" data-text value="${esc(hexc(c[k], DEFAULTS[k]))}"><span>${l}</span></label>`;
     const rowL = (k, l, bk, fk) => `<div class="lvrow">${sw(k, l)}${bk ? this._num(bk, c[bk], "1") : `<i class="dash">—</i>`}${fk ? this._num(fk, c[fk], "1") : `<i class="dash">—</i>`}</div>`;
     const fu = hasFuel(this._hass, c);
-    return `<h4>Εφέ φόρτισης</h4>
+    return `<h4>Στοιχεία φόρτισης</h4>
+      ${this._opt("Στυλ", this._seg("charge_style", c.charge_style || "line", [["line", "Γραμμή"], ["text", "Κείμενο"], ["big", "Μεγάλο"], ["beside", "Στη θύρα"]]), "Ρεύμα, χρόνος που απομένει και τύπος φόρτισης ως κείμενο πάνω στην εικόνα.")}
+      <h4>Εφέ φόρτισης</h4>
       <label class="field">Εφέ φόρτισης πάνω στο αμάξι${this._sel("charge_fx", c.charge_fx || "flow_port", [["flow_port", "Ροή στο καλώδιο + παλμός στη θύρα"], ["flow", "Ροή ενέργειας στο καλώδιο"], ["port", "Παλμός στη θύρα φόρτισης"], ["sweep", "Σάρωση φωτός πάνω στο αμάξι"], ["none", "Κανένα"]])}</label>
       <h4>Χρώματα επιπέδων</h4>
       <p class="hint">Η μπάρα μπαταρίας και καυσίμου αλλάζει χρώμα ανάλογα με το ποσοστό. Όρισε τα όρια (κάτω από κάθε τιμή) και τα χρώματα.</p>
@@ -164,10 +166,13 @@ class DeepalS05Settings extends HTMLElement {
       ${this._opt("Δεξαμενή (km)", this._num("fuel_max", c.fuel_max, "1"), "Αυτονομία με γεμάτη δεξαμενή, για τον υπολογισμό του ποσοστού.")}` : ""}`;
   }
   _tabTires(c) {
+    const u = c.tire_unit || "bar", k = u === "kPa" ? 100 : u === "psi" ? 14.5038 : 1, dp = u === "kPa" ? 0 : u === "psi" ? 1 : 2, shown = (b) => Number((Number(b) * k).toFixed(dp));
+    const chk = c.tire_check || "vehicle";
     return `<h4>Ελαστικά</h4>
-      ${this._opt("Μονάδα", this._seg("tire_unit", c.tire_unit, [["bar", "bar"], ["kPa", "kPa"], ["psi", "psi"]]))}
-      <div class="grid2"><label class="field">Ελάχιστη (bar)${this._num("tire_min", c.tire_min)}</label><label class="field">Μέγιστη (bar)${this._num("tire_max", c.tire_max)}</label></div>
-      <p class="hint">Εκτός ορίων η πίεση εμφανίζεται ως «χαμηλή» ή «υψηλή».</p>`;
+      ${this._opt("Μονάδα", this._seg("tire_unit", u, [["bar", "bar"], ["kPa", "kPa"], ["psi", "psi"]]))}
+      ${this._opt("Έλεγχος πίεσης", this._seg("tire_check", chk, [["vehicle", "Από το όχημα"], ["limits", "Δικά μου όρια"], ["both", "Και τα δύο"]]), "«Από το όχημα»: η κατάσταση βγαίνει από τις ειδοποιήσεις των ελαστικών που στέλνει το ίδιο το αμάξι.")}
+      ${chk === "vehicle" ? "" : `<div class="grid2"><label class="field">Ελάχιστη (${u})<input type="number" step="${dp ? 1 / 10 ** dp : 1}" data-set="tire_min" data-num data-conv value="${shown(c.tire_min)}"></label><label class="field">Μέγιστη (${u})<input type="number" step="${dp ? 1 / 10 ** dp : 1}" data-set="tire_max" data-num data-conv value="${shown(c.tire_max)}"></label></div>
+      <p class="hint">Εκτός ορίων η πίεση εμφανίζεται ως «χαμηλή» ή «υψηλή».</p>`}`;
   }
   _tabLook(c) {
     return `<h4>Περιθώρια</h4>
@@ -283,6 +288,7 @@ class DeepalS05Settings extends HTMLElement {
       if (d.set) {
         let v = t.value;
         if (d.num !== undefined) { v = parseFloat(v); if (!Number.isFinite(v)) return; }
+        if (d.conv !== undefined) { const u = c.tire_unit; v = Number((u === "kPa" ? v / 100 : u === "psi" ? v / 14.5038 : v).toFixed(3)); }
         if (d.text !== undefined) { v = v.trim(); if (["image_path", "layers_path", "climate_on_mode", "image_aspect"].includes(d.set) && !v) v = null; if (["name", "prefix"].includes(d.set) && !v) return; }
         return this._emit({ [d.set]: v });
       }

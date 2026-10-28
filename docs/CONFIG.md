@@ -36,6 +36,7 @@ name: Deepal S05
 | `bat_t1` / `bat_t2` / `bat_t3` | `30` / `50` / `70` | Battery %: below `t1` red, below `t2` orange, below `t3` yellow, otherwise green. |
 | `fuel_t1` / `fuel_t2` / `fuel_t3` | `10` / `25` / `40` | Same thresholds for the fuel level (% of the tank). |
 | `charge_fx` | `flow_port` | Charging effect on the car: `flow_port`, `flow`, `port`, `sweep`, `none`. |
+| `charge_style` | `line` | Charging details on the hero image: `line`, `text`, `big` or `beside`. |
 | `diag` | all | List of diagnostic entities to watch (`null` = all known). |
 | `diag_mode` | `alerts` | `alerts` (only active warnings) or `all`. |
 | `diag_custom` | `[]` | Extra diagnostics: `{entity, label, icon}`. |
@@ -44,7 +45,8 @@ name: Deepal S05
 | `entities` | `{}` | Per-entity override, e.g. `sensor.battery_level: sensor.my_other_battery`. |
 | `top_orientation` | `horizontal` | Top-view orientation: `horizontal` or `vertical`. |
 | `tire_unit` | `bar` | `bar`, `kPa`, `psi`. |
-| `tire_min` / `tire_max` | `2.0` / `3.5` | Pressure range (bar) considered normal. |
+| `tire_min` / `tire_max` | `2.0` / `3.5` | Pressure range (bar) considered normal; used when `tire_check` is `limits` or `both`. |
+| `tire_check` | `vehicle` | What marks a tyre as not OK: `vehicle` (the car's own alerts), `limits` (your min/max) or `both`. |
 | `climate_on_mode` | auto | HVAC mode used to turn the climate on (default: detected from the entity). |
 | `image_path` | `<card folder>/images/car/` | Folder with the hero photos. |
 | `layers_path` | `<card folder>/images/` | Folder with `top/` and `interior/` layers. |

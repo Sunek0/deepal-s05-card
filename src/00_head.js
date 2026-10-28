@@ -8,7 +8,7 @@
  * (MIT) — δες LICENSE-NOTICE.txt στον φάκελο της κάρτας.
  */
 (() => {
-const CARD_VERSION = "1.0.5";
+const CARD_VERSION = "1.0.6";
 const TAG = "deepal-s05-card";
 const SETTINGS_TAG = "deepal-s05-settings";
 const EDITOR_TAG = "deepal-s05-card-editor";
@@ -87,6 +87,8 @@ const DEFAULTS = {
   tire_min: 2.0, // bar — κάτω από αυτό «χαμηλή»
   tire_max: 3.5, // bar — πάνω από αυτό «υψηλή»
   tire_unit: "bar", // bar | kPa | psi
+  tire_check: "vehicle", // vehicle = μόνο οι ειδοποιήσεις του οχήματος · limits = τα δικά μου όρια · both = και τα δύο
+  charge_style: "line", // line · text · big · beside
   show_customize: true,
   language: "auto", // auto (γλώσσα του HA) | el | en | …
   charge_fx: "flow_port", // εφέ φόρτισης πάνω στο αμάξι: flow_port | flow | port | sweep | none

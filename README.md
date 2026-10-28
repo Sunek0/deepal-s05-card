@@ -9,13 +9,22 @@ It works with the [Deepal Alternative](https://github.com/Sunek0/ha-deepal-alter
 
 ![Deepal S05 Card](docs/screenshot.png)
 
+## Gallery
+
+| | |
+|---|---|
+| ![Overview](docs/images/overview.jpg) | ![Charging](docs/images/charging.jpg) |
+| ![Top view](docs/images/tyres.jpg) | ![Seats](docs/images/seats.jpg) |
+| ![Climate](docs/images/climate.jpg) | ![Settings](docs/images/settings.jpg) |
+| ![Tyre settings](docs/images/settings-tyres.jpg) | |
+
 ## Features
 
 - Hero photo that changes with the vehicle state (off, lights, unlocked, charging, charge complete).
 - Round control buttons: lock, windows, trunk, climate, tyres, interior, flash lights, horn, find car — layout, labels, size, order and visibility are configurable.
 - Range, battery (and fuel for PHEV) rings; the battery ring animates while charging.
-- Charging status: "Charging now", current, time remaining, plus an optional animated effect on the car (cable flow / charge-port pulse / light sweep).
-- Top-view popup (tyre pressures, open doors/windows/hood/trunk) and interior popup (cabin climate with temperature picker, seat heating/ventilation, steering-wheel heating).
+- Charging status: current, time remaining and type as text next to the charge port (4 styles), plus an optional animated effect on the car (cable flow / charge-port pulse / light sweep).
+- Top-view popup with a real photo (tyre pressure pills — green OK / red alert —  open doors/windows/hood/trunk) and interior popup (cabin climate with temperature picker, seat heating/ventilation, steering-wheel heating).
 - Diagnostics shown as small warning icons (airbag, ABS, brakes, tyres, 12 V battery…), customisable.
 - Custom info tiles: add any sensor.
 - **EV or PHEV**: fuel items are hidden automatically when the car has no fuel sensors (or force it in settings).

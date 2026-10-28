@@ -63,7 +63,7 @@ class DeepalS05Card extends HTMLElement {
     I18N.subs.add(this);
     if (window.IntersectionObserver && !this._io) { this._io = new IntersectionObserver(([e]) => { if (this._el && this._el.card) this._el.card.classList.toggle("off", !e.isIntersecting); }); this._io.observe(this); }
   }
-  disconnectedCallback() { I18N.subs.delete(this); if (this._io) { this._io.disconnect(); this._io = null; } }
+  disconnectedCallback() { I18N.subs.delete(this); if (this._yPend) { this._yPend = false; this._customize = false; this._doSaveYaml(); } if (this._io) { this._io.disconnect(); this._io = null; } }
   getCardSize() { return 9; }
   getGridOptions() { return { columns: 12, min_columns: 6, rows: "auto" }; }
 
@@ -98,6 +98,7 @@ class DeepalS05Card extends HTMLElement {
   _saveYaml(reset) {
     clearTimeout(this._yT);
     if (reset) this._yReset = true;
+    if (this._customize) { this._yPend = true; this._saveRemote(); return; } /* όσο είναι ανοιχτές οι ρυθμίσεις δεν γράφουμε στο YAML (προκαλεί επαναφόρτωση του dashboard) */
     this._yT = setTimeout(() => this._doSaveYaml(), 1200);
   }
   async _doSaveYaml() {
@@ -402,7 +403,7 @@ class DeepalS05Card extends HTMLElement {
     this._toastTimer = setTimeout(() => { this._toastState = null; this._force(); }, ((Number(this._c.toast_duration) > 0 ? Number(this._c.toast_duration) : 5) + (type === "error" ? 3 : 0)) * 1000);
     this._force();
   }
-  _closeSheet() { clearTimeout(this._confirmTimer); this._confirm = null; this._customize = false; this._uiSave(); this._force(); }
+  _closeSheet() { clearTimeout(this._confirmTimer); this._confirm = null; const wasC = this._customize; this._customize = false; this._uiSave(); this._force(); if (wasC && this._yPend) { this._yPend = false; this._saveYaml(); } }
   _vsheetOpen() { return !!this._view && !this._confirm && !this._customize; }
 
   /* ───── εσωτερικό: επίπεδα καθισμάτων / τιμόνι / θερμοκρασία ───── */
@@ -472,17 +473,18 @@ class DeepalS05Card extends HTMLElement {
     const c = this._c, B = `${this._layerBase()}top/`, horiz = c.top_orientation !== "vertical";
     const img = (n, extra = "") => `<image class="l ${extra}" data-l="${n}" href="${esc(B + n + ".webp")}" x="${TOP_BOX.x}" y="${TOP_BOX.y}" width="${TOP_BOX.w}" height="${TOP_BOX.h}"/>`;
     let layers = `<image data-l="base" href="${esc(B + "base.webp")}" x="${TOP_BOX.x}" y="${TOP_BOX.y}" width="${TOP_BOX.w}" height="${TOP_BOX.h}"/>`;
-    for (const [id, open, closed] of TOP_LAYERS) { if (closed) layers += img(closed, "on"); layers += img(open); }
-    const pos = (t) => {
-      const px = t.x + t.side * 62, py = t.y;
-      return horiz ? [py, 750 - px] : [px, py];
-    };
-    const pills = TIRES.map((t) => {
-      const [x, y] = pos(t);
-      return `<g class="pill" data-t="${t.id}" transform="translate(${x} ${y})"><rect x="-40" y="-19" width="80" height="38" rx="14"/><text y="6" text-anchor="middle" font-size="19"></text></g>`;
+    for (const [id, open] of TOP_LAYERS) layers += img(open); // η βάση είναι η πραγματική φωτογραφία· εμφανίζονται μόνο τα layers «ανοιχτό»
+    const OFF = 96, map = (px, py) => (horiz ? [py, 750 - px] : [px, py]);
+    const pins = TIRES.map((t) => {
+      const [x0, y0] = map(t.x, t.y), [x1, y1] = map(t.x + t.side * (OFF - 46), t.y);
+      return `<g class="pin" data-pin="${t.id}"><line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}"/><circle cx="${x0}" cy="${y0}" r="9" class="halo"/><circle cx="${x0}" cy="${y0}" r="4.5" class="dot"/></g>`;
     }).join("");
-    const vb = horiz ? "40 148 690 455" : "60 22 630 720";
-    return `<svg viewBox="${vb}" role="img" aria-label="Κάτοψη οχήματος"><g transform="${horiz ? "matrix(0 -1 1 0 0 750)" : ""}">${layers}</g>${pills}</svg>`;
+    const pills = TIRES.map((t) => {
+      const [x, y] = map(t.x + t.side * OFF, t.y);
+      return `<g class="pill" data-t="${t.id}" transform="translate(${x} ${y})"><rect x="-46" y="-27" width="92" height="54" rx="17"/><text class="v" y="3" text-anchor="middle" font-size="20"></text><text class="s" y="20" text-anchor="middle" font-size="12"></text></g>`;
+    }).join("");
+    const vb = horiz ? "40 104 690 548" : "60 22 630 720";
+    return `<svg viewBox="${vb}" role="img" aria-label="Κάτοψη οχήματος"><g transform="${horiz ? "matrix(0 -1 1 0 0 750)" : ""}">${layers}</g>${pins}${pills}</svg>`;
   }
   /* Αέρας από τους αεραγωγούς: δέσμες από λεπτές καμπύλες που ανοίγουν σε βεντάλια, με διαφάνεια που σβήνει (συντεταγμένες εικόνας 510×285) */
   _airSvg() {
@@ -538,6 +540,7 @@ class DeepalS05Card extends HTMLElement {
           <div class="hero-top"><div><div class="title" id="ttl"><span id="nm">${esc(c.name)}</span><span class="plate" id="plate"></span></div><div class="total" id="total"></div></div>
             <div class="meta" id="meta"><span class="cloud" id="cloud" role="button"></span><button class="rfs" id="rfs" data-id="refresh"></button></div></div>
           <div class="status" id="status"></div>
+          <div class="chgbox" id="chgbox" hidden></div><i class="chgline" id="chgline" hidden></i>
           <div class="tells" id="tells"></div>
           <div class="toast" id="toast" role="status" aria-live="polite"></div>
         </div>
@@ -564,7 +567,7 @@ class DeepalS05Card extends HTMLElement {
     this._dashKeys = {};
     this._el = { card: sr.querySelector("ha-card"), hero: g("hero"), sweep: sr.querySelector(".sweep"), imgs: [...sr.querySelectorAll(".stage img")], plate: g("plate"), cloud: g("cloud"), age: g("age"),
       toast: g("toast"), status: g("status"), tells: g("tells"), rfs: g("rfs"), total: g("total"), stats: g("stats"), veh: g("veh"), vtabs: g("vtabs"), vtop: g("vtop"), vclim: g("vclim"), vseats: g("vseats"), pk: g("pk"), pkp: g("pkp"), pkv: g("pkv"), vmiss: g("vmiss"), vextra: g("vextra"),
-      vsheet: g("vsheet"), vtctl: g("vtctl"), dash: g("dash"), info: g("info"), diag: g("diag"), charge: g("charge"), actions: g("actions"), foot: g("foot"), sheet: g("sheet"), box: g("box") };
+      vsheet: g("vsheet"), vtctl: g("vtctl"), dash: g("dash"), info: g("info"), diag: g("diag"), charge: g("charge"), chgbox: g("chgbox"), chgline: g("chgline"), actions: g("actions"), foot: g("foot"), sheet: g("sheet"), box: g("box") };
     this._el.hero.style.setProperty("--ds-scale", String(c.image_scale));
     if (c.image_aspect) this._el.hero.style.setProperty("--ds-aspect", c.image_aspect);
     this._el.imgs.forEach((img) => {
@@ -631,14 +634,16 @@ class DeepalS05Card extends HTMLElement {
     const alarm = this._is(`binary_sensor.${t.id}_tire_alarm`, "on");
     const c = this._c;
     let tone = "148,163,184", note = "";
+    const chk = c.tire_check || "vehicle", own = chk === "limits" || chk === "both", veh = chk === "vehicle" || chk === "both";
     if (bar !== null) {
       tone = "var(--ds-ok)";
-      if (bar < c.tire_min) { tone = "var(--ds-warn)"; note = "χαμηλή"; } else if (bar > c.tire_max) { tone = "var(--ds-warn)"; note = "υψηλή"; }
+      if (own) { if (bar < c.tire_min) { tone = "var(--ds-warn)"; note = "χαμηλή"; } else if (bar > c.tire_max) { tone = "var(--ds-warn)"; note = "υψηλή"; } }
+      if (veh && this._is("binary_sensor.tire_pressure_warning", "on")) { tone = "var(--ds-warn)"; note = "έλεγξε πίεση"; } // γενική ειδοποίηση του οχήματος
     }
-    if (alarm) { tone = "var(--ds-bad)"; note = "συναγερμός"; }
+    if (alarm && veh) { tone = "var(--ds-bad)"; note = "συναγερμός"; }
     const unit = c.tire_unit;
     const txt = bar === null ? "--" : unit === "kPa" ? `${Math.round(bar * 100)}` : unit === "psi" ? `${(bar / 0.0689476).toFixed(1)}` : bar.toFixed(1);
-    return { txt: `${txt}${bar === null ? "" : " " + unit}`, tone, note, stale, alarm, name: t.name, bar };
+    return { txt: `${txt}${bar === null ? "" : " " + unit}`, tone, note, stale, alarm: alarm && veh, name: t.name, bar };
   }
 
   _render() {
@@ -782,13 +787,17 @@ class DeepalS05Card extends HTMLElement {
     el.diag.toggleAttribute("data-empty-diag", true);
 
     /* φόρτιση */
-    const showCharge = v.charging || v.plugged;
-    el.charge.hidden = !showCharge;
+    const showCharge = v.charging || v.plugged, cst = ["text", "line", "big", "beside"].includes(c.charge_style) ? c.charge_style : "line";
+    el.chgbox.className = "chgbox " + cst; el.chgline.className = "chgline s-" + cst;
+    el.charge.hidden = true;
+    el.chgbox.hidden = el.chgline.hidden = !showCharge;
     if (showCharge) {
       const left = this._s("sensor.remaining_charge_time_h_mm"), type = this._s("sensor.charging_type");
-      el.charge.innerHTML = `<div><div class="l">Ρεύμα</div><div class="v">${esc(this._chargeCurrent() || "--")}</div></div>
-        <div><div class="l">Απομένουν</div><div class="v">${esc(left && v.charging ? this._fmtLeft(left) : "--")}</div></div>
-        <div><div class="l">Τύπος</div><div class="v">${esc(type || "--")}</div></div>`;
+      const curRaw = this._chargeCurrent(), pre = (curRaw.match(/^(AC|DC)\s/) || [])[1] || "";
+      const cur = curRaw ? curRaw.replace(/^(AC|DC)\s+/, "") : "--", rem = left && v.charging ? this._fmtLeft(left) : "--", typ = type || pre || "--";
+      if (cst === "line") el.chgbox.innerHTML = `${ico("bolt")}<span>${esc(cur)}</span><i>·</i><span>${esc(rem)}</span><i>·</i><span>${esc(typ)}</span>`;
+      else if (cst === "big") { const m = /^(.*?)\s*([A-Za-z]+)$/.exec(cur); el.chgbox.innerHTML = `<span class="a">${esc(m ? m[1] : cur)}${m ? `<small>${esc(m[2])}</small>` : ""}</span><span class="b">${esc(typ)} · ${esc(rem)} <em>Απομένουν</em></span>`; }
+      else el.chgbox.innerHTML = `<span class="a">${esc(cur)}</span><span class="b">${esc(rem)} <em>Απομένουν</em></span><span class="c">${esc(typ)}</span>`;
     }
 
     /* φύλλα */
@@ -929,13 +938,12 @@ class DeepalS05Card extends HTMLElement {
       const pills = [];
       TIRES.forEach((t) => {
         const r = this._tire(t), g = el.vtop.querySelector(`[data-t="${t.id}"]`); if (!g) return;
-        const rect = g.querySelector("rect"), tx = g.querySelector("text");
-        const rgb = r.tone;
-        rect.setAttribute("style", `fill: rgba(${rgb === "var(--ds-ok)" ? "var(--ds-ok)" : rgb}, .16); stroke: rgb(${rgb});`);
-        tx.setAttribute("style", `fill: rgb(${rgb});`);
-        tx.textContent = r.txt + (r.stale ? "·" : "");
+        const st = r.bar === null ? "na" : r.tone === "var(--ds-ok)" ? "ok" : "bad";
+        g.setAttribute("class", `pill ${st}`); const pin = el.vtop.querySelector(`[data-pin="${t.id}"]`); if (pin) pin.setAttribute("class", `pin ${st}`);
+        g.querySelector(".v").textContent = r.txt + (r.stale ? "·" : "");
+        g.querySelector(".s").textContent = st === "ok" ? "✓ OK" : st === "bad" ? `! ${r.note || "έλεγξε πίεση"}` : "";
         g.setAttribute("opacity", r.stale ? ".7" : "1");
-        if (r.note) pills.push(`<span><b style="--c:${rgb}">${esc(t.name)}</b>: ${esc(r.note)}</span>`);
+        if (r.note) pills.push(`<span><b style="--c:${r.tone}">${esc(t.name)}</b>: ${esc(r.note)}</span>`);
       });
       const open = v.open.map((x) => x[1]);
       const bits = [...(open.length ? [`<span><b style="--c:var(--ds-bad)">Ανοιχτά:</b> ${esc(open.join(", "))}</span>`] : []), ...pills];

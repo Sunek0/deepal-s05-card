@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.6
+
+- Charging details (current, time remaining, type) are now plain green text on the hero photo, next to the charge port — no frame. Four styles (Settings → Charging → Style): `line` (default), `text`, `big`, `beside`.
+- Top view uses the real top-down photo of the car. Tyre pressures are pills connected to the image: green with a check when OK, red with a "low"/"check" note otherwise.
+- Tyre pressure check can follow the alerts the car sends itself (`tire_check: vehicle`, default), your own min/max limits (`limits`), or both. Min/max fields are entered in the selected unit (bar, kPa or psi).
+- Settings are no longer written to the dashboard YAML on every click: while the settings are open nothing reloads, and the YAML is saved once when you close them (changes still apply instantly and are kept in your browser and HA account).
+- Presentation images added to the README.
+
 ## 1.0.5
 
 - The settings tab arrow buttons are now translated (English/Spanish). No other changes.

@@ -8,7 +8,7 @@
  * (MIT) — δες LICENSE-NOTICE.txt στον φάκελο της κάρτας.
  */
 (() => {
-const CARD_VERSION = "1.0.5";
+const CARD_VERSION = "1.0.6";
 const TAG = "deepal-s05-card";
 const SETTINGS_TAG = "deepal-s05-settings";
 const EDITOR_TAG = "deepal-s05-card-editor";
@@ -87,6 +87,8 @@ const DEFAULTS = {
   tire_min: 2.0, // bar — κάτω από αυτό «χαμηλή»
   tire_max: 3.5, // bar — πάνω από αυτό «υψηλή»
   tire_unit: "bar", // bar | kPa | psi
+  tire_check: "vehicle", // vehicle = μόνο οι ειδοποιήσεις του οχήματος · limits = τα δικά μου όρια · both = και τα δύο
+  charge_style: "line", // line · text · big · beside
   show_customize: true,
   language: "auto", // auto (γλώσσα του HA) | el | en | …
   charge_fx: "flow_port", // εφέ φόρτισης πάνω στο αμάξι: flow_port | flow | port | sweep | none
@@ -722,7 +724,13 @@ ${BASE_CSS}
 .vstage > svg { display:block; width:100%; height:auto; }
 .vstage .l { opacity:0; transition: opacity .35s ease; } .vstage .l.on { opacity:1; }
 .vmiss { padding:18px 12px; text-align:center; font-size:12.5px; color: var(--ds-fg2); }
-.pill rect { stroke-width: 1.5; } .pill text { font-weight:600; font-family: inherit; }
+.pill rect { stroke-width: 1.6; fill: rgba(14,15,20,.72); } .pill text { font-weight:700; font-family: inherit; } .pill .s { font-weight:600; letter-spacing:.02em; }
+.pill.ok rect { stroke: rgb(var(--ds-ok)); fill: rgba(var(--ds-ok), .16); } .pill.ok text { fill: rgb(var(--ds-ok)); }
+.pill.bad rect { stroke: rgb(var(--ds-bad)); fill: rgba(var(--ds-bad), .2); animation: ds-pill 1.8s ease-in-out infinite; } .pill.bad text { fill: rgb(var(--ds-bad)); }
+.pill.na rect { stroke: rgba(148,163,184,.7); } .pill.na text { fill: rgb(148,163,184); }
+.pin line { stroke-width:2; stroke-linecap:round; opacity:.7; } .pin .halo { opacity:.25; } .pin.ok line, .pin.ok .dot, .pin.ok .halo { stroke: rgb(var(--ds-ok)); fill: rgb(var(--ds-ok)); } .pin.bad line, .pin.bad .dot, .pin.bad .halo { stroke: rgb(var(--ds-bad)); fill: rgb(var(--ds-bad)); }
+.pin.na line, .pin.na .dot, .pin.na .halo { stroke: rgb(148,163,184); fill: rgb(148,163,184); } .pin .dot, .pin .halo { stroke:none; } .pin.bad .halo { animation: ds-pill 1.8s ease-in-out infinite; }
+@keyframes ds-pill { 0%,100% { stroke-opacity: 1; } 50% { stroke-opacity: .35; } }
 .ipane .sbtn { position:absolute; transform: translate(-50%,-50%); width:54px; padding:9px 0 7px; gap:5px; border-radius:18px; background: rgba(14,15,20,.66); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color:#fff; border-color: rgba(255,255,255,.2); }
 .ipane .sbtn:active { transform: translate(-50%,-50%) scale(.94); } .ipane .sbtn .nm { display:none; } .ipane .sbtn .i { --is:28px; }
 .sbtn { --c: var(--ds-info); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:12px 2px 9px; min-width:0; border-radius:20px; cursor:pointer; color: var(--ds-fg2);
@@ -788,6 +796,20 @@ ${BASE_CSS}
   border:1px solid rgba(var(--c), .35); background: rgba(var(--c), .12); } .chip .i { --is: 15px; color: rgb(var(--c)); }
 .gear { flex:none; width:30px; height:30px; display:grid; place-items:center; border-radius:50%; cursor:pointer; border:1px solid var(--ds-line); background: var(--ds-soft); color: var(--ds-fg2); padding:0; }
 .gear .i { --is: 16px; }
+.chgbox { position:absolute; z-index:8; top:50px; left: min(calc(50% + 29.8% * var(--ds-scale, 1.2) + 1px), calc(100% - 20px)); transform: translateX(-100%); display:flex; flex-direction:column; align-items:flex-end; gap:1px; white-space:nowrap; text-align:right; font-variant-numeric: tabular-nums; color: rgb(var(--ds-ok)); text-shadow: 0 1px 7px rgba(0,0,0,.9), 0 0 14px rgba(var(--ds-ok), .4); }
+.chgbox .a { font-size:21px; font-weight:800; line-height:1.05; letter-spacing:-.01em; }
+.chgbox .b { font-size:12.5px; font-weight:600; } .chgbox .b em { font-style:normal; font-weight:500; opacity:.8; text-transform:lowercase; }
+.chgbox .c { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; opacity:.9; }
+.chgbox.line { flex-direction:row; align-items:center; gap:6px; font-size:13.5px; font-weight:700; } .chgbox .i { --is:15px; } .chgbox i { font-style:normal; opacity:.5; }
+.chgbox.text, .chgbox.big { top:46px; left: min(calc(50% + 29.8% * var(--ds-scale, 1.2) - 16px), calc(100% - 20px)); }
+.chgbox.big .a { font-size:34px; font-weight:800; line-height:1; } .chgbox.big .a small { font-size:16px; font-weight:700; margin-left:2px; }
+.chgbox.beside { top: calc(50% - 7.9% * var(--ds-scale, 1.2) - 10px); transform: translate(-100%, -50%); left: calc(50% + 29.8% * var(--ds-scale, 1.2) - 24px); }
+.chgbox.beside::after { content:""; position:absolute; right:-20px; top:50%; width:16px; border-top:1.5px dashed rgba(var(--ds-ok), .8); }
+.chgline { position:absolute; z-index:8; left: calc(50% + 29.8% * var(--ds-scale, 1.2)); top:74px; width:0; height: max(0px, calc(50% - 7.9% * var(--ds-scale, 1.2) - 84px)); border-left:1.5px dashed rgba(var(--ds-ok), .75); filter: drop-shadow(0 0 3px rgba(var(--ds-ok), .6)); }
+.chgline.s-text, .chgline.s-big, .chgline.s-beside { display:none; }
+.chgbox[hidden], .chgline[hidden] { display:none; }
+.hero { container-type: inline-size; }
+@container (max-width: 370px) { .chgbox.line { font-size:12.5px; } .chgbox .a { font-size:18px; } .chgbox.big .a { font-size:28px; } }
 .charge { display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; padding: 12px; border-radius:18px; border:1px solid rgba(var(--ds-ok), .28); background: linear-gradient(145deg, rgba(var(--ds-ok), .10), var(--ds-soft)); }
 .charge > div { min-width:0; } .charge .l { font-size:11.5px; color: var(--ds-fg2); }
 .charge .v { margin-top:3px; font-size:15px; font-weight:600; color: var(--ds-fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -925,7 +947,7 @@ class DeepalS05Card extends HTMLElement {
     I18N.subs.add(this);
     if (window.IntersectionObserver && !this._io) { this._io = new IntersectionObserver(([e]) => { if (this._el && this._el.card) this._el.card.classList.toggle("off", !e.isIntersecting); }); this._io.observe(this); }
   }
-  disconnectedCallback() { I18N.subs.delete(this); if (this._io) { this._io.disconnect(); this._io = null; } }
+  disconnectedCallback() { I18N.subs.delete(this); if (this._yPend) { this._yPend = false; this._customize = false; this._doSaveYaml(); } if (this._io) { this._io.disconnect(); this._io = null; } }
   getCardSize() { return 9; }
   getGridOptions() { return { columns: 12, min_columns: 6, rows: "auto" }; }
 
@@ -960,6 +982,7 @@ class DeepalS05Card extends HTMLElement {
   _saveYaml(reset) {
     clearTimeout(this._yT);
     if (reset) this._yReset = true;
+    if (this._customize) { this._yPend = true; this._saveRemote(); return; } /* όσο είναι ανοιχτές οι ρυθμίσεις δεν γράφουμε στο YAML (προκαλεί επαναφόρτωση του dashboard) */
     this._yT = setTimeout(() => this._doSaveYaml(), 1200);
   }
   async _doSaveYaml() {
@@ -1264,7 +1287,7 @@ class DeepalS05Card extends HTMLElement {
     this._toastTimer = setTimeout(() => { this._toastState = null; this._force(); }, ((Number(this._c.toast_duration) > 0 ? Number(this._c.toast_duration) : 5) + (type === "error" ? 3 : 0)) * 1000);
     this._force();
   }
-  _closeSheet() { clearTimeout(this._confirmTimer); this._confirm = null; this._customize = false; this._uiSave(); this._force(); }
+  _closeSheet() { clearTimeout(this._confirmTimer); this._confirm = null; const wasC = this._customize; this._customize = false; this._uiSave(); this._force(); if (wasC && this._yPend) { this._yPend = false; this._saveYaml(); } }
   _vsheetOpen() { return !!this._view && !this._confirm && !this._customize; }
 
   /* ───── εσωτερικό: επίπεδα καθισμάτων / τιμόνι / θερμοκρασία ───── */
@@ -1334,17 +1357,18 @@ class DeepalS05Card extends HTMLElement {
     const c = this._c, B = `${this._layerBase()}top/`, horiz = c.top_orientation !== "vertical";
     const img = (n, extra = "") => `<image class="l ${extra}" data-l="${n}" href="${esc(B + n + ".webp")}" x="${TOP_BOX.x}" y="${TOP_BOX.y}" width="${TOP_BOX.w}" height="${TOP_BOX.h}"/>`;
     let layers = `<image data-l="base" href="${esc(B + "base.webp")}" x="${TOP_BOX.x}" y="${TOP_BOX.y}" width="${TOP_BOX.w}" height="${TOP_BOX.h}"/>`;
-    for (const [id, open, closed] of TOP_LAYERS) { if (closed) layers += img(closed, "on"); layers += img(open); }
-    const pos = (t) => {
-      const px = t.x + t.side * 62, py = t.y;
-      return horiz ? [py, 750 - px] : [px, py];
-    };
-    const pills = TIRES.map((t) => {
-      const [x, y] = pos(t);
-      return `<g class="pill" data-t="${t.id}" transform="translate(${x} ${y})"><rect x="-40" y="-19" width="80" height="38" rx="14"/><text y="6" text-anchor="middle" font-size="19"></text></g>`;
+    for (const [id, open] of TOP_LAYERS) layers += img(open); // η βάση είναι η πραγματική φωτογραφία· εμφανίζονται μόνο τα layers «ανοιχτό»
+    const OFF = 96, map = (px, py) => (horiz ? [py, 750 - px] : [px, py]);
+    const pins = TIRES.map((t) => {
+      const [x0, y0] = map(t.x, t.y), [x1, y1] = map(t.x + t.side * (OFF - 46), t.y);
+      return `<g class="pin" data-pin="${t.id}"><line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}"/><circle cx="${x0}" cy="${y0}" r="9" class="halo"/><circle cx="${x0}" cy="${y0}" r="4.5" class="dot"/></g>`;
     }).join("");
-    const vb = horiz ? "40 148 690 455" : "60 22 630 720";
-    return `<svg viewBox="${vb}" role="img" aria-label="Κάτοψη οχήματος"><g transform="${horiz ? "matrix(0 -1 1 0 0 750)" : ""}">${layers}</g>${pills}</svg>`;
+    const pills = TIRES.map((t) => {
+      const [x, y] = map(t.x + t.side * OFF, t.y);
+      return `<g class="pill" data-t="${t.id}" transform="translate(${x} ${y})"><rect x="-46" y="-27" width="92" height="54" rx="17"/><text class="v" y="3" text-anchor="middle" font-size="20"></text><text class="s" y="20" text-anchor="middle" font-size="12"></text></g>`;
+    }).join("");
+    const vb = horiz ? "40 104 690 548" : "60 22 630 720";
+    return `<svg viewBox="${vb}" role="img" aria-label="Κάτοψη οχήματος"><g transform="${horiz ? "matrix(0 -1 1 0 0 750)" : ""}">${layers}</g>${pins}${pills}</svg>`;
   }
   /* Αέρας από τους αεραγωγούς: δέσμες από λεπτές καμπύλες που ανοίγουν σε βεντάλια, με διαφάνεια που σβήνει (συντεταγμένες εικόνας 510×285) */
   _airSvg() {
@@ -1400,6 +1424,7 @@ class DeepalS05Card extends HTMLElement {
           <div class="hero-top"><div><div class="title" id="ttl"><span id="nm">${esc(c.name)}</span><span class="plate" id="plate"></span></div><div class="total" id="total"></div></div>
             <div class="meta" id="meta"><span class="cloud" id="cloud" role="button"></span><button class="rfs" id="rfs" data-id="refresh"></button></div></div>
           <div class="status" id="status"></div>
+          <div class="chgbox" id="chgbox" hidden></div><i class="chgline" id="chgline" hidden></i>
           <div class="tells" id="tells"></div>
           <div class="toast" id="toast" role="status" aria-live="polite"></div>
         </div>
@@ -1426,7 +1451,7 @@ class DeepalS05Card extends HTMLElement {
     this._dashKeys = {};
     this._el = { card: sr.querySelector("ha-card"), hero: g("hero"), sweep: sr.querySelector(".sweep"), imgs: [...sr.querySelectorAll(".stage img")], plate: g("plate"), cloud: g("cloud"), age: g("age"),
       toast: g("toast"), status: g("status"), tells: g("tells"), rfs: g("rfs"), total: g("total"), stats: g("stats"), veh: g("veh"), vtabs: g("vtabs"), vtop: g("vtop"), vclim: g("vclim"), vseats: g("vseats"), pk: g("pk"), pkp: g("pkp"), pkv: g("pkv"), vmiss: g("vmiss"), vextra: g("vextra"),
-      vsheet: g("vsheet"), vtctl: g("vtctl"), dash: g("dash"), info: g("info"), diag: g("diag"), charge: g("charge"), actions: g("actions"), foot: g("foot"), sheet: g("sheet"), box: g("box") };
+      vsheet: g("vsheet"), vtctl: g("vtctl"), dash: g("dash"), info: g("info"), diag: g("diag"), charge: g("charge"), chgbox: g("chgbox"), chgline: g("chgline"), actions: g("actions"), foot: g("foot"), sheet: g("sheet"), box: g("box") };
     this._el.hero.style.setProperty("--ds-scale", String(c.image_scale));
     if (c.image_aspect) this._el.hero.style.setProperty("--ds-aspect", c.image_aspect);
     this._el.imgs.forEach((img) => {
@@ -1493,14 +1518,16 @@ class DeepalS05Card extends HTMLElement {
     const alarm = this._is(`binary_sensor.${t.id}_tire_alarm`, "on");
     const c = this._c;
     let tone = "148,163,184", note = "";
+    const chk = c.tire_check || "vehicle", own = chk === "limits" || chk === "both", veh = chk === "vehicle" || chk === "both";
     if (bar !== null) {
       tone = "var(--ds-ok)";
-      if (bar < c.tire_min) { tone = "var(--ds-warn)"; note = "χαμηλή"; } else if (bar > c.tire_max) { tone = "var(--ds-warn)"; note = "υψηλή"; }
+      if (own) { if (bar < c.tire_min) { tone = "var(--ds-warn)"; note = "χαμηλή"; } else if (bar > c.tire_max) { tone = "var(--ds-warn)"; note = "υψηλή"; } }
+      if (veh && this._is("binary_sensor.tire_pressure_warning", "on")) { tone = "var(--ds-warn)"; note = "έλεγξε πίεση"; } // γενική ειδοποίηση του οχήματος
     }
-    if (alarm) { tone = "var(--ds-bad)"; note = "συναγερμός"; }
+    if (alarm && veh) { tone = "var(--ds-bad)"; note = "συναγερμός"; }
     const unit = c.tire_unit;
     const txt = bar === null ? "--" : unit === "kPa" ? `${Math.round(bar * 100)}` : unit === "psi" ? `${(bar / 0.0689476).toFixed(1)}` : bar.toFixed(1);
-    return { txt: `${txt}${bar === null ? "" : " " + unit}`, tone, note, stale, alarm, name: t.name, bar };
+    return { txt: `${txt}${bar === null ? "" : " " + unit}`, tone, note, stale, alarm: alarm && veh, name: t.name, bar };
   }
 
   _render() {
@@ -1644,13 +1671,17 @@ class DeepalS05Card extends HTMLElement {
     el.diag.toggleAttribute("data-empty-diag", true);
 
     /* φόρτιση */
-    const showCharge = v.charging || v.plugged;
-    el.charge.hidden = !showCharge;
+    const showCharge = v.charging || v.plugged, cst = ["text", "line", "big", "beside"].includes(c.charge_style) ? c.charge_style : "line";
+    el.chgbox.className = "chgbox " + cst; el.chgline.className = "chgline s-" + cst;
+    el.charge.hidden = true;
+    el.chgbox.hidden = el.chgline.hidden = !showCharge;
     if (showCharge) {
       const left = this._s("sensor.remaining_charge_time_h_mm"), type = this._s("sensor.charging_type");
-      el.charge.innerHTML = `<div><div class="l">Ρεύμα</div><div class="v">${esc(this._chargeCurrent() || "--")}</div></div>
-        <div><div class="l">Απομένουν</div><div class="v">${esc(left && v.charging ? this._fmtLeft(left) : "--")}</div></div>
-        <div><div class="l">Τύπος</div><div class="v">${esc(type || "--")}</div></div>`;
+      const curRaw = this._chargeCurrent(), pre = (curRaw.match(/^(AC|DC)\s/) || [])[1] || "";
+      const cur = curRaw ? curRaw.replace(/^(AC|DC)\s+/, "") : "--", rem = left && v.charging ? this._fmtLeft(left) : "--", typ = type || pre || "--";
+      if (cst === "line") el.chgbox.innerHTML = `${ico("bolt")}<span>${esc(cur)}</span><i>·</i><span>${esc(rem)}</span><i>·</i><span>${esc(typ)}</span>`;
+      else if (cst === "big") { const m = /^(.*?)\s*([A-Za-z]+)$/.exec(cur); el.chgbox.innerHTML = `<span class="a">${esc(m ? m[1] : cur)}${m ? `<small>${esc(m[2])}</small>` : ""}</span><span class="b">${esc(typ)} · ${esc(rem)} <em>Απομένουν</em></span>`; }
+      else el.chgbox.innerHTML = `<span class="a">${esc(cur)}</span><span class="b">${esc(rem)} <em>Απομένουν</em></span><span class="c">${esc(typ)}</span>`;
     }
 
     /* φύλλα */
@@ -1791,13 +1822,12 @@ class DeepalS05Card extends HTMLElement {
       const pills = [];
       TIRES.forEach((t) => {
         const r = this._tire(t), g = el.vtop.querySelector(`[data-t="${t.id}"]`); if (!g) return;
-        const rect = g.querySelector("rect"), tx = g.querySelector("text");
-        const rgb = r.tone;
-        rect.setAttribute("style", `fill: rgba(${rgb === "var(--ds-ok)" ? "var(--ds-ok)" : rgb}, .16); stroke: rgb(${rgb});`);
-        tx.setAttribute("style", `fill: rgb(${rgb});`);
-        tx.textContent = r.txt + (r.stale ? "·" : "");
+        const st = r.bar === null ? "na" : r.tone === "var(--ds-ok)" ? "ok" : "bad";
+        g.setAttribute("class", `pill ${st}`); const pin = el.vtop.querySelector(`[data-pin="${t.id}"]`); if (pin) pin.setAttribute("class", `pin ${st}`);
+        g.querySelector(".v").textContent = r.txt + (r.stale ? "·" : "");
+        g.querySelector(".s").textContent = st === "ok" ? "✓ OK" : st === "bad" ? `! ${r.note || "έλεγξε πίεση"}` : "";
         g.setAttribute("opacity", r.stale ? ".7" : "1");
-        if (r.note) pills.push(`<span><b style="--c:${rgb}">${esc(t.name)}</b>: ${esc(r.note)}</span>`);
+        if (r.note) pills.push(`<span><b style="--c:${r.tone}">${esc(t.name)}</b>: ${esc(r.note)}</span>`);
       });
       const open = v.open.map((x) => x[1]);
       const bits = [...(open.length ? [`<span><b style="--c:var(--ds-bad)">Ανοιχτά:</b> ${esc(open.join(", "))}</span>`] : []), ...pills];
@@ -1991,7 +2021,9 @@ class DeepalS05Settings extends HTMLElement {
     const sw = (k, l) => `<label class="sw-c"><input type="color" data-set="${k}" data-text value="${esc(hexc(c[k], DEFAULTS[k]))}"><span>${l}</span></label>`;
     const rowL = (k, l, bk, fk) => `<div class="lvrow">${sw(k, l)}${bk ? this._num(bk, c[bk], "1") : `<i class="dash">—</i>`}${fk ? this._num(fk, c[fk], "1") : `<i class="dash">—</i>`}</div>`;
     const fu = hasFuel(this._hass, c);
-    return `<h4>Εφέ φόρτισης</h4>
+    return `<h4>Στοιχεία φόρτισης</h4>
+      ${this._opt("Στυλ", this._seg("charge_style", c.charge_style || "line", [["line", "Γραμμή"], ["text", "Κείμενο"], ["big", "Μεγάλο"], ["beside", "Στη θύρα"]]), "Ρεύμα, χρόνος που απομένει και τύπος φόρτισης ως κείμενο πάνω στην εικόνα.")}
+      <h4>Εφέ φόρτισης</h4>
       <label class="field">Εφέ φόρτισης πάνω στο αμάξι${this._sel("charge_fx", c.charge_fx || "flow_port", [["flow_port", "Ροή στο καλώδιο + παλμός στη θύρα"], ["flow", "Ροή ενέργειας στο καλώδιο"], ["port", "Παλμός στη θύρα φόρτισης"], ["sweep", "Σάρωση φωτός πάνω στο αμάξι"], ["none", "Κανένα"]])}</label>
       <h4>Χρώματα επιπέδων</h4>
       <p class="hint">Η μπάρα μπαταρίας και καυσίμου αλλάζει χρώμα ανάλογα με το ποσοστό. Όρισε τα όρια (κάτω από κάθε τιμή) και τα χρώματα.</p>
@@ -2003,10 +2035,13 @@ class DeepalS05Settings extends HTMLElement {
       ${this._opt("Δεξαμενή (km)", this._num("fuel_max", c.fuel_max, "1"), "Αυτονομία με γεμάτη δεξαμενή, για τον υπολογισμό του ποσοστού.")}` : ""}`;
   }
   _tabTires(c) {
+    const u = c.tire_unit || "bar", k = u === "kPa" ? 100 : u === "psi" ? 14.5038 : 1, dp = u === "kPa" ? 0 : u === "psi" ? 1 : 2, shown = (b) => Number((Number(b) * k).toFixed(dp));
+    const chk = c.tire_check || "vehicle";
     return `<h4>Ελαστικά</h4>
-      ${this._opt("Μονάδα", this._seg("tire_unit", c.tire_unit, [["bar", "bar"], ["kPa", "kPa"], ["psi", "psi"]]))}
-      <div class="grid2"><label class="field">Ελάχιστη (bar)${this._num("tire_min", c.tire_min)}</label><label class="field">Μέγιστη (bar)${this._num("tire_max", c.tire_max)}</label></div>
-      <p class="hint">Εκτός ορίων η πίεση εμφανίζεται ως «χαμηλή» ή «υψηλή».</p>`;
+      ${this._opt("Μονάδα", this._seg("tire_unit", u, [["bar", "bar"], ["kPa", "kPa"], ["psi", "psi"]]))}
+      ${this._opt("Έλεγχος πίεσης", this._seg("tire_check", chk, [["vehicle", "Από το όχημα"], ["limits", "Δικά μου όρια"], ["both", "Και τα δύο"]]), "«Από το όχημα»: η κατάσταση βγαίνει από τις ειδοποιήσεις των ελαστικών που στέλνει το ίδιο το αμάξι.")}
+      ${chk === "vehicle" ? "" : `<div class="grid2"><label class="field">Ελάχιστη (${u})<input type="number" step="${dp ? 1 / 10 ** dp : 1}" data-set="tire_min" data-num data-conv value="${shown(c.tire_min)}"></label><label class="field">Μέγιστη (${u})<input type="number" step="${dp ? 1 / 10 ** dp : 1}" data-set="tire_max" data-num data-conv value="${shown(c.tire_max)}"></label></div>
+      <p class="hint">Εκτός ορίων η πίεση εμφανίζεται ως «χαμηλή» ή «υψηλή».</p>`}`;
   }
   _tabLook(c) {
     return `<h4>Περιθώρια</h4>
@@ -2122,6 +2157,7 @@ class DeepalS05Settings extends HTMLElement {
       if (d.set) {
         let v = t.value;
         if (d.num !== undefined) { v = parseFloat(v); if (!Number.isFinite(v)) return; }
+        if (d.conv !== undefined) { const u = c.tire_unit; v = Number((u === "kPa" ? v / 100 : u === "psi" ? v / 14.5038 : v).toFixed(3)); }
         if (d.text !== undefined) { v = v.trim(); if (["image_path", "layers_path", "climate_on_mode", "image_aspect"].includes(d.set) && !v) v = null; if (["name", "prefix"].includes(d.set) && !v) return; }
         return this._emit({ [d.set]: v });
       }
