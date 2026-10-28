@@ -12,7 +12,7 @@ const I18N = {
   lang: "el", wanted: null, ready: true, dict: null, re: null, subs: new Set(), roots: new Set(),
   rec: new WeakMap(), arec: new WeakMap(), attrs: ["title", "aria-label", "placeholder", "alt"],
   norm(c) { return String(c || "el").toLowerCase().replace("_", "-"); },
-  available() { const o = { el: "Ελληνικά", en: "English" }; for (const [k, v] of Object.entries(LANGS)) o[k] = v.name || k; return Object.entries(o); },
+  available() { const o = { el: "Ελληνικά", en: "English", es: "Español" }; for (const [k, v] of Object.entries(LANGS)) o[k] = v.name || k; return Object.entries(o); },
   numLocale() { return this.lang === "el" ? "el-GR" : this.lang; },
   _load(code) {
     return new Promise((res) => {

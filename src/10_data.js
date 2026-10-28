@@ -99,6 +99,8 @@ const INT_SPOTS = [
 const INT_LAYERS = ["seat_heat_driver_on", "seat_heat_passenger_on", "seat_vent_driver_on", "seat_vent_passenger_on", "steering_wheel_heat_on"];
 
 const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : "");
+const STATE_TX = { not_charging: "Δεν φορτίζει", charging: "Φορτίζει", charge_complete: "Φόρτιση ολοκληρώθηκε", charged: "Φόρτιση ολοκληρώθηκε", fully_charged: "Φόρτιση ολοκληρώθηκε", on: "Ενεργό", off: "Ανενεργό", locked: "Κλειδωμένο", unlocked: "Ξεκλείδωτο", open: "Ανοιχτό", closed: "Κλειστό", unknown: "Άγνωστο", unavailable: "μη διαθέσιμο", parked: "Στάθμευση", driving: "Οδήγηση" };
+const stateText = (s) => { const k = String(s).trim().toLowerCase().replace(/[\s-]+/g, "_"); return STATE_TX[k] || cap(String(s).replace(/_/g, " ")); };
 const CONFIRM_TEXT = {
   unlock: ["Ξεκλείδωμα οχήματος;", "Το όχημα θα ξεκλειδώσει."],
   trunk: ["Άνοιγμα πορτμπαγκάζ;", "Το πορτμπαγκάζ θα ανοίξει."],
@@ -178,9 +180,7 @@ ha-card { ${VARS}
     var(--ha-card-background, var(--card-background-color, #1c1c1c)); }
 ha-card[data-pad="half"] { padding:7px; gap:12px; }
 ha-card[data-pad="none"] { padding:0 0 8px; gap:8px; }
-ha-card[data-pad="none"] > :not(.hero):not(.sheet) { margin-inline:0; }
-ha-card[data-pad="none"] .t2, ha-card[data-pad="none"] .tile { border-radius:0; border-inline:0; }
-ha-card[data-pad="none"] .actions { padding-inline:6px; }
+ha-card[data-pad="none"] > :not(.hero):not(.sheet) { margin-inline:3px; }
 ha-card[data-pad="none"] > .hero { border-radius:0; }
 ha-card[data-ppad="half"] .sheet { padding:5px; } ha-card[data-ppad="half"] .box { padding:8px 7px 6px; }
 ha-card[data-ppad="none"] .sheet { padding:0; } ha-card[data-ppad="none"] .box { padding:8px 4px 4px; border-radius:24px 24px 0 0; border-inline:0; border-bottom:0; }
@@ -416,15 +416,16 @@ ${BASE_CSS}
 
 /* Φύλλο */
 .sheet { position:absolute; inset:0; z-index:20; display:none; align-items:flex-end; justify-content:center; padding:10px; background: rgba(0,0,0,.5); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
-.sheet.show { display:flex; }
-.box { width:100%; max-height:70%; min-height:min(300px, 100%); box-sizing:border-box; display:flex; flex-direction:column; padding:16px 14px 12px; border-radius:24px; background: var(--ha-card-background, var(--card-background-color, #222)); border:1px solid var(--ds-line); animation: ds-up .22s ease; overflow:hidden; }
+.sheet.show { display:flex; animation: ds-fade .3s ease-out; }
+.box { width:100%; max-height:70%; min-height:min(300px, 100%); box-sizing:border-box; display:flex; flex-direction:column; padding:16px 14px 12px; border-radius:24px; background: var(--ha-card-background, var(--card-background-color, #222)); border:1px solid var(--ds-line); animation: ds-up .42s cubic-bezier(.22,.8,.3,1); overflow:hidden; }
 .box.wide { overflow:hidden; max-height:94%; } .box.confirm { min-height:0; }
 .box h3 { margin:0; font-size:16px; font-weight:600; color: var(--ds-fg); } .box p.c { margin:6px 0 12px; font-size:13px; color: var(--ds-fg2); text-align:center; }
 .confirm { text-align:center; }
 .hd { flex:none; display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
 .x { flex:none; width:30px; height:30px; display:grid; place-items:center; border-radius:50%; border:1px solid var(--ds-line); background: var(--ds-soft); cursor:pointer; padding:0; } .x .i { --is: 16px; }
 .box deepal-s05-settings { flex:1 1 auto; min-height:0; display:block; overflow-y:auto; overflow-x:hidden; }
-@keyframes ds-up { from { transform: translateY(16px); opacity:0 } to { transform:none; opacity:1 } }
+@keyframes ds-up { from { transform: translateY(110%) } to { transform:none } }
+@keyframes ds-fade { from { opacity:0 } to { opacity:1 } }
 @media (prefers-reduced-motion: reduce) { .fx *, .act, .act .ring rect, .gauge .fp, .fxs *, .stage img, .bar b, .box, .l { animation: none !important; transition: none !important; } }
 `;
 

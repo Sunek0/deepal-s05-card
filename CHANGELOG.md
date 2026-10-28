@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.3
+
+- Spanish translation (`lang/es.js`).
+- Popups slide up smoothly instead of jumping in.
+- `card_padding: none`: tiles and buttons keep their border and rounded corners (3px from the edge).
+- Missing English strings fixed (layer headings, climate messages, tooltips); raw sensor states such as `not_charging` are shown as readable text.
+- Language list now includes Español.
+
 ## 1.0.2
 
 - Battery/fuel gauge (PHEV): the centre now shows both the battery % and the fuel %.

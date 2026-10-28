@@ -8,7 +8,7 @@
  * (MIT) — δες LICENSE-NOTICE.txt στον φάκελο της κάρτας.
  */
 (() => {
-const CARD_VERSION = "1.0.2";
+const CARD_VERSION = "1.0.3";
 const TAG = "deepal-s05-card";
 const SETTINGS_TAG = "deepal-s05-settings";
 const EDITOR_TAG = "deepal-s05-card-editor";
@@ -290,7 +290,7 @@ const I18N = {
   lang: "el", wanted: null, ready: true, dict: null, re: null, subs: new Set(), roots: new Set(),
   rec: new WeakMap(), arec: new WeakMap(), attrs: ["title", "aria-label", "placeholder", "alt"],
   norm(c) { return String(c || "el").toLowerCase().replace("_", "-"); },
-  available() { const o = { el: "Ελληνικά", en: "English" }; for (const [k, v] of Object.entries(LANGS)) o[k] = v.name || k; return Object.entries(o); },
+  available() { const o = { el: "Ελληνικά", en: "English", es: "Español" }; for (const [k, v] of Object.entries(LANGS)) o[k] = v.name || k; return Object.entries(o); },
   numLocale() { return this.lang === "el" ? "el-GR" : this.lang; },
   _load(code) {
     return new Promise((res) => {
@@ -468,6 +468,8 @@ const INT_SPOTS = [
 const INT_LAYERS = ["seat_heat_driver_on", "seat_heat_passenger_on", "seat_vent_driver_on", "seat_vent_passenger_on", "steering_wheel_heat_on"];
 
 const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : "");
+const STATE_TX = { not_charging: "Δεν φορτίζει", charging: "Φορτίζει", charge_complete: "Φόρτιση ολοκληρώθηκε", charged: "Φόρτιση ολοκληρώθηκε", fully_charged: "Φόρτιση ολοκληρώθηκε", on: "Ενεργό", off: "Ανενεργό", locked: "Κλειδωμένο", unlocked: "Ξεκλείδωτο", open: "Ανοιχτό", closed: "Κλειστό", unknown: "Άγνωστο", unavailable: "μη διαθέσιμο", parked: "Στάθμευση", driving: "Οδήγηση" };
+const stateText = (s) => { const k = String(s).trim().toLowerCase().replace(/[\s-]+/g, "_"); return STATE_TX[k] || cap(String(s).replace(/_/g, " ")); };
 const CONFIRM_TEXT = {
   unlock: ["Ξεκλείδωμα οχήματος;", "Το όχημα θα ξεκλειδώσει."],
   trunk: ["Άνοιγμα πορτμπαγκάζ;", "Το πορτμπαγκάζ θα ανοίξει."],
@@ -547,9 +549,7 @@ ha-card { ${VARS}
     var(--ha-card-background, var(--card-background-color, #1c1c1c)); }
 ha-card[data-pad="half"] { padding:7px; gap:12px; }
 ha-card[data-pad="none"] { padding:0 0 8px; gap:8px; }
-ha-card[data-pad="none"] > :not(.hero):not(.sheet) { margin-inline:0; }
-ha-card[data-pad="none"] .t2, ha-card[data-pad="none"] .tile { border-radius:0; border-inline:0; }
-ha-card[data-pad="none"] .actions { padding-inline:6px; }
+ha-card[data-pad="none"] > :not(.hero):not(.sheet) { margin-inline:3px; }
 ha-card[data-pad="none"] > .hero { border-radius:0; }
 ha-card[data-ppad="half"] .sheet { padding:5px; } ha-card[data-ppad="half"] .box { padding:8px 7px 6px; }
 ha-card[data-ppad="none"] .sheet { padding:0; } ha-card[data-ppad="none"] .box { padding:8px 4px 4px; border-radius:24px 24px 0 0; border-inline:0; border-bottom:0; }
@@ -785,15 +785,16 @@ ${BASE_CSS}
 
 /* Φύλλο */
 .sheet { position:absolute; inset:0; z-index:20; display:none; align-items:flex-end; justify-content:center; padding:10px; background: rgba(0,0,0,.5); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
-.sheet.show { display:flex; }
-.box { width:100%; max-height:70%; min-height:min(300px, 100%); box-sizing:border-box; display:flex; flex-direction:column; padding:16px 14px 12px; border-radius:24px; background: var(--ha-card-background, var(--card-background-color, #222)); border:1px solid var(--ds-line); animation: ds-up .22s ease; overflow:hidden; }
+.sheet.show { display:flex; animation: ds-fade .3s ease-out; }
+.box { width:100%; max-height:70%; min-height:min(300px, 100%); box-sizing:border-box; display:flex; flex-direction:column; padding:16px 14px 12px; border-radius:24px; background: var(--ha-card-background, var(--card-background-color, #222)); border:1px solid var(--ds-line); animation: ds-up .42s cubic-bezier(.22,.8,.3,1); overflow:hidden; }
 .box.wide { overflow:hidden; max-height:94%; } .box.confirm { min-height:0; }
 .box h3 { margin:0; font-size:16px; font-weight:600; color: var(--ds-fg); } .box p.c { margin:6px 0 12px; font-size:13px; color: var(--ds-fg2); text-align:center; }
 .confirm { text-align:center; }
 .hd { flex:none; display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
 .x { flex:none; width:30px; height:30px; display:grid; place-items:center; border-radius:50%; border:1px solid var(--ds-line); background: var(--ds-soft); cursor:pointer; padding:0; } .x .i { --is: 16px; }
 .box deepal-s05-settings { flex:1 1 auto; min-height:0; display:block; overflow-y:auto; overflow-x:hidden; }
-@keyframes ds-up { from { transform: translateY(16px); opacity:0 } to { transform:none; opacity:1 } }
+@keyframes ds-up { from { transform: translateY(110%) } to { transform:none } }
+@keyframes ds-fade { from { opacity:0 } to { opacity:1 } }
 @media (prefers-reduced-motion: reduce) { .fx *, .act, .act .ring rect, .gauge .fp, .fxs *, .stage img, .bar b, .box, .l { animation: none !important; transition: none !important; } }
 `;
 
@@ -1115,7 +1116,7 @@ class DeepalS05Card extends HTMLElement {
         call: ["cover", "toggle", "cover.trunk"] },
       climate: { on: climateOn, icon: climateOn ? "snow" : "snowoff", sub: climate === null ? "μη διαθέσιμο" : climateOn ? "ενεργός" : "ανενεργός", tone: climate === null ? "bad" : "", disabled: climate === null, confirm: "climate",
         watch: this._obj("binary_sensor.climate_on") ? "binary_sensor.climate_on" : "climate.cabin_climate", timeout: 35000, call: cCall,
-        unsupported: "Ο κλιματισμός δεν έχει εντολή " + (climateOn ? "απενεργοποίησης" : "ενεργοποίησης") + " σε αυτή την οντότητα" },
+        unsupported: climateOn ? "Ο κλιματισμός δεν έχει εντολή απενεργοποίησης σε αυτή την οντότητα" : "Ο κλιματισμός δεν έχει εντολή ενεργοποίησης σε αυτή την οντότητα" },
       tires: (() => { const s = this._tiresSummary(); return { icon: "tirealert", ...s, open: "top" }; })(),
       cabin: (() => { const s = this._cabinSummary(climateOn); return { icon: s.on ? "interioron" : "interior", ...s, open: "climate" }; })(),
       flash: { confirm: "flash", icon: "headlight", sub: "αναλαμπή", btn: "button.flash_lights", call: ["button", "press", "button.flash_lights"] },
@@ -1580,12 +1581,12 @@ class DeepalS05Card extends HTMLElement {
       const { v: n, stale } = it[3] === null ? { v: null } : this._nl(it[0]);
       const s = this._s(it[0]);
       if (s === null && n === null) continue;
-      const val = it[3] === null ? (s === null ? "--" : cap(s)) : n === null ? "--" : `${this._fmtNum(n, it[3])} ${this._unit(it[0])}`.trim();
+      const val = it[3] === null ? (s === null ? "--" : stateText(s)) : n === null ? "--" : `${this._fmtNum(n, it[3])} ${this._unit(it[0])}`.trim();
       tiles.push(`<div class="tile" data-ent="${esc(this._id(it[0]))}">${ico(it[2])}<div><div class="v">${esc(val)}</div><div class="l">${esc(it[1])}</div></div></div>`);
     }
     for (const x of c.info_custom || []) {
       const o = this._eobj(x.entity), n = o ? parseFloat(o.state) : NaN;
-      const val = !o || BAD.includes(o.state) ? "--" : Number.isFinite(n) ? `${this._fmtNum(n, 1)} ${o.attributes?.unit_of_measurement || x.unit || ""}`.trim() : cap(String(o.state));
+      const val = !o || BAD.includes(o.state) ? "--" : Number.isFinite(n) ? `${this._fmtNum(n, 1)} ${o.attributes?.unit_of_measurement || x.unit || ""}`.trim() : stateText(o.state);
       tiles.push(`<div class="tile" data-ent="${esc(x.entity)}"${x.tap_action ? ` data-tap="${esc(JSON.stringify(x.tap_action))}"` : ""}${x.hold_action ? ` data-hold="${esc(JSON.stringify(x.hold_action))}"` : ""}>${ico(x.icon || "info")}<div><div class="v">${esc(val)}</div><div class="l">${esc(x.label || o?.attributes?.friendly_name || x.entity)}</div></div></div>`);
     }
     /* διαγνωστικά: εικονίδια-ενδείξεις πάνω στην εικόνα, μόνο όταν υπάρχει κάτι να δεις */
