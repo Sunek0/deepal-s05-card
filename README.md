@@ -33,7 +33,7 @@ It works with the [Deepal Alternative](https://github.com/Sunek0/ha-deepal-alter
 - Diagnostics shown as large, status-coloured dashboard icons (airbag, ABS, brakes, tyres, 12 V battery…). Tap “+N” for the full list of sensors; new sensors can be discovered with one button.
 - Custom info tiles: add any sensor.
 - **EV or PHEV**: fuel items are hidden automatically when the car has no fuel sensors (or force it in settings).
-- **Languages**: English, Spanish and Greek built in, follows the Home Assistant language. More languages = one small file ([how](docs/LANGUAGES.md)).
+- **Languages**: English, Spanish and Greek included, follows the Home Assistant language. More languages = one small file ([how](docs/LANGUAGES.md)).
 - **Settings UI** inside the card (and in the card editor). Settings are saved in the card YAML so they are shared by every device and user.
 - No dependencies, no CDN, one JavaScript file + local images.
 

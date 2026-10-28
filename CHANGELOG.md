@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.2.3
+
+Language loading. · Φόρτωση γλωσσών. · Carga de idiomas.
+
+**Changed**
+
+- Only English is built into the main file now (it is the fallback language, so the card is never shown in Greek on a non-Greek Home Assistant, even if the `lang/` folder is missing). Spanish and every other language load from the `lang/` folder, like before 1.2.1. Greek is the language of the code itself, so it needs no file. The main file is about 30 KB smaller. If a language file cannot be loaded, the card shows English.
+
+<details><summary>Ελληνικά</summary>
+
+**Αλλαγές**
+
+- Στο κύριο αρχείο είναι πλέον ενσωματωμένα μόνο τα αγγλικά (είναι η εφεδρική γλώσσα, οπότε η κάρτα δεν εμφανίζεται ποτέ στα ελληνικά σε μη ελληνικό Home Assistant, ακόμα κι αν λείπει ο φάκελος `lang/`). Τα ισπανικά και κάθε άλλη γλώσσα φορτώνουν από τον φάκελο `lang/`. Τα ελληνικά είναι η γλώσσα του ίδιου του κώδικα και δεν χρειάζονται αρχείο. Το κύριο αρχείο είναι περίπου 30 KB μικρότερο. Αν ένα αρχείο γλώσσας δεν φορτώσει, η κάρτα δείχνει αγγλικά.
+
+</details>
+
+<details><summary>Español</summary>
+
+**Cambios**
+
+- Ahora solo el inglés va integrado en el archivo principal (es el idioma de reserva, así que la tarjeta nunca aparece en griego en un Home Assistant que no sea griego, aunque falte la carpeta `lang/`). El español y cualquier otro idioma se cargan desde la carpeta `lang/`. El griego es el idioma del propio código y no necesita archivo. El archivo principal pesa unos 30 KB menos. Si un archivo de idioma no se puede cargar, la tarjeta muestra inglés.
+
+</details>
+
 ## 1.2.2
 
 HACS install fix. · Διόρθωση εγκατάστασης από το HACS. · Corrección de la instalación con HACS.
