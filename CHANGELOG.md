@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.5
+
+- The settings tab arrow buttons are now translated (English/Spanish). No other changes.
+
 ## 1.0.4
 
 - Settings redesigned: eight tabs with icons (Sections, Buttons, Sensors, Charging, Tyres, Appearance, Images, General), grouped cards, segmented controls and colour swatches. Tabs have an opaque bar and arrow buttons (plus mouse drag), so they can be scrolled without a wheel.
