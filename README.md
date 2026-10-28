@@ -31,7 +31,7 @@ It works with the [Deepal Alternative](https://github.com/Sunek0/ha-deepal-alter
 
 ### HACS (recommended)
 
-1. HACS → ⋮ → **Custom repositories** → add `https://github.com/<your-github-user>/deepal-s05-card`, category **Dashboard**.
+1. HACS → ⋮ → **Custom repositories** → add `https://github.com/rmxs/deepal-s05-card`, category **Dashboard**.
 2. Install **Deepal S05 Card** and reload the browser (hard refresh).
 3. HACS registers the resource for you. If it does not, add it manually:
    *Settings → Dashboards → ⋮ → Resources* → `/hacsfiles/deepal-s05-card/deepal-s05-card.js`, type **JavaScript module**.
