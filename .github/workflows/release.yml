@@ -22,7 +22,9 @@ jobs:
         run: |
           v="$(grep -oP 'CARD_VERSION = "\K[^"]+' src/00_head.js)"
           test "v$v" = "${GITHUB_REF_NAME}" || { echo "CARD_VERSION ($v) != tag (${GITHUB_REF_NAME})"; exit 1; }
-      - name: Create release
+      - name: Create release (if missing) and attach the card file
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${GITHUB_REF_NAME}" --generate-notes --title "${GITHUB_REF_NAME}"
+        run: |
+          gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1 || gh release create "${GITHUB_REF_NAME}" --generate-notes --title "${GITHUB_REF_NAME}"
+          gh release upload "${GITHUB_REF_NAME}" dist/deepal-s05-card.js --clobber
