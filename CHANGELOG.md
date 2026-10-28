@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.7
+
+- Charging details are shown once: the status row and the Energy tile no longer repeat the current, type and remaining time (they are on the hero photo next to the charge port).
+- New presentation images (A/C target picker, settings, EV vs PHEV).
+
 ## 1.0.6
 
 - Charging details (current, time remaining, type) are now plain green text on the hero photo, next to the charge port — no frame. Four styles (Settings → Charging → Style): `line` (default), `text`, `big`, `beside`.

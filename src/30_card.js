@@ -244,7 +244,7 @@ class DeepalS05Card extends HTMLElement {
     const pl = this._pending && this._pending.lock;
     if (pl) { const un = pl.before === "locked"; return { icon: un ? "unlock" : "lock", text: un ? "Ξεκλειδώνει…" : "Κλειδώνει…", sub: "Αναμονή επιβεβαίωσης από το όχημα", rgb: "var(--ds-warn)" }; }
     if (!cloudOk) return { icon: "cloudoff", text: "Χωρίς σύνδεση", sub: "Δεν υπάρχει επικοινωνία με το Deepal Cloud", rgb: "var(--ds-bad)" };
-    if (v.charging) return { icon: "bolt", text: "Φορτίζει", sub: [this._chargeCurrent(), left ? T("απομένουν {0}", left) : ""].filter(Boolean).join(" · "), rgb: "var(--ds-ok)" };
+    if (v.charging) return { icon: "bolt", text: "Φορτίζει", sub: "", rgb: "var(--ds-ok)" };
     const alerts = this._diagItems().filter((d) => d.on).length, warn = alerts ? T(alerts === 1 ? "{0} προειδοποίηση" : "{0} προειδοποιήσεις", alerts) : "";
     if (v.plugged) return { icon: "plug", text: "Φορτιστής συνδεδεμένος", sub: warn, rgb: "var(--ds-warn)" };
     if (v.unlocked) return { icon: "unlock", text: "Ξεκλείδωτο", sub: warn, rgb: "var(--ds-warn)" };
@@ -733,7 +733,7 @@ class DeepalS05Card extends HTMLElement {
     const cl = (x) => (x === null ? 0 : Math.min(100, Math.max(0, x)));
     const climOn = this._climateIsOn(), tgt = (() => { const t = this._tgt(); const n = t ? parseFloat(t.state) : NaN; return Number.isFinite(n) ? n : null; })(), pendC = !!this._pending.climate, climOk = this._s("climate.cabin_climate") !== null;
     const leftTxt = this._fmtLeft(this._s("sensor.remaining_charge_time_h_mm"));
-    const chgSub = v.charging ? [this._chargeCurrent(), leftTxt ? T("απομένουν {0}", leftTxt) : ""].filter(Boolean).map(esc).join("<br>") : "";
+    const chgSub = "";
     /* Κύκλος: το ποσοστό αντιστοιχεί στο ΟΡΑΤΟ τόξο (από το κάτω όριο του tile ως το δεξί όριο), όχι σε ολόκληρο τον κύκλο */
     const GD = 40, GS = 1.5, arc = (r) => { const rp = r * GS, a = (x) => (x * 180) / Math.PI; return [180 - a(Math.asin(Math.min(1, GD / rp))) - 4, 360 - a(Math.acos(Math.min(1, GD / rp))) + 4]; };
     const [o0, o1] = arc(44), [i0, i1] = arc(33), at = (a0, a1, p) => a0 + ((a1 - a0) * cl(p)) / 100, f1 = (x) => x.toFixed(1);
