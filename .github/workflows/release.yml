@@ -8,6 +8,7 @@ on:
     paths:
       - "src/00_head.js"
       - "CHANGELOG.md"
+      - ".github/workflows/release.yml"
   workflow_dispatch:
 
 permissions:
