@@ -59,7 +59,7 @@ It works with the [Deepal Alternative](https://github.com/Sunek0/ha-deepal-alter
 
 ## Usage
 
-Add the card from the card picker (**Deepal S05**) or in YAML:
+Add the card from the card picker (**Deepal S05 Control Panel**) or in YAML:
 
 ```yaml
 type: custom:deepal-s05-card

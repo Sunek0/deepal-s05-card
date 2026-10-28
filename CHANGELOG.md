@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.2.6
+
+Card picker. · Επιλογέας καρτών. · Selector de tarjetas.
+
+**Changed**
+
+- In the card picker the card is now called **Deepal S05 Control Panel**, with a clearer description, and it shows a live preview of the card instead of only text.
+
+<details><summary>Ελληνικά</summary>
+
+**Αλλαγές**
+
+- Στον επιλογέα καρτών η κάρτα λέγεται πλέον **Deepal S05 Control Panel**, με πιο σαφή περιγραφή, και δείχνει ζωντανή προεπισκόπηση της κάρτας αντί για απλό κείμενο.
+
+</details>
+
+<details><summary>Español</summary>
+
+**Cambios**
+
+- En el selector de tarjetas la tarjeta se llama ahora **Deepal S05 Control Panel**, con una descripción más clara, y muestra una vista previa en vivo en lugar de solo texto.
+
+</details>
+
 ## 1.2.5
 
 Energy tile. · Πλακίδιο ενέργειας. · Mosaico de energía.

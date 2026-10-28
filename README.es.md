@@ -61,7 +61,7 @@ _(Las imágenes están en inglés.)_
 
 ## Uso
 
-Añade la tarjeta desde el selector de tarjetas (**Deepal S05**) o en YAML:
+Añade la tarjeta desde el selector de tarjetas (**Deepal S05 Control Panel**) o en YAML:
 
 ```yaml
 type: custom:deepal-s05-card
