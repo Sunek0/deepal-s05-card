@@ -1,0 +1,28 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build
+        run: bash scripts/build.sh
+      - name: Check version matches the tag
+        run: |
+          v="$(grep -oP 'CARD_VERSION = "\K[^"]+' src/00_head.js)"
+          test "v$v" = "${GITHUB_REF_NAME}" || { echo "CARD_VERSION ($v) != tag (${GITHUB_REF_NAME})"; exit 1; }
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" --generate-notes --title "${GITHUB_REF_NAME}"

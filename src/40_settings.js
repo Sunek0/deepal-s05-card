@@ -69,7 +69,7 @@ class DeepalS05Settings extends HTMLElement {
       <label class="field inline">Κάτοψη ${this._sel("top_orientation", c.top_orientation, [["horizontal", "Οριζόντια"], ["vertical", "Κάθετη"]])}</label>`;
   }
   _tabButtons(c) {
-    const conf = [["unlock", "Ξεκλείδωμα"], ["trunk", "Άνοιγμα πορτμπαγκάζ"], ["windows", "Άνοιγμα παραθύρων"]];
+    const conf = [["lock", "Κλείδωμα"], ["unlock", "Ξεκλείδωμα"], ["windows", "Άνοιγμα παραθύρων"], ["trunk", "Άνοιγμα πορτμπαγκάζ"], ["climate", "Κλιματισμός"], ["flash", "Φώτα"], ["honk", "Κόρνα"], ["find", "Εντοπισμός"], ["refresh", "Ανανέωση δεδομένων"]];
     return `<p class="hint">Σειρά και εμφάνιση των κουμπιών ελέγχου.</p>
       ${this._orderList(BUTTON_IDS, c.buttons, c.buttons_hidden, (i) => BUTTON_LABELS[i], "btn")}
       <h4>Εμφάνιση</h4>
@@ -125,6 +125,10 @@ class DeepalS05Settings extends HTMLElement {
       <div class="list"><button class="row tg ${c.show_customize !== false ? "on" : ""}" data-tgl="show_customize"><span>Κουμπί «Ρυθμίσεις» στην κάρτα</span><i class="sw ${c.show_customize !== false ? "on" : ""}"></i></button></div>
       <p class="hint">${T("Αν το κρύψεις, οι ρυθμίσεις ανοίγουν μόνο από τον επεξεργαστή της κάρτας (Επεξεργασία dashboard).")}</p>
       <div class="list"><button class="row tg ${c.toasts !== false ? "on" : ""}" data-tgl="toasts"><span>Μηνύματα πάνω στην οθόνη</span><i class="sw ${c.toasts !== false ? "on" : ""}"></i></button></div>
+      <label class="field inline">Περιθώρια κάρτας ${this._sel("card_padding", c.card_padding || "normal", [["normal", "Κανονικά"], ["half", "Μισά"], ["none", "Χωρίς (εικόνα από άκρη σε άκρη)"]])}</label>
+      <label class="field inline">Περιθώρια popup ${this._sel("popup_padding", c.popup_padding || "normal", [["normal", "Κανονικά"], ["half", "Μισά"], ["none", "Χωρίς"]])}</label>
+      <label class="field inline">Θέση μηνυμάτων (πάνω στην εικόνα) ${this._sel("toast_position", c.toast_position || "bottom", [["bottom", "Κάτω"], ["top", "Πάνω"]])}</label>
+      <label class="field inline">Διάρκεια μηνυμάτων ${this._sel("toast_duration", String(c.toast_duration || 5), [["3", "3 δευτ."], ["5", "5 δευτ."], ["8", "8 δευτ."], ["12", "12 δευτ."]])}</label>
       <label class="field">Πρόθεμα οντοτήτων (π.χ. s05)<input type="text" data-set="prefix" data-text value="${esc(c.prefix)}" list="dl-pfx"></label>
       <datalist id="dl-pfx">${pfxCandidates(this._hass).map((p) => `<option value="${esc(p)}"></option>`).join("")}</datalist>
       ${(() => { const e = effPrefix(this._hass, c); return e !== c.prefix ? `<p class="hint">${T("Το πρόθεμα {0} δεν βρέθηκε· χρησιμοποιείται αυτόματα το {1}. Πάτησε το πεδίο για να το αποθηκεύσεις.", `<code>${esc(c.prefix)}</code>`, `<code>${esc(e)}</code>`)}</p>` : ""; })()}

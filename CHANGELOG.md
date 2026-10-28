@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1
+
+- Messages are shown on the hero image (bottom or top, configurable) and stay longer (configurable).
+- Pending status "Locking… / Unlocking…" instead of the stale state while waiting for the vehicle.
+- Every action button can ask for confirmation (per-button switches in the settings).
+- New margin options for the card (including edge-to-edge image) and for the popups.
+
 ## 1.0.0
 
 - First public release.

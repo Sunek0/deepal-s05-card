@@ -29,12 +29,9 @@ The images were recoloured to black (open parts in red) with `tools/build_layers
 
 ## Vehicle photos (`dist/images/car`)
 
-Photographs of a black Deepal S05 used as the hero and dashboard images.
-
-> **Maintainer: fill in the source and licence of these photos before publishing.**
-> Deepal and Changan names, logos and vehicle imagery are trademarks / copyrighted material of their owners.
-> If you do not hold the rights to redistribute them, remove `dist/images/car/` (the card then shows a message and
-> users supply their own photos) and say so here.
+Images of a black Deepal S05 used as the hero and dashboard images. They were created by the project author with an
+AI image generator and are released under the same MIT licence as the rest of the project.
+They depict a real vehicle model; Deepal and Changan names and designs remain the property of their owners.
 
 ## Trademarks
 

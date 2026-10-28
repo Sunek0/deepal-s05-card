@@ -26,7 +26,11 @@ name: Deepal S05
 | `button_layout` | `grid` | `grid` (5 per row), `scroll` (one row, scrolls), `fit` (one row, all fit). |
 | `button_labels` | `both` | `none`, `status`, `title`, `both`. |
 | `button_size` | `m` | `s`, `m`, `l`. |
-| `confirm` | `unlock`, `trunk`, `windows` | Actions that ask for confirmation. |
+| `confirm` | `unlock`, `trunk`, `windows` | Actions that ask for confirmation. Any of `lock`, `unlock`, `windows`, `trunk`, `climate`, `flash`, `honk`, `find`, `refresh`. |
+| `card_padding` | `normal` | Card margins: `normal`, `half`, `none` (hero image edge-to-edge). |
+| `popup_padding` | `normal` | Popup margins: `normal`, `half`, `none`. |
+| `toast_position` | `bottom` | Message position on the image: `bottom` or `top`. |
+| `toast_duration` | `5` | Seconds a message stays visible (errors +3). |
 | `hero_show` | `name`, `plate`, `range` | What is shown on the hero image: `name`, `plate`, `range`, `cloud`, `updated`. |
 | `charge_fx` | `flow_port` | Charging effect on the car: `flow_port`, `flow`, `port`, `sweep`, `none`. |
 | `diag` | all | List of diagnostic entities to watch (`null` = all known). |

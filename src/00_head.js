@@ -8,7 +8,7 @@
  * (MIT) — δες LICENSE-NOTICE.txt στον φάκελο της κάρτας.
  */
 (() => {
-const CARD_VERSION = "1.0.0";
+const CARD_VERSION = "1.0.1";
 const TAG = "deepal-s05-card";
 const SETTINGS_TAG = "deepal-s05-settings";
 const EDITOR_TAG = "deepal-s05-card-editor";
@@ -91,6 +91,10 @@ const DEFAULTS = {
   language: "auto", // auto (γλώσσα του HA) | el | en | …
   charge_fx: "flow_port", // εφέ φόρτισης πάνω στο αμάξι: flow_port | flow | port | sweep | none
   toasts: true, // μηνύματα πάνω στην οθόνη
+  card_padding: "normal", // normal | half | none (εικόνα από άκρη σε άκρη)
+  popup_padding: "normal", // normal | half | none
+  toast_position: "bottom", // πάνω στην εικόνα: bottom | top
+  toast_duration: 5, // δευτερόλεπτα
 };
 // Κλειδιά που αλλάζουν από το UI ρυθμίσεων
 /* Αυτόματη αναγνώριση προθέματος: αν το ορισμένο δεν βρίσκεται (π.χ. άλλο όνομα συσκευής: mycar_…), ψάχνουμε στο HA ποιο πρόθεμα έχει τους αισθητήρες του οχήματος */

@@ -8,7 +8,7 @@
  * (MIT) — δες LICENSE-NOTICE.txt στον φάκελο της κάρτας.
  */
 (() => {
-const CARD_VERSION = "1.0.0";
+const CARD_VERSION = "1.0.1";
 const TAG = "deepal-s05-card";
 const SETTINGS_TAG = "deepal-s05-settings";
 const EDITOR_TAG = "deepal-s05-card-editor";
@@ -91,6 +91,10 @@ const DEFAULTS = {
   language: "auto", // auto (γλώσσα του HA) | el | en | …
   charge_fx: "flow_port", // εφέ φόρτισης πάνω στο αμάξι: flow_port | flow | port | sweep | none
   toasts: true, // μηνύματα πάνω στην οθόνη
+  card_padding: "normal", // normal | half | none (εικόνα από άκρη σε άκρη)
+  popup_padding: "normal", // normal | half | none
+  toast_position: "bottom", // πάνω στην εικόνα: bottom | top
+  toast_duration: 5, // δευτερόλεπτα
 };
 // Κλειδιά που αλλάζουν από το UI ρυθμίσεων
 /* Αυτόματη αναγνώριση προθέματος: αν το ορισμένο δεν βρίσκεται (π.χ. άλλο όνομα συσκευής: mycar_…), ψάχνουμε στο HA ποιο πρόθεμα έχει τους αισθητήρες του οχήματος */
@@ -468,6 +472,12 @@ const CONFIRM_TEXT = {
   unlock: ["Ξεκλείδωμα οχήματος;", "Το όχημα θα ξεκλειδώσει."],
   trunk: ["Άνοιγμα πορτμπαγκάζ;", "Το πορτμπαγκάζ θα ανοίξει."],
   windows: ["Άνοιγμα παραθύρων;", "Όλα τα παράθυρα θα ανοίξουν."],
+  lock: ["Κλείδωμα οχήματος;", "Το όχημα θα κλειδώσει."],
+  climate: ["Αλλαγή κλιματισμού;", "Θα σταλεί εντολή στον κλιματισμό του οχήματος."],
+  flash: ["Αναλαμπή φώτων;", "Τα φώτα του οχήματος θα αναβοσβήσουν."],
+  honk: ["Ηχητικό σήμα;", "Η κόρνα του οχήματος θα ηχήσει."],
+  find: ["Εντοπισμός οχήματος;", "Τα φώτα θα αναβοσβήσουν και η κόρνα θα ηχήσει."],
+  refresh: ["Ανανέωση δεδομένων;", "Θα ζητηθούν νέα δεδομένα από το όχημα."],
 };
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -535,6 +545,12 @@ ha-card { ${VARS}
   background: radial-gradient(90% 60% at 0% 0%, rgba(var(--ds-ev), .10), transparent 60%),
     radial-gradient(90% 60% at 100% 0%, rgba(var(--ds-fu), .08), transparent 60%),
     var(--ha-card-background, var(--card-background-color, #1c1c1c)); }
+ha-card[data-pad="half"] { padding:7px; gap:12px; }
+ha-card[data-pad="none"] { padding:0 0 12px; gap:12px; }
+ha-card[data-pad="none"] > :not(.hero):not(.sheet) { margin-inline:14px; }
+ha-card[data-pad="none"] > .hero { border-radius:0; }
+ha-card[data-ppad="half"] .sheet { padding:5px; } ha-card[data-ppad="half"] .box { padding:8px 7px 6px; }
+ha-card[data-ppad="none"] .sheet { padding:0; } ha-card[data-ppad="none"] .box { padding:8px 4px 4px; border-radius:24px 24px 0 0; border-inline:0; border-bottom:0; }
 ${BASE_CSS}
 
 /* Hero */
@@ -594,9 +610,10 @@ ${BASE_CSS}
 @keyframes ds-sweep { from { -webkit-mask-position: 100% 0; mask-position: 100% 0; } to { -webkit-mask-position: 0% 0; mask-position: 0% 0; } }
 @keyframes ds-glow { 0%,100% { opacity:.30 } 50% { opacity:1 } }
 @keyframes ds-core { 0%,100% { opacity:.25 } 55% { opacity:1 } }
-.toast { position:absolute; left:50%; top:20px; z-index:40; transform: translate(-50%, -8px); max-width: calc(100% - 28px); padding: 8px 14px; border-radius: 999px;
+.toast { position:absolute; left:50%; top:14px; bottom:auto; z-index:40; transform: translate(-50%, -8px); max-width: calc(100% - 28px); padding: 8px 14px; border-radius: 999px;
   font-size: 12.5px; font-weight: 500; color:#fff; opacity:0; pointer-events:none; background: rgba(20,20,24,.82); border:1px solid rgba(255,255,255,.16);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transition: opacity .2s ease, transform .2s ease; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
+.toast.pos-bottom { top:auto; bottom:14px; transform: translate(-50%, 8px); }
 .toast.show { opacity:1; transform: translate(-50%, 0); } .toast.warn { border-color: rgba(var(--ds-warn), .55); } .toast.error { border-color: rgba(var(--ds-bad), .55); } .toast.ok { border-color: rgba(var(--ds-ok), .55); }
 
 /* Κουμπιά (κυκλικά, σαν της εφαρμογής) */
@@ -1047,6 +1064,8 @@ class DeepalS05Card extends HTMLElement {
       const names = v.open.slice(0, 2).map((x) => x[1]).join(" · ");
       return { icon: "alert", text: "Ανοιχτά", sub: names + (v.open.length > 2 ? ` +${v.open.length - 2}` : ""), rgb: "var(--ds-bad)" };
     }
+    const pl = this._pending && this._pending.lock;
+    if (pl) { const un = pl.before === "locked"; return { icon: un ? "unlock" : "lock", text: un ? "Ξεκλειδώνει…" : "Κλειδώνει…", sub: "Αναμονή επιβεβαίωσης από το όχημα", rgb: "var(--ds-warn)" }; }
     if (!cloudOk) return { icon: "cloudoff", text: "Χωρίς σύνδεση", sub: "Δεν υπάρχει επικοινωνία με το Deepal Cloud", rgb: "var(--ds-bad)" };
     if (v.charging) return { icon: "bolt", text: "Φορτίζει", sub: [this._chargeCurrent(), left ? T("απομένουν {0}", left) : ""].filter(Boolean).join(" · "), rgb: "var(--ds-ok)" };
     const alerts = this._diagItems().filter((d) => d.on).length, warn = alerts ? T(alerts === 1 ? "{0} προειδοποίηση" : "{0} προειδοποιήσεις", alerts) : "";
@@ -1084,21 +1103,21 @@ class DeepalS05Card extends HTMLElement {
     const txt = (s, closed, open) => (s === "closed" ? closed : s === "open" ? open : s === null ? "μη διαθέσιμο" : s);
     const all = {
       lock: { on: lock === "locked", icon: lock === "locked" ? "lock" : "unlock", sub: lock === "locked" ? "κλειδωμένο" : lock === "unlocked" ? "ξεκλείδωτο" : lock || "μη διαθέσιμο",
-        tone: lock === "locked" ? "ok" : lock === "unlocked" ? "warn" : "bad", disabled: lock === null, watch: "lock.doors", confirm: lock === "locked" ? "unlock" : null,
+        tone: lock === "locked" ? "ok" : lock === "unlocked" ? "warn" : "bad", disabled: lock === null, watch: "lock.doors", confirm: lock === "locked" ? "unlock" : "lock",
         call: ["lock", lock === "locked" ? "unlock" : "lock", "lock.doors"] },
       windows: { on: win === "open", icon: win === "closed" || win === null ? "windowclosed" : "windowopen", sub: txt(win, "κλειστά", "ανοιχτά"), tone: openTone(win), disabled: win === null,
         watch: "cover.windows", confirm: win === "closed" ? "windows" : null, call: ["cover", "toggle", "cover.windows"] },
       trunk: { on: trunk === "open", icon: trunk === "open" ? "trunkopen" : "trunk", sub: txt(trunk, "κλειστό", "ανοιχτό"), tone: openTone(trunk), disabled: trunk === null, watch: "cover.trunk", confirm: trunk === "closed" ? "trunk" : null,
         call: ["cover", "toggle", "cover.trunk"] },
-      climate: { on: climateOn, icon: climateOn ? "snow" : "snowoff", sub: climate === null ? "μη διαθέσιμο" : climateOn ? "ενεργός" : "ανενεργός", tone: climate === null ? "bad" : "", disabled: climate === null,
+      climate: { on: climateOn, icon: climateOn ? "snow" : "snowoff", sub: climate === null ? "μη διαθέσιμο" : climateOn ? "ενεργός" : "ανενεργός", tone: climate === null ? "bad" : "", disabled: climate === null, confirm: "climate",
         watch: this._obj("binary_sensor.climate_on") ? "binary_sensor.climate_on" : "climate.cabin_climate", timeout: 35000, call: cCall,
         unsupported: "Ο κλιματισμός δεν έχει εντολή " + (climateOn ? "απενεργοποίησης" : "ενεργοποίησης") + " σε αυτή την οντότητα" },
       tires: (() => { const s = this._tiresSummary(); return { icon: "tirealert", ...s, open: "top" }; })(),
       cabin: (() => { const s = this._cabinSummary(climateOn); return { icon: s.on ? "interioron" : "interior", ...s, open: "climate" }; })(),
-      flash: { icon: "headlight", sub: "αναλαμπή", btn: "button.flash_lights", call: ["button", "press", "button.flash_lights"] },
-      honk: { icon: "horn", sub: "ηχητικό σήμα", btn: "button.honk_horn", call: ["button", "press", "button.honk_horn"] },
-      find: { icon: "find", sub: "εντοπισμός", btn: "button.flash_lights_and_honk", call: ["button", "press", "button.flash_lights_and_honk"] },
-      refresh: { icon: "refresh", sub: this._age(), btn: "button.refresh_vehicle_data", watch: "sensor.last_updated", timeout: 25000, call: ["button", "press", "button.refresh_vehicle_data"] },
+      flash: { confirm: "flash", icon: "headlight", sub: "αναλαμπή", btn: "button.flash_lights", call: ["button", "press", "button.flash_lights"] },
+      honk: { confirm: "honk", icon: "horn", sub: "ηχητικό σήμα", btn: "button.honk_horn", call: ["button", "press", "button.honk_horn"] },
+      find: { confirm: "find", icon: "find", sub: "εντοπισμός", btn: "button.flash_lights_and_honk", call: ["button", "press", "button.flash_lights_and_honk"] },
+      refresh: { confirm: "refresh", icon: "refresh", sub: this._age(), btn: "button.refresh_vehicle_data", watch: "sensor.last_updated", timeout: 25000, call: ["button", "press", "button.refresh_vehicle_data"] },
     };
     return [...BUTTON_IDS, "refresh"].map((id) => {
       const a = { id, label: BUTTON_LABELS[id], ...all[id] };
@@ -1204,7 +1223,7 @@ class DeepalS05Card extends HTMLElement {
   _toast(msg, type) {
     clearTimeout(this._toastTimer);
     this._toastState = { msg, type };
-    this._toastTimer = setTimeout(() => { this._toastState = null; this._force(); }, 4200);
+    this._toastTimer = setTimeout(() => { this._toastState = null; this._force(); }, ((Number(this._c.toast_duration) > 0 ? Number(this._c.toast_duration) : 5) + (type === "error" ? 3 : 0)) * 1000);
     this._force();
   }
   _closeSheet() { clearTimeout(this._confirmTimer); this._confirm = null; this._customize = false; this._uiSave(); this._force(); }
@@ -1344,8 +1363,8 @@ class DeepalS05Card extends HTMLElement {
             <div class="meta" id="meta"><span class="cloud" id="cloud" role="button"></span><button class="rfs" id="rfs" data-id="refresh"></button></div></div>
           <div class="status" id="status"></div>
           <div class="tells" id="tells"></div>
+          <div class="toast" id="toast" role="status" aria-live="polite"></div>
         </div>
-        <div class="toast" id="toast" role="status" aria-live="polite"></div>
         <div class="actions" id="actions"></div>
         <div class="stats" id="stats"></div>
         <div class="info" id="info"></div>
@@ -1483,7 +1502,7 @@ class DeepalS05Card extends HTMLElement {
     el.age.textContent = T("Ενημερώθηκε {0}", this._age());
     const ts = this._toastState;
     if (ts) el.toast.textContent = ts.msg;
-    el.toast.className = `toast ${ts && c.toasts !== false ? `show ${ts.type}` : ""}`;
+    el.toast.className = `toast pos-${c.toast_position === "top" ? "top" : "bottom"} ${ts && c.toasts !== false ? `show ${ts.type}` : ""}`;
 
     {
       const ra = this._actions().find((x) => x.id === "refresh"), f = this._flashes.refresh, pend = !!this._pending.refresh;
@@ -1518,6 +1537,7 @@ class DeepalS05Card extends HTMLElement {
     const bat = v.battery, range = this._n("sensor.remaining_range"), fuel = this._n("sensor.fuel_range"), temp = this._n("sensor.inside_temperature");
     const evRgb = bat === null ? "148,163,184" : bat < 30 ? "248,113,113" : bat < 50 ? "251,146,60" : bat < 70 ? "250,204,21" : "52,211,153";
     const fuRgb = fuel === null ? "148,163,184" : fuel < 100 ? "248,113,113" : fuel < 250 ? "250,204,21" : fuel < 400 ? "251,146,60" : "52,211,153";
+    el.card.dataset.pad = c.card_padding || "normal"; el.card.dataset.ppad = c.popup_padding || "normal";
     el.card.style.setProperty("--ds-ev", evRgb); el.card.style.setProperty("--ds-fu", fuRgb);
     const num = (n) => (n === null ? "--" : Math.round(n));
     const fu = hasFuel(this._hass, c);
@@ -1843,7 +1863,7 @@ class DeepalS05Settings extends HTMLElement {
       <label class="field inline">Κάτοψη ${this._sel("top_orientation", c.top_orientation, [["horizontal", "Οριζόντια"], ["vertical", "Κάθετη"]])}</label>`;
   }
   _tabButtons(c) {
-    const conf = [["unlock", "Ξεκλείδωμα"], ["trunk", "Άνοιγμα πορτμπαγκάζ"], ["windows", "Άνοιγμα παραθύρων"]];
+    const conf = [["lock", "Κλείδωμα"], ["unlock", "Ξεκλείδωμα"], ["windows", "Άνοιγμα παραθύρων"], ["trunk", "Άνοιγμα πορτμπαγκάζ"], ["climate", "Κλιματισμός"], ["flash", "Φώτα"], ["honk", "Κόρνα"], ["find", "Εντοπισμός"], ["refresh", "Ανανέωση δεδομένων"]];
     return `<p class="hint">Σειρά και εμφάνιση των κουμπιών ελέγχου.</p>
       ${this._orderList(BUTTON_IDS, c.buttons, c.buttons_hidden, (i) => BUTTON_LABELS[i], "btn")}
       <h4>Εμφάνιση</h4>
@@ -1899,6 +1919,10 @@ class DeepalS05Settings extends HTMLElement {
       <div class="list"><button class="row tg ${c.show_customize !== false ? "on" : ""}" data-tgl="show_customize"><span>Κουμπί «Ρυθμίσεις» στην κάρτα</span><i class="sw ${c.show_customize !== false ? "on" : ""}"></i></button></div>
       <p class="hint">${T("Αν το κρύψεις, οι ρυθμίσεις ανοίγουν μόνο από τον επεξεργαστή της κάρτας (Επεξεργασία dashboard).")}</p>
       <div class="list"><button class="row tg ${c.toasts !== false ? "on" : ""}" data-tgl="toasts"><span>Μηνύματα πάνω στην οθόνη</span><i class="sw ${c.toasts !== false ? "on" : ""}"></i></button></div>
+      <label class="field inline">Περιθώρια κάρτας ${this._sel("card_padding", c.card_padding || "normal", [["normal", "Κανονικά"], ["half", "Μισά"], ["none", "Χωρίς (εικόνα από άκρη σε άκρη)"]])}</label>
+      <label class="field inline">Περιθώρια popup ${this._sel("popup_padding", c.popup_padding || "normal", [["normal", "Κανονικά"], ["half", "Μισά"], ["none", "Χωρίς"]])}</label>
+      <label class="field inline">Θέση μηνυμάτων (πάνω στην εικόνα) ${this._sel("toast_position", c.toast_position || "bottom", [["bottom", "Κάτω"], ["top", "Πάνω"]])}</label>
+      <label class="field inline">Διάρκεια μηνυμάτων ${this._sel("toast_duration", String(c.toast_duration || 5), [["3", "3 δευτ."], ["5", "5 δευτ."], ["8", "8 δευτ."], ["12", "12 δευτ."]])}</label>
       <label class="field">Πρόθεμα οντοτήτων (π.χ. s05)<input type="text" data-set="prefix" data-text value="${esc(c.prefix)}" list="dl-pfx"></label>
       <datalist id="dl-pfx">${pfxCandidates(this._hass).map((p) => `<option value="${esc(p)}"></option>`).join("")}</datalist>
       ${(() => { const e = effPrefix(this._hass, c); return e !== c.prefix ? `<p class="hint">${T("Το πρόθεμα {0} δεν βρέθηκε· χρησιμοποιείται αυτόματα το {1}. Πάτησε το πεδίο για να το αποθηκεύσεις.", `<code>${esc(c.prefix)}</code>`, `<code>${esc(e)}</code>`)}</p>` : ""; })()}

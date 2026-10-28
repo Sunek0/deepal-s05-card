@@ -103,6 +103,12 @@ const CONFIRM_TEXT = {
   unlock: ["Ξεκλείδωμα οχήματος;", "Το όχημα θα ξεκλειδώσει."],
   trunk: ["Άνοιγμα πορτμπαγκάζ;", "Το πορτμπαγκάζ θα ανοίξει."],
   windows: ["Άνοιγμα παραθύρων;", "Όλα τα παράθυρα θα ανοίξουν."],
+  lock: ["Κλείδωμα οχήματος;", "Το όχημα θα κλειδώσει."],
+  climate: ["Αλλαγή κλιματισμού;", "Θα σταλεί εντολή στον κλιματισμό του οχήματος."],
+  flash: ["Αναλαμπή φώτων;", "Τα φώτα του οχήματος θα αναβοσβήσουν."],
+  honk: ["Ηχητικό σήμα;", "Η κόρνα του οχήματος θα ηχήσει."],
+  find: ["Εντοπισμός οχήματος;", "Τα φώτα θα αναβοσβήσουν και η κόρνα θα ηχήσει."],
+  refresh: ["Ανανέωση δεδομένων;", "Θα ζητηθούν νέα δεδομένα από το όχημα."],
 };
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -170,6 +176,12 @@ ha-card { ${VARS}
   background: radial-gradient(90% 60% at 0% 0%, rgba(var(--ds-ev), .10), transparent 60%),
     radial-gradient(90% 60% at 100% 0%, rgba(var(--ds-fu), .08), transparent 60%),
     var(--ha-card-background, var(--card-background-color, #1c1c1c)); }
+ha-card[data-pad="half"] { padding:7px; gap:12px; }
+ha-card[data-pad="none"] { padding:0 0 12px; gap:12px; }
+ha-card[data-pad="none"] > :not(.hero):not(.sheet) { margin-inline:14px; }
+ha-card[data-pad="none"] > .hero { border-radius:0; }
+ha-card[data-ppad="half"] .sheet { padding:5px; } ha-card[data-ppad="half"] .box { padding:8px 7px 6px; }
+ha-card[data-ppad="none"] .sheet { padding:0; } ha-card[data-ppad="none"] .box { padding:8px 4px 4px; border-radius:24px 24px 0 0; border-inline:0; border-bottom:0; }
 ${BASE_CSS}
 
 /* Hero */
@@ -229,9 +241,10 @@ ${BASE_CSS}
 @keyframes ds-sweep { from { -webkit-mask-position: 100% 0; mask-position: 100% 0; } to { -webkit-mask-position: 0% 0; mask-position: 0% 0; } }
 @keyframes ds-glow { 0%,100% { opacity:.30 } 50% { opacity:1 } }
 @keyframes ds-core { 0%,100% { opacity:.25 } 55% { opacity:1 } }
-.toast { position:absolute; left:50%; top:20px; z-index:40; transform: translate(-50%, -8px); max-width: calc(100% - 28px); padding: 8px 14px; border-radius: 999px;
+.toast { position:absolute; left:50%; top:14px; bottom:auto; z-index:40; transform: translate(-50%, -8px); max-width: calc(100% - 28px); padding: 8px 14px; border-radius: 999px;
   font-size: 12.5px; font-weight: 500; color:#fff; opacity:0; pointer-events:none; background: rgba(20,20,24,.82); border:1px solid rgba(255,255,255,.16);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transition: opacity .2s ease, transform .2s ease; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
+.toast.pos-bottom { top:auto; bottom:14px; transform: translate(-50%, 8px); }
 .toast.show { opacity:1; transform: translate(-50%, 0); } .toast.warn { border-color: rgba(var(--ds-warn), .55); } .toast.error { border-color: rgba(var(--ds-bad), .55); } .toast.ok { border-color: rgba(var(--ds-ok), .55); }
 
 /* Κουμπιά (κυκλικά, σαν της εφαρμογής) */
