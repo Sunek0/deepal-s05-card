@@ -16,6 +16,7 @@ Funciona con la integración [Deepal Alternative](https://github.com/Sunek0/ha-d
 | | |
 |---|---|
 | ![Overview](docs/images/overview.jpg) | ![Charging](docs/images/charging.jpg) |
+| ![Car View hero](docs/images/hero-carview.jpg) | ![Charging view](docs/images/charging-view.jpg) |
 | ![Diagnostics](docs/images/diagnostics.jpg) | ![New sensors](docs/images/new-sensors.jpg) |
 | ![Car View](docs/images/tyres.jpg) | ![Seats](docs/images/seats.jpg) |
 | ![Climate](docs/images/climate.jpg) | ![Settings](docs/images/settings.jpg) |
@@ -27,6 +28,7 @@ _(Las imágenes están en inglés.)_
 ## Características
 
 - Foto del coche que cambia con el estado del vehículo (apagado, luces, desbloqueado, cargando, carga completa).
+- **Estilo del hero** (*Ajustes → Vehículo*): tus propias fotos o un render **Car View** en vivo en negro, azul, gris, plata o blanco, con puertas, capó, portón, ventanillas y luces que siguen al coche. Al conectar el cargador, el coche cambia a una vista lateral translúcida con cable gris (conectado) o cable verde con los mismos efectos de flujo de energía y pulso en el puerto (cargando).
 - Botones de control redondos: bloqueo, ventanillas, maletero, clima, neumáticos, interior, destellos, claxon, localizar coche — disposición, etiquetas, tamaño, orden y visibilidad configurables.
 - Anillos de autonomía y batería (y combustible en el PHEV); el anillo de la batería se anima mientras carga.
 - Estado de carga: corriente, tiempo restante y tipo como texto junto al puerto de carga (4 estilos), más un efecto animado opcional sobre el coche (flujo en el cable / pulso en el puerto / barrido de luz).
@@ -83,8 +85,8 @@ El selector de temperatura objetivo usa directamente la entidad `climate.<prefix
 
 ## Fotos y capas
 
-La tarjeta muestra fotos de `images/car/` (hero), las capas del Car View de `images/iso/<color>/` y las capas del interior de `images/interior/`, todo junto al archivo de la tarjeta (HACS lo instala con la tarjeta).
-Las fotos hero están hechas para un **Deepal S05 negro**; el Car View está disponible en cinco colores (*Ajustes → Mostrar → Color del coche*). Para otro modelo sustituye los archivos (mismos nombres) o indica a la tarjeta tu propia carpeta en *Ajustes → Imágenes*.
+La tarjeta muestra fotos de `images/car/` (hero), las capas del Car View de `images/iso/<color>/` las capas del interior de `images/interior/` y la vista translúcida de carga de `images/carga/`, todo junto al archivo de la tarjeta (HACS lo instala con la tarjeta).
+Las fotos hero están hechas para un **Deepal S05 negro**; el Car View está disponible en cinco colores (*Ajustes → Vehículo → Color del coche*) y también puede usarse como hero (*Ajustes → Vehículo → Estilo del hero*). Para otro modelo sustituye los archivos (mismos nombres) o indica a la tarjeta tu propia carpeta en *Ajustes → Imágenes*.
 Consulta [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) para el origen y las licencias de las imágenes.
 
 ## Solución de problemas
@@ -104,7 +106,7 @@ bash scripts/build.sh      # genera dist/deepal-s05-card.js a partir de src/
 ```
 
 Edita los archivos de `src/`, ejecuta el build y haz commit de `src/` y `dist/`.
-Las imágenes del Car View se convierten desde los renders de dec_deepal con `tools/build_iso.py` y las capas del interior con `tools/build_layers.py` (consulta la cabecera de cada script).
+Las imágenes del Car View se convierten desde los renders de dec_deepal con `tools/build_iso.py` la vista de carga con `tools/build_carga.py` y las capas del interior con `tools/build_layers.py` (consulta la cabecera de cada script).
 
 ## Licencia
 

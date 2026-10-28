@@ -1,5 +1,50 @@
 # Changelog
 
+## 1.3.0
+
+Car View hero and a new Vehicle tab. · Hero Car View και νέα καρτέλα Όχημα. · Hero Car View y nueva pestaña Vehículo.
+
+**Added**
+
+- **Hero style** (*Settings → Vehicle*, option `hero_style`): keep your own photos (default, unchanged) or use a live **Car View** render as the hero. It follows the car's colour setting and shows doors, bonnet, tailgate, windows and low beams in real time. It is centred, follows the card's zoom (`image_scale`) around the car and sits on a lighter floor with a soft shadow.
+- **Charging view** for the Car View hero: while the charger is connected the car switches to a translucent side view (from the dec_deepal project) with a grey cable when plugged in and a green cable while charging. The same effects as the photo hero apply and follow *Charging effect*: energy flowing along the cable, glow and pulses at the charge port, light sweep. The new images live in `images/carga/`.
+- New first settings tab **Vehicle** with the card name, entity prefix, vehicle type, hero style, zoom and aspect ratio, car colour and wheels. These settings moved here from *General*, *Images* and *Appearance*.
+
+**Changed**
+
+- The black car in the Car View (popup and hero) is darker and no longer bluish: the same tone curve is applied to every black layer, so shadows and mid-tones go deeper while reflections and edges stay as they were. The other colours are unchanged.
+- New presentation images (hero styles, charging view, Vehicle tab) and regenerated existing ones.
+
+<details><summary>Ελληνικά</summary>
+
+**Προστέθηκαν**
+
+- **Στυλ hero** (*Ρυθμίσεις → Όχημα*, επιλογή `hero_style`): κράτα τις δικές σου φωτογραφίες (προεπιλογή, αμετάβλητο) ή χρησιμοποίησε ζωντανό render **Car View** ως hero. Ακολουθεί το χρώμα του αμαξιού και δείχνει πόρτες, καπό, πορτμπαγκάζ, παράθυρα και φώτα σε πραγματικό χρόνο. Είναι κεντραρισμένο, ακολουθεί το ζουμ της κάρτας (`image_scale`) γύρω από το αμάξι και στέκεται σε πιο ανοιχτό δάπεδο με απαλή σκιά.
+- **Όψη φόρτισης** για το hero Car View: όταν είναι συνδεδεμένος ο φορτιστής, το αμάξι αλλάζει σε διάφανη πλάγια όψη (από το έργο dec_deepal) με γκρι καλώδιο όταν είναι συνδεδεμένος και πράσινο όταν φορτίζει. Ισχύουν τα ίδια εφέ με το hero φωτογραφιών και ακολουθούν την επιλογή «Εφέ φόρτισης»: ροή ενέργειας στο καλώδιο, λάμψη και παλμοί στη θύρα, σάρωση φωτός. Οι νέες εικόνες είναι στο `images/carga/`.
+- Νέα πρώτη καρτέλα ρυθμίσεων **Όχημα** με όνομα κάρτας, πρόθεμα οντοτήτων, τύπο οχήματος, στυλ hero, ζουμ και λόγο διαστάσεων, χρώμα αμαξιού και ζάντες. Οι ρυθμίσεις αυτές μεταφέρθηκαν από τις καρτέλες «Γενικά», «Εικόνες» και «Εμφάνιση».
+
+**Αλλαγές**
+
+- Το μαύρο αμάξι στο Car View (popup και hero) είναι πιο σκούρο και χωρίς μπλε απόχρωση: η ίδια καμπύλη τόνων εφαρμόζεται σε όλα τα layers του μαύρου, ώστε οι σκιές και τα μεσαία τόνα να βαθαίνουν ενώ οι αντανακλάσεις και οι άκρες μένουν όπως ήταν. Τα υπόλοιπα χρώματα δεν άλλαξαν.
+- Νέες εικόνες παρουσίασης (στυλ hero, όψη φόρτισης, καρτέλα Όχημα) και ανανεωμένες οι υπάρχουσες.
+
+</details>
+
+<details><summary>Español</summary>
+
+**Añadido**
+
+- **Estilo del hero** (*Ajustes → Vehículo*, opción `hero_style`): conserva tus propias fotos (por defecto, sin cambios) o usa un render **Car View** en vivo como hero. Sigue el color del coche y muestra puertas, capó, portón, ventanillas y luces en tiempo real. Va centrado, sigue el zoom de la tarjeta (`image_scale`) alrededor del coche y se apoya en un suelo más claro con una sombra suave.
+- **Vista de carga** para el hero Car View: con el cargador conectado, el coche cambia a una vista lateral translúcida (del proyecto dec_deepal) con cable gris al estar conectado y cable verde al cargar. Se aplican los mismos efectos que en el hero de fotos y siguen la opción «Efecto de carga»: flujo de energía por el cable, brillo y pulsos en el puerto, barrido de luz. Las imágenes nuevas están en `images/carga/`.
+- Nueva primera pestaña de ajustes **Vehículo** con el nombre de la tarjeta, el prefijo de entidades, el tipo de vehículo, el estilo del hero, el zoom y la relación de aspecto, el color del coche y las llantas. Estos ajustes se movieron aquí desde «General», «Imágenes» y «Mostrar».
+
+**Cambios**
+
+- El coche negro del Car View (ventana y hero) es más oscuro y sin tono azulado: la misma curva de tonos se aplica a todas las capas del negro, de modo que las sombras y los tonos medios se profundizan mientras que los reflejos y los bordes quedan como estaban. Los demás colores no cambian.
+- Imágenes de presentación nuevas (estilos de hero, vista de carga, pestaña Vehículo) y las existentes regeneradas.
+
+</details>
+
 ## 1.2.6
 
 Card picker. · Επιλογέας καρτών. · Selector de tarjetas.

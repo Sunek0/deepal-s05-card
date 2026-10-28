@@ -9,7 +9,7 @@
  * (MIT) — δες THIRD_PARTY_NOTICES.md στον φάκελο της κάρτας.
  */
 (() => {
-const CARD_VERSION = "1.2.6";
+const CARD_VERSION = "1.3.0";
 const TAG = "deepal-s05-card";
 const SETTINGS_TAG = "deepal-s05-settings";
 const EDITOR_TAG = "deepal-s05-card-editor";
@@ -92,6 +92,7 @@ const DEFAULTS = {
   tire_max: 3.5, // bar — πάνω από αυτό «υψηλή»
   tire_unit: "bar", // bar | kPa | psi
   tire_check: "vehicle", // vehicle = μόνο οι ειδοποιήσεις του οχήματος · limits = τα δικά μου όρια · both = και τα δύο
+  hero_style: "photo", // εικόνα hero: photo (οι μαύρες φωτογραφίες σου) | carview (3/4 render σε χρώμα· στη φόρτιση διάφανη όψη με καλώδιο)
   car_color: "black", // χρώμα αμαξιού στις εικόνα Car View: black · blue · grey · silver · white
   iso_wheels: "cover", // ζάντες στο Car View: cover (20" με τάπες) · open (20" χωρίς τάπες) · pro (18")
   charge_style: "line", // line · text · big · beside

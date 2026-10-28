@@ -9,7 +9,7 @@ class DeepalS05Settings extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" }); I18N.watch(this.shadowRoot);
-    this.mode = "card"; this.tab = "sections"; this._form = { entity: "", label: "", icon: "info", mkey: "", ment: "", mdi: "" }; this._disc = null;
+    this.mode = "card"; this.tab = "vehicle"; this._form = { entity: "", label: "", icon: "info", mkey: "", ment: "", mdi: "" }; this._disc = null;
     this._sig = null; this._note = "";
   }
   set hass(h) { this._hass = h; }
@@ -23,7 +23,7 @@ class DeepalS05Settings extends HTMLElement {
   _setTab(t) { this.tab = t; this.onTab && this.onTab(t); this._render(); }
 
   _tabs() {
-    const T = [["sections", "Ενότητες", "eye"], ["buttons", "Κουμπιά", "power"], ["sensors", "Αισθητήρες", "gauge"], ["charge", "Φόρτιση", "bolt"], ["tires", "Ελαστικά", "tire"], ["look", "Εμφάνιση", "sliders"], ["images", "Εικόνες", "image"], ["general", "Γενικά", "info"]];
+    const T = [["vehicle", "Όχημα", "carside"], ["sections", "Ενότητες", "eye"], ["buttons", "Κουμπιά", "power"], ["sensors", "Αισθητήρες", "gauge"], ["charge", "Φόρτιση", "bolt"], ["tires", "Ελαστικά", "tire"], ["look", "Εμφάνιση", "sliders"], ["images", "Εικόνες", "image"], ["general", "Γενικά", "info"]];
     return `<div class="tabbar"><button class="tn l" data-tn="-1" aria-label="Προηγούμενες καρτέλες" hidden>${ico("chevr")}</button><div class="tabs">${T.map(([k, l, i]) => `<button data-tab="${k}" class="${this.tab === k ? "on" : ""}">${ico(i)}<span>${l}</span></button>`).join("")}</div><button class="tn r" data-tn="1" aria-label="Επόμενες καρτέλες" hidden>${ico("chevr")}</button></div>`;
   }
   _orderList(all, order, hidden, labelOf, kind) {
@@ -112,8 +112,6 @@ class DeepalS05Settings extends HTMLElement {
   _tabImages(c) {
     return `<p class="hint">${T("Οι φωτογραφίες φορτώνονται από τον φάκελο {0} δίπλα στην κάρτα. Εδώ μπορείς να ορίσεις άλλον φάκελο ή άλλο αρχείο για κάθε φωτογραφία και να ελέγξεις ότι βρίσκεται.", "<code>images/car/</code>")}</p>
       <label class="field">Φάκελος φωτογραφιών hero (κενό = αυτόματα)<input type="text" data-set="image_path" data-text value="${esc(c.image_path || "")}" placeholder="${esc(SCRIPT_BASE)}images/car/"></label>
-      <div class="grid2"><label class="field">Μεγέθυνση εικόνας${this._num("image_scale", c.image_scale, "0.05")}</label>
-        <label class="field">Λόγος διαστάσεων (π.χ. 16 / 9)<input type="text" data-set="image_aspect" data-text value="${esc(c.image_aspect || "")}" placeholder="auto"></label></div>
       <h4>Φωτογραφίες (hero & ταμπλό)</h4>
       <div class="list">${Object.keys(ALL_FILES).map((k) => `<div class="chk"><span class="th" data-probe-hero="${k}"></span><div style="min-width:0;flex:1"><div>${esc(HERO_LABELS[k])}</div><input type="text" data-img="${k}" value="${esc(c.images[k] || "")}" placeholder="${esc(ALL_FILES[k])}"></div><span class="st" data-st-hero="${k}">…</span></div>`).join("")}</div>`;
   }
@@ -137,13 +135,7 @@ class DeepalS05Settings extends HTMLElement {
   _tabGeneral(c) {
     const cfgOut = this._exportObj();
     return `<h4>Κάρτα</h4>
-      <label class="field">Όνομα κάρτας<input type="text" data-set="name" data-text value="${esc(c.name)}"></label>
       ${this._opt("Γλώσσα", this._sel("language", c.language || "auto", [["auto", "Αυτόματα (γλώσσα του HA)"], ...I18N.available()]))}
-      <h4>Όχημα</h4>
-      ${this._opt("Τύπος οχήματος", this._seg("powertrain", c.powertrain || "auto", [["auto", "Αυτόματα"], ["phev", "Plug-in υβριδικό"], ["ev", "Ηλεκτρικό"]]), "Το «Αυτόματα» βρίσκει τον τύπο από τους αισθητήρες καυσίμου.")}
-      <label class="field">Πρόθεμα οντοτήτων (π.χ. s05)<input type="text" data-set="prefix" data-text value="${esc(c.prefix)}" list="dl-pfx"></label>
-      <datalist id="dl-pfx">${pfxCandidates(this._hass).map((p) => `<option value="${esc(p)}"></option>`).join("")}</datalist>
-      ${(() => { const e = effPrefix(this._hass, c); return e !== c.prefix ? `<p class="hint">${T("Το πρόθεμα {0} δεν βρέθηκε· χρησιμοποιείται αυτόματα το {1}. Πάτησε το πεδίο για να το αποθηκεύσεις.", `<code>${esc(c.prefix)}</code>`, `<code>${esc(e)}</code>`)}</p>` : ""; })()}
       <label class="field">Κλιματισμός on-mode<input type="text" data-set="climate_on_mode" data-text value="${esc(c.climate_on_mode || "")}" placeholder="auto"></label>
       <h4>Ρυθμίσεις στην κάρτα</h4>
       ${this._tg("show_customize", c.show_customize !== false, "Κουμπί «Ρυθμίσεις» στην κάρτα", "Αν το κρύψεις, οι ρυθμίσεις ανοίγουν μόνο από τον επεξεργαστή της κάρτας (Επεξεργασία dashboard).")}
@@ -181,16 +173,28 @@ class DeepalS05Settings extends HTMLElement {
       ${chk === "vehicle" ? "" : `<div class="grid2"><label class="field">Ελάχιστη (${u})<input type="number" step="${dp ? 1 / 10 ** dp : 1}" data-set="tire_min" data-num data-conv value="${shown(c.tire_min)}"></label><label class="field">Μέγιστη (${u})<input type="number" step="${dp ? 1 / 10 ** dp : 1}" data-set="tire_max" data-num data-conv value="${shown(c.tire_max)}"></label></div>
       <p class="hint">Εκτός ορίων η πίεση εμφανίζεται ως «χαμηλή» ή «υψηλή».</p>`}`;
   }
+  _tabVehicle(c) {
+    const cc = CAR_COLORS.some((x) => x[0] === c.car_color) ? c.car_color : "black";
+    return `<h4>Όχημα</h4>
+      <label class="field">Όνομα κάρτας<input type="text" data-set="name" data-text value="${esc(c.name)}"></label>
+      <label class="field">Πρόθεμα οντοτήτων (π.χ. s05)<input type="text" data-set="prefix" data-text value="${esc(c.prefix)}" list="dl-pfx"></label>
+      <datalist id="dl-pfx">${pfxCandidates(this._hass).map((p) => `<option value="${esc(p)}"></option>`).join("")}</datalist>
+      ${(() => { const e = effPrefix(this._hass, c); return e !== c.prefix ? `<p class="hint">${T("Το πρόθεμα {0} δεν βρέθηκε· χρησιμοποιείται αυτόματα το {1}. Πάτησε το πεδίο για να το αποθηκεύσεις.", `<code>${esc(c.prefix)}</code>`, `<code>${esc(e)}</code>`)}</p>` : ""; })()}
+      ${this._opt("Τύπος οχήματος", this._seg("powertrain", c.powertrain || "auto", [["auto", "Αυτόματα"], ["phev", "Plug-in υβριδικό"], ["ev", "Ηλεκτρικό"]]), "Το «Αυτόματα» βρίσκει τον τύπο από τους αισθητήρες καυσίμου.")}
+      <h4>Εικόνα αμαξιού (hero)</h4>
+      ${this._opt("Στυλ", this._seg("hero_style", c.hero_style === "carview" ? "carview" : "photo", [["photo", "Φωτογραφίες (μαύρο)"], ["carview", "Car View (χρώματα)"]]), "Φωτογραφίες: οι μαύρες φωτογραφίες με τα εφέ φόρτισης. Car View: 3/4 render στο χρώμα που διαλέγεις, με ζωντανές πόρτες· στη φόρτιση εμφανίζεται η διάφανη όψη με τον φορτιστή.")}
+      <div class="grid2"><label class="field">Μεγέθυνση εικόνας${this._num("image_scale", c.image_scale, "0.05")}</label>
+        <label class="field">Λόγος διαστάσεων (π.χ. 16 / 9)<input type="text" data-set="image_aspect" data-text value="${esc(c.image_aspect || "")}" placeholder="auto"></label></div>
+      <h4>Χρώμα αμαξιού</h4>
+      <p class="hint">Για την εικόνα Car View (popup οχήματος και, αν το διαλέξεις, hero).</p>
+      <div class="csw">${CAR_COLORS.map(([k, n, hex]) => `<button data-sset="car_color|${k}" class="${k === cc ? "on" : ""}" style="background:${hex}" title="${esc(T(n))}" aria-label="${esc(T(n))}"></button>`).join("")}</div>
+      ${this._opt("Ζάντες (Car View)", this._seg("iso_wheels", c.iso_wheels || "cover", [["cover", "20″ με τάπες"], ["open", "20″ χωρίς τάπες"], ["pro", "18″ Pro"]]))}`;
+  }
   _tabLook(c) {
     const hc = (k) => hexc(c[k], DEFAULTS[k]);
     const sw = (k, l) => `<label class="sw-c"><input type="color" data-set="${k}" data-text value="${esc(hc(k))}"><span>${l}</span></label>`;
     const a = Number(c.air_t1) || 22, b = Number(c.air_t2) || 24, lo = 16, hi = 30, pc = (v) => Math.min(100, Math.max(0, ((v - lo) / (hi - lo)) * 100));
-    const cc = CAR_COLORS.some((x) => x[0] === c.car_color) ? c.car_color : "black";
-    return `<h4>Χρώμα αμαξιού</h4>
-      <p class="hint">Για την εικόνα Car View στο popup του οχήματος.</p>
-      <div class="csw">${CAR_COLORS.map(([k, n, hex]) => `<button data-sset="car_color|${k}" class="${k === cc ? "on" : ""}" style="background:${hex}" title="${esc(T(n))}" aria-label="${esc(T(n))}"></button>`).join("")}</div>
-      ${this._opt("Ζάντες (Car View)", this._seg("iso_wheels", c.iso_wheels || "cover", [["cover", "20″ με τάπες"], ["open", "20″ χωρίς τάπες"], ["pro", "18″ Pro"]]))}
-      <h4>Χρώμα αέρα κλιματισμού</h4>
+    return `<h4>Χρώμα αέρα κλιματισμού</h4>
       <p class="hint">Ο αέρας στην καρτέλα Κλιματισμού παίρνει χρώμα ανάλογα με τη θερμοκρασία-στόχο. Όρισε τα όρια και τα χρώματα.</p>
       <div class="lvhead"><span></span><span>Μέχρι (°C)</span><span></span></div>
       <div class="lvrow">${sw("air_c1", "Δροσερό")}${this._num("air_t1", c.air_t1, "0.5")}<i class="dash"></i></div>
@@ -217,8 +221,8 @@ class DeepalS05Settings extends HTMLElement {
   _render() {
     const c = this._cfg;
     if (!c) return;
-    if (!["general", "sections", "buttons", "sensors", "charge", "tires", "look", "images"].includes(this.tab)) this.tab = "sections";
-    const body = { sections: () => this._tabSections(c), buttons: () => this._tabButtons(c), sensors: () => this._tabSensors(c), images: () => this._tabImages(c), general: () => this._tabGeneral(c), charge: () => this._tabCharge(c), tires: () => this._tabTires(c), look: () => this._tabLook(c) }[this.tab]();
+    if (!["vehicle", "general", "sections", "buttons", "sensors", "charge", "tires", "look", "images"].includes(this.tab)) this.tab = "vehicle";
+    const body = { vehicle: () => this._tabVehicle(c), sections: () => this._tabSections(c), buttons: () => this._tabButtons(c), sensors: () => this._tabSensors(c), images: () => this._tabImages(c), general: () => this._tabGeneral(c), charge: () => this._tabCharge(c), tires: () => this._tabTires(c), look: () => this._tabLook(c) }[this.tab]();
     const parts = body.split("<h4>"), grouped = parts[0] + parts.slice(1).map((x) => `<section class="grp"><h4>${x}</section>`).join("");
     this.shadowRoot.innerHTML = `<style>${SETTINGS_CSS}</style><div class="wrap">${this._tabs()}${grouped}</div>`;
     this._bind(); this._wireTabs();
@@ -332,7 +336,7 @@ class DeepalS05Settings extends HTMLElement {
 
 /* ───────────────────────── Επεξεργαστής του HA ───────────────────────── */
 class DeepalS05CardEditor extends HTMLElement {
-  constructor() { super(); this.attachShadow({ mode: "open" }); I18N.watch(this.shadowRoot); this._tab = "sections"; }
+  constructor() { super(); this.attachShadow({ mode: "open" }); I18N.watch(this.shadowRoot); this._tab = "vehicle"; }
   setConfig(config) { this._config = { ...config }; this._draw(); }
   set hass(h) { this._hass = h; if (this._s) this._s.hass = h; }
   _draw() {

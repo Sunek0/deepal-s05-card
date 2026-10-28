@@ -425,6 +425,11 @@
   "Προσθήκη όλων": "Añadir todos",
   "Εμφάνιση ξανά όσων αγνόησα": "Mostrar de nuevo los ignorados",
   "Ή εικονίδιο του HA (προαιρετικά)": "O un icono de Home Assistant (opcional)",
-  "Χωρίς δεδομένα": "Sin datos"
+  "Χωρίς δεδομένα": "Sin datos",
+  "Εικόνα αμαξιού (hero)": "Imagen del coche (hero)",
+  "Φωτογραφίες (μαύρο)": "Fotos (negro)",
+  "Car View (χρώματα)": "Car View (colores)",
+  "Φωτογραφίες: οι μαύρες φωτογραφίες με τα εφέ φόρτισης. Car View: 3/4 render στο χρώμα που διαλέγεις, με ζωντανές πόρτες· στη φόρτιση εμφανίζεται η διάφανη όψη με τον φορτιστή.": "Fotos: las fotos en negro con los efectos de carga. Car View: un render 3/4 en el color que elijas, con puertas en vivo; al cargar cambia a la vista translúcida con el cargador.",
+  "Για την εικόνα Car View (popup οχήματος και, αν το διαλέξεις, hero).": "Para la imagen Car View (ventana del vehículo y, si lo eliges, el hero)."
  }
 };

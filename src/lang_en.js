@@ -425,6 +425,11 @@
   "Προσθήκη όλων": "Add all",
   "Εμφάνιση ξανά όσων αγνόησα": "Show the ones I ignored again",
   "Ή εικονίδιο του HA (προαιρετικά)": "Or a Home Assistant icon (optional)",
-  "Χωρίς δεδομένα": "No data"
+  "Χωρίς δεδομένα": "No data",
+  "Εικόνα αμαξιού (hero)": "Car image (hero)",
+  "Φωτογραφίες (μαύρο)": "Photos (black)",
+  "Car View (χρώματα)": "Car View (colours)",
+  "Φωτογραφίες: οι μαύρες φωτογραφίες με τα εφέ φόρτισης. Car View: 3/4 render στο χρώμα που διαλέγεις, με ζωντανές πόρτες· στη φόρτιση εμφανίζεται η διάφανη όψη με τον φορτιστή.": "Photos: the black photos with the charging effects. Car View: a 3/4 render in the colour you choose, with live doors; while charging it switches to the translucent view with the charger.",
+  "Για την εικόνα Car View (popup οχήματος και, αν το διαλέξεις, hero).": "Used by the Car View image (vehicle popup and, if you choose it, the hero)."
  }
 };

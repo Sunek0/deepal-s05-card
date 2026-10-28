@@ -66,7 +66,7 @@ const shot = (loc, o = {}) => loc.screenshot({ omitBackground: true, ...o });
 const BG = "background:#0a0c11; background-image: radial-gradient(1100px 700px at 0% 105%, rgba(28,74,120,.32), transparent 62%), radial-gradient(900px 520px at 100% -5%, rgba(18,96,82,.30), transparent 60%);";
 const png = (b) => "data:image/png;base64," + b.toString("base64");
 const pngSize = (b) => ({ w: b.readUInt32BE(16) / 2, h: b.readUInt32BE(20) / 2 });
-async function slide(name, { eyebrow, title, desc, items, gap = 24, maxW = 940, maxH = 800, up = 1.15, align = "center", wrap = false, w = 0 }) {
+async function slide(name, { eyebrow, title, desc, items, gap = 24, rowGap = gap, maxW = 940, maxH = 800, up = 1.15, align = "center", wrap = false, w = 0 }) {
   if (ONLY.length && !ONLY.includes(name)) return;
   const sz = items.map((it) => pngSize(it.buf)), tw = sz.reduce((a, s, i) => a + s.w * (items[i].k || 1), 0) + gap * (items.length - 1), mh = Math.max(...sz.map((s, i) => s.h * (items[i].k || 1)));
   const k = Math.min(up, maxW / tw, maxH / mh);
@@ -75,7 +75,7 @@ async function slide(name, { eyebrow, title, desc, items, gap = 24, maxW = 940, 
   <style>.l{position:absolute;left:90px;top:0;bottom:0;width:470px;display:flex;flex-direction:column;justify-content:center}
   .e{color:#34d399;font-size:15px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;margin-bottom:22px}
   .t{color:#fff;font-size:62px;line-height:1.06;font-weight:800;letter-spacing:-.02em;margin:0 0 26px}.d{color:#8b95a5;font-size:23px;line-height:1.45;margin:0}
-  .r{position:absolute;left:600px;right:60px;top:0;bottom:0;display:flex;align-items:${align};justify-content:center;gap:${gap}px;flex-wrap:${wrap ? 'wrap' : 'nowrap'};${wrap ? 'align-content:center;' : ''}}
+  .r{position:absolute;left:600px;right:60px;top:0;bottom:0;display:flex;align-items:${align};justify-content:center;gap:${rowGap}px ${gap}px;flex-wrap:${wrap ? 'wrap' : 'nowrap'};${wrap ? 'align-content:center;' : ''}}
   .it{position:relative;display:flex;flex-direction:column;align-items:center}.it img{display:block;filter:drop-shadow(0 18px 40px rgba(0,0,0,.55))}
   .tag{position:absolute;top:-34px;font-size:13px;font-weight:700;letter-spacing:.14em;color:#e5e7eb;background:#1c1f26;border:1px solid #3a4150;border-radius:999px;padding:5px 16px}</style>
   <div class="l"><div class="e">${eyebrow}</div><h1 class="t">${title}</h1><p class="d">${desc}</p></div><div class="r">${imgs}</div></body></html>`;
@@ -149,14 +149,31 @@ const jobs = {
     await slide("settings-tyres", { eyebrow: "Tyres", title: "Your limits,<br>your units", desc: "Follow the alerts the car sends, set your own min/max, and choose bar, kPa or psi.", items: [{ buf: a }], up: 1.2 });
   },
   async settings() {
-    const a = await scene({ over: { ...BASE }, height: 1100 }, async (p) => { await settings(p, "charge"); return shot(p.box()); });
-    const b = await scene({ over: { ...BASE }, height: 1100 }, async (p) => { await settings(p, "look"); return shot(p.box()); });
-    await slide("settings", { eyebrow: "Settings", title: "Configured in a<br>few taps", desc: "Tabbed settings with segmented controls, colour pickers and thresholds — car colour, air-flow colours, charging levels — saved to your dashboard.", items: [{ buf: a }, { buf: b }] });
+    const a = await scene({ cfg: { hero_style: "carview" }, over: { ...BASE }, height: 1250 }, async (p) => { await settings(p, "vehicle"); return shot(p.box()); });
+    const b = await scene({ over: { ...BASE }, height: 1250 }, async (p) => { await settings(p, "look"); return shot(p.box()); });
+    await slide("settings", { eyebrow: "Settings", title: "Configured in a<br>few taps", desc: "Tabbed settings with segmented controls, colour pickers and thresholds — vehicle name and hero image, car colour, air-flow colours, charging levels — saved to your dashboard.", items: [{ buf: a }, { buf: b }] });
   },
   async "car-colors"() {
     const items = [];
     for (const col of ["black", "blue", "grey", "silver", "white"]) items.push({ buf: await scene({ cfg: { car_color: col }, over: { ...BASE, "sensor.s05_front_left_tire_pressure": { state: 2.5, attributes: { unit_of_measurement: "bar" } } }, height: 1000 }, async (p) => { await open(p, "iso"); return shot(p.locator("deepal-s05-card >> #viso")); }) });
     await slide("car-colors", { eyebrow: "Car colour", title: "Make it your<br>colour", desc: "Pick black, blue, grey, silver or white, and the wheel style. The Car View follows your choice.", items, wrap: true, w: 290, gap: 16 });
+  },
+  async "hero-carview"() {
+    const hero = (p) => shot(p.locator("deepal-s05-card >> #hero"));
+    const cv = (c, o = {}) => scene({ cfg: { hero_style: "carview", car_color: c, diag_mode: "all" }, over: { ...BASE, ...o } }, hero);
+    const items = [
+      { buf: await cv("black"), tag: "BLACK" },
+      { buf: await cv("white", { "binary_sensor.s05_front_left_door": "on", "binary_sensor.s05_low_beam": "on" }), tag: "DOOR OPEN, LIGHTS ON" },
+      { buf: await cv("blue", { "binary_sensor.s05_trunk": "on", "binary_sensor.s05_hood": "on" }), tag: "BONNET &amp; TAILGATE" },
+      { buf: await cv("silver"), tag: "SILVER" },
+    ];
+    await slide("hero-carview", { eyebrow: "Car View hero", title: "Your car,<br>live and in colour", desc: "Choose the hero image: your own photos, or a Car View render in black, blue, grey, silver or white. Doors, bonnet, tailgate, windows and lights follow the real state of the car.", items, wrap: true, w: 450, gap: 18, rowGap: 52 });
+  },
+  async "charging-view"() {
+    const c = { hero_style: "carview", car_color: "white", diag_mode: "all" };
+    const a = await scene({ cfg: c, over: { ...BASE, "binary_sensor.s05_charger_plugged": "on", "binary_sensor.s05_charging": "off" } }, (p) => shot(p.card()));
+    const b = await scene({ cfg: c, over: { ...BASE, ...CHARGING } }, (p) => shot(p.card()));
+    await slide("charging-view", { eyebrow: "Charging view", title: "The car goes<br>see-through", desc: "In Car View the hero switches to a translucent side view when the charger is connected: grey cable when plugged in, green cable with the live energy flow and port pulse while charging.", items: [{ buf: a, tag: "PLUGGED IN" }, { buf: b, tag: "CHARGING" }] });
   },
   async "phev-ev"() {
     const o = { ...BASE, ...SEATS, ...CHARGING };

@@ -11,6 +11,10 @@ const smoothPath = (p) => {
   return d;
 };
 const CHG_D = smoothPath(CHG_PTS);
+/* Όψη φόρτισης Car View (750×500, dec_deepal vista_carga): καλώδιο από το έδαφος προς το φις, και θέση της θύρας */
+const CARGA_PTS = [[705, 370], [677, 365], [640, 359], [613, 353], [597, 347], [588, 338], [583, 325], [580, 310], [578, 295], [576, 278], [574, 262], [572, 248], [570, 238]];
+const CARGA_PORT = [566, 236];
+const CARGA_D = smoothPath(CARGA_PTS);
 const OPEN_ITEMS = [
   ["binary_sensor.front_left_door", "Εμπρός αριστερή πόρτα"],
   ["binary_sensor.front_right_door", "Εμπρός δεξιά πόρτα"],
@@ -189,6 +193,27 @@ ${BASE_CSS}
 .stage img { position:absolute; inset:0; width:100%; height:100%; object-fit: cover; opacity:0; transition: opacity .55s ease;
   transform: scale(var(--ds-scale, 1.2)); transform-origin: center center; }
 .stage img.on { opacity:1; }
+/* Hero «Car View»: 3/4 render με layers· στη φόρτιση αλλάζει με τη διάφανη όψη και το καλώδιο */
+.hcv { position:absolute; inset:0; display:none; z-index:1; }
+.hero[data-style="carview"] .stage, .hero[data-style="carview"] .fxs, .hero[data-style="carview"] .fx-handles { display:none !important; }
+.hero[data-style="carview"] .hcv { display:block; }
+.hero[data-style="carview"] .shade-left { width:46%; background: linear-gradient(90deg, rgba(0,0,0,.6), rgba(0,0,0,.28) 60%, transparent); }
+.hero[data-style="carview"] { background: radial-gradient(ellipse 72% 60% at 56% 76%, #3b4654 0%, #1a1e25 58%, #0e0f13 100%); }
+.cva::before, .cvb::before { content:""; position:absolute; pointer-events:none; background: radial-gradient(ellipse at center, rgba(0,0,0,.72), rgba(0,0,0,.3) 45%, transparent 72%); filter: blur(6px); }
+.cva::before { left:12%; right:8%; top:68%; height:14%; }
+.cvb::before { left:11%; right:20%; top:64%; height:12%; }
+.cvi { position:absolute; left:50%; top:50%; width:100%; aspect-ratio: 750 / 500; transform-origin: 51.5% 52.7%; transform: translate(-51.5%, -52.7%) scale(var(--ds-cvs, 1.08)); } /* το κέντρο του αμαξιού (386,263 στα 750×500) πάει στο κέντρο του hero και η μεγέθυνση γίνεται γύρω από αυτό */
+.cva, .cvb { position:absolute; inset:0; transition: opacity .6s ease; }
+.cvb { opacity:0; transform: translate(2.5%, 5.9%); } /* η διάφανη όψη έχει άλλο κάδρο: μετατοπίζεται ώστε το αμάξι να μένει στο ίδιο κέντρο */ .hcv.chg .cva { opacity:0; } .hcv.chg .cvb { opacity:1; }
+.cva img, .cvb > img:not(.sweep) { position:absolute; inset:0; width:100%; height:100%; opacity:0; transition: opacity .35s ease; }
+.cva img.on, .cvb > img.on:not(.sweep) { opacity:1; }
+.cvb > svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+.cvb path, .cvb circle { fill:none; visibility:hidden; }
+.cvb .cb { stroke-width:5.6; filter: blur(2.4px); }
+.cvb .cf { stroke-width:3.4; stroke-dasharray: 7 30; animation: ds-cab2 1.2s linear infinite; }
+@keyframes ds-cab2 { to { stroke-dashoffset: -37; } }
+.cvb .pr { stroke-width:2; }
+.cvb .sweep { object-fit: fill; }
 .shade-top, .shade-bot { position:absolute; left:0; right:0; pointer-events:none; z-index:5; }
 .shade-top { top:0; height:38%; background: linear-gradient(180deg, rgba(0,0,0,.72), transparent); }
 .shade-left { position:absolute; left:0; top:0; bottom:0; width:62%; pointer-events:none; z-index:5; background: linear-gradient(90deg, rgba(0,0,0,.78), rgba(0,0,0,.45) 55%, transparent); }
