@@ -7,6 +7,8 @@ It works with the [Deepal Alternative](https://github.com/Sunek0/ha-deepal-alter
 > Buttons send **real commands to a real vehicle** (lock/unlock, windows, trunk, climate, horn…).
 > Use them with the same care as in the official app.
 
+![Deepal S05 Card](docs/screenshot.png)
+
 ## Features
 
 - Hero photo that changes with the vehicle state (off, lights, unlocked, charging, charge complete).
