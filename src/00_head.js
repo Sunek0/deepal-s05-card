@@ -9,7 +9,7 @@
  * (MIT) — δες THIRD_PARTY_NOTICES.md στον φάκελο της κάρτας.
  */
 (() => {
-const CARD_VERSION = "1.2.1";
+const CARD_VERSION = "1.2.2";
 const TAG = "deepal-s05-card";
 const SETTINGS_TAG = "deepal-s05-settings";
 const EDITOR_TAG = "deepal-s05-card-editor";

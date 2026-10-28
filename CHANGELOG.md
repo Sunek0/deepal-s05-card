@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.2.2
+
+HACS install fix. · Διόρθωση εγκατάστασης από το HACS. · Corrección de la instalación con HACS.
+
+**Fixed**
+
+- **HACS now installs the whole card, not just the `.js`.** The releases carried the `deepal-s05-card.js` file as an attachment, and when a release has that, HACS downloads only that one file and never looks at the `dist/` folder — so the `images/` (car photos, Car View, interior) and `lang/` folders were missing after a HACS install. Releases no longer carry the attachment, so HACS downloads everything in `dist/`, sub-folders included. If you installed 1.0.6–1.2.1 from HACS and see no car photos, update to 1.2.2 (or newer) in HACS.
+
+<details><summary>Ελληνικά</summary>
+
+**Διορθώσεις**
+
+- **Το HACS εγκαθιστά πλέον ολόκληρη την κάρτα, όχι μόνο το `.js`.** Τα releases είχαν ως συνημμένο το αρχείο `deepal-s05-card.js` και, όταν ένα release το έχει, το HACS κατεβάζει μόνο αυτό και δεν κοιτάζει τον φάκελο `dist/` — έτσι έλειπαν οι φάκελοι `images/` (φωτογραφίες αυτοκινήτου, Car View, εσωτερικό) και `lang/` μετά από εγκατάσταση με HACS. Τα releases πλέον δεν έχουν συνημμένο, οπότε το HACS κατεβάζει ό,τι υπάρχει στο `dist/`, μαζί με τους υποφακέλους. Αν εγκατέστησες την 1.0.6–1.2.1 από το HACS και δεν βλέπεις φωτογραφίες, ενημέρωσε στην 1.2.2 (ή νεότερη) από το HACS.
+
+</details>
+
+<details><summary>Español</summary>
+
+**Corregido**
+
+- **HACS ahora instala toda la tarjeta, no solo el `.js`.** Las versiones llevaban el archivo `deepal-s05-card.js` como adjunto y, cuando una versión lo tiene, HACS descarga solo ese archivo y no mira la carpeta `dist/` — por eso faltaban las carpetas `images/` (fotos del coche, Car View, interior) y `lang/` tras instalar con HACS. Las versiones ya no llevan adjunto, así que HACS descarga todo lo que hay en `dist/`, subcarpetas incluidas. Si instalaste la 1.0.6–1.2.1 con HACS y no ves las fotos del coche, actualiza a la 1.2.2 (o posterior) en HACS.
+
+</details>
+
 ## 1.2.1
 
 Language fix. · Διόρθωση γλώσσας. · Corrección del idioma.
