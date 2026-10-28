@@ -1,0 +1,101 @@
+# Deepal S05 Card
+
+A Lovelace card for the **Deepal S05** (EV and PHEV) that looks and feels like the manufacturer's mobile app.
+It works with the [Deepal Alternative](https://github.com/Sunek0/ha-deepal-alternative) integration (`deepal` domain).
+
+> **Unofficial.** This project is not affiliated with Deepal, Changan or the integration authors.
+> Buttons send **real commands to a real vehicle** (lock/unlock, windows, trunk, climate, horn…).
+> Use them with the same care as in the official app.
+
+## Features
+
+- Hero photo that changes with the vehicle state (off, lights, unlocked, charging, charge complete).
+- Round control buttons: lock, windows, trunk, climate, tyres, interior, flash lights, horn, find car — layout, labels, size, order and visibility are configurable.
+- Range, battery (and fuel for PHEV) rings; the battery ring animates while charging.
+- Charging status: "Charging now", current, time remaining, plus an optional animated effect on the car (cable flow / charge-port pulse / light sweep).
+- Top-view popup (tyre pressures, open doors/windows/hood/trunk) and interior popup (cabin climate with temperature picker, seat heating/ventilation, steering-wheel heating).
+- Diagnostics shown as small warning icons (airbag, ABS, brakes, tyres, 12 V battery…), customisable.
+- Custom info tiles: add any sensor.
+- **EV or PHEV**: fuel items are hidden automatically when the car has no fuel sensors (or force it in settings).
+- **Languages**: English and Greek built in, follows the Home Assistant language. More languages = one small file ([how](docs/LANGUAGES.md)).
+- **Settings UI** inside the card (and in the card editor). Settings are saved in the card YAML so they are shared by every device and user.
+- No dependencies, no CDN, one JavaScript file + local images.
+
+## Requirements
+
+- Home Assistant **2026.3.0** or newer.
+- The [Deepal Alternative](https://github.com/Sunek0/ha-deepal-alternative) integration, with your vehicle added.
+- Entity names are detected automatically — see [How entities are found](#how-entities-are-found).
+
+## Installation
+
+### HACS (recommended)
+
+1. HACS → ⋮ → **Custom repositories** → add `https://github.com/<your-github-user>/deepal-s05-card`, category **Dashboard**.
+2. Install **Deepal S05 Card** and reload the browser (hard refresh).
+3. HACS registers the resource for you. If it does not, add it manually:
+   *Settings → Dashboards → ⋮ → Resources* → `/hacsfiles/deepal-s05-card/deepal-s05-card.js`, type **JavaScript module**.
+
+### Manual
+
+1. Copy the contents of the `dist/` folder to `/config/www/deepal-s05-card/` (so that `deepal-s05-card.js`, `lang/` and `images/` sit next to each other).
+2. Add the resource `/local/deepal-s05-card/deepal-s05-card.js` as **JavaScript module** and hard-refresh the browser.
+
+## Usage
+
+Add the card from the card picker (**Deepal S05**) or in YAML:
+
+```yaml
+type: custom:deepal-s05-card
+prefix: s05          # entity prefix, e.g. sensor.s05_battery_level  (optional, auto-detected)
+name: Deepal S05
+```
+
+Everything else is changed from the **Settings** button at the bottom of the card, or from the visual editor.
+The full list of options is in [docs/CONFIG.md](docs/CONFIG.md).
+
+## How entities are found
+
+1. The card builds the entity id from `prefix` (`sensor.<prefix>_battery_level`, `lock.<prefix>_doors`, …).
+2. If the prefix does not match anything, it looks for the prefix that has the vehicle's sensors (e.g. `mycar_`).
+3. If the entity id differs from the expected one (for example because Home Assistant was installed in another language, so the integration's translated names produce different ids), the card finds it through the entity registry using the integration's stable `translation_key`.
+4. Any single entity can still be remapped manually in *Settings → Sensors → Entity mapping*.
+
+The target temperature picker uses the `climate.<prefix>_cabin_climate` entity directly — no helper is needed.
+
+## Photos and layers
+
+The card shows photos from `images/car/` and top-view/interior layers from `images/top/` and `images/interior/`, all next to the card file.
+They are made for a **black Deepal S05**. For another colour or model replace the files (same names) or point the card to your own folder in *Settings → Images*.
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the origin and licences of the images.
+
+## Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| "Vehicle images not found" | The `images/` folder is not next to the card file. Reinstall via HACS or copy the whole `dist/` content. |
+| All values show `--` | Wrong prefix. Set `prefix:` to the part between the domain and the sensor name (`sensor.`**`s05`**`_battery_level`). |
+| Settings are not saved to YAML | Needs an administrator account and a UI-managed dashboard. Otherwise they are stored in your user profile and you can copy the YAML from *Settings → General*. |
+| Buttons do nothing | The integration documents that remote commands on the S05 are experimental and need the remote-control PIN. |
+
+## Development
+
+```bash
+bash scripts/build.sh      # builds dist/deepal-s05-card.js from src/
+```
+
+Edit the files in `src/`, run the build, commit both `src/` and `dist/`.
+Layers can be regenerated with `tools/build_layers.py` (see the header of the script).
+
+## Ελληνικά (σύντομα)
+
+Κάρτα Lovelace για το Deepal S05 (EV και PHEV) που μοιάζει με την εφαρμογή του κατασκευαστή. Δουλεύει με το integration *Deepal Alternative*.
+
+- Εγκατάσταση: HACS → Custom repositories → κατηγορία **Dashboard** → εγκατάσταση → hard refresh.
+- Κάρτα: `type: custom:deepal-s05-card` και προαιρετικά `prefix: s05`.
+- Η γλώσσα ακολουθεί τη γλώσσα του HA (ελληνικά/αγγλικά). Όλες οι ρυθμίσεις αλλάζουν από το κουμπί «Ρυθμίσεις» στην κάρτα.
+- Σε μόνο ηλεκτρικό όχημα κρύβονται αυτόματα τα στοιχεία καυσίμου.
+
+## License
+
+MIT — see [LICENSE](LICENSE). Third-party material: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
