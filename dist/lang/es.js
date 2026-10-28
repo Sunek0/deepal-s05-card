@@ -63,6 +63,8 @@
   "Ανοιχτό": "Abierto",
   "Κλειστό": "Cerrado",
   "Ενέργεια": "Energía",
+  "Προηγούμενες καρτέλες": "Pestañas anteriores",
+  "Επόμενες καρτέλες": "Pestañas siguientes",
   "Εφέ φόρτισης": "Efecto de carga",
   "Κόκκινο": "Rojo",
   "Πορτοκαλί": "Naranja",
